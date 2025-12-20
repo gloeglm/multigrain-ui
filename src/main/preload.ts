@@ -25,6 +25,22 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Audio operations
   convertAudio: (inputPath: string, outputPath: string) =>
     ipcRenderer.invoke('audio:convert', inputPath, outputPath),
+  readAudioMetadata: (filePath: string) =>
+    ipcRenderer.invoke('audio:readMetadata', filePath),
+  writeAudioMetadata: (filePath: string, description: string) =>
+    ipcRenderer.invoke('audio:writeMetadata', filePath, description),
+
+  // Project metadata operations
+  readProjectMetadata: (projectPath: string) =>
+    ipcRenderer.invoke('project:readMetadata', projectPath),
+  writeProjectMetadata: (projectPath: string, customName: string) =>
+    ipcRenderer.invoke('project:writeMetadata', projectPath, customName),
+  batchWriteProjectMetadata: (updates: Array<{ projectPath: string; customName: string }>) =>
+    ipcRenderer.invoke('project:batchWriteMetadata', updates),
+
+  // Preset operations
+  readPresetSamples: (filePath: string) =>
+    ipcRenderer.invoke('preset:readSamples', filePath),
 });
 
 export type ElectronAPI = {
@@ -44,6 +60,38 @@ export type ElectronAPI = {
   validateMultigrain: (rootPath: string) => Promise<import('../shared/types').ValidationResult>;
   findMultigrainFolder: (searchPath: string) => Promise<string | null>;
   convertAudio: (inputPath: string, outputPath: string) => Promise<void>;
+  readAudioMetadata: (filePath: string) => Promise<{
+    description: string;
+    title: string;
+    artist: string;
+    duration: number;
+    sampleRate: number;
+    bitDepth: number;
+    channels: number;
+  }>;
+  writeAudioMetadata: (filePath: string, description: string) => Promise<{
+    success: boolean;
+    error?: string;
+  }>;
+  readProjectMetadata: (projectPath: string) => Promise<{
+    customName: string;
+  }>;
+  writeProjectMetadata: (projectPath: string, customName: string) => Promise<{
+    success: boolean;
+    error?: string;
+  }>;
+  batchWriteProjectMetadata: (
+    updates: Array<{ projectPath: string; customName: string }>
+  ) => Promise<{
+    success: boolean;
+    count?: number;
+    error?: string;
+  }>;
+  readPresetSamples: (filePath: string) => Promise<{
+    success: boolean;
+    samples?: string[];
+    error?: string;
+  }>;
 };
 
 declare global {

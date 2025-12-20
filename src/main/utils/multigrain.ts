@@ -82,10 +82,29 @@ async function parseProject(projectPath: string, projectName: string): Promise<P
   // Find WAV samples
   const samples = await getWavFiles(projectPath);
 
-  // Check for autosave
-  const hasAutosave = entries.some(
-    (e) => e.name.toLowerCase() === FOLDER_NAMES.AUTOSAVE_FILE.toLowerCase()
+  // Check for autosave and create preset object if it exists
+  const autosaveEntry = entries.find(
+    (e) => !e.isDirectory && e.name.toLowerCase() === FOLDER_NAMES.AUTOSAVE_FILE.toLowerCase()
   );
+  const hasAutosave = !!autosaveEntry;
+  const autosave: Preset | undefined = autosaveEntry
+    ? {
+        name: 'Autosave',
+        path: path.join(projectPath, autosaveEntry.name),
+        index: 0, // Special index for autosave
+      }
+    : undefined;
+
+  // Load custom name from metadata file
+  let customName: string | undefined;
+  try {
+    const metadataPath = path.join(projectPath, '.project-metadata.json');
+    const metadataContent = await fs.readFile(metadataPath, 'utf-8');
+    const metadata = JSON.parse(metadataContent);
+    customName = metadata.customName || undefined;
+  } catch {
+    // Metadata file doesn't exist or is invalid, that's okay
+  }
 
   return {
     name: projectName,
@@ -94,6 +113,8 @@ async function parseProject(projectPath: string, projectName: string): Promise<P
     presets: presets.sort((a, b) => a.index - b.index),
     samples,
     hasAutosave,
+    autosave,
+    customName,
   };
 }
 

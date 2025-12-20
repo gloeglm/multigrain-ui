@@ -24,6 +24,10 @@ export interface Preset {
   index: number; // 1-48
 }
 
+export interface PresetWithSamples extends Preset {
+  samples: string[]; // Sample filenames referenced in this preset
+}
+
 export interface Project {
   name: string;
   path: string;
@@ -31,6 +35,8 @@ export interface Project {
   presets: Preset[];
   samples: WavFile[];
   hasAutosave: boolean;
+  autosave?: Preset; // Autosave.mgp preset (current project state)
+  customName?: string; // User-defined custom name from metadata file
 }
 
 export interface MultigainStructure {

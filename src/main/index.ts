@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, session } from 'electron';
 import { registerAllHandlers } from './ipc';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -20,6 +20,22 @@ const createWindow = (): void => {
       contextIsolation: true,
       nodeIntegration: false,
     },
+  });
+
+  // Set CSP to allow blob URLs for audio playback
+  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+    callback({
+      responseHeaders: {
+        ...details.responseHeaders,
+        'Content-Security-Policy': [
+          "default-src 'self' 'unsafe-inline' data: blob:; " +
+          "script-src 'self' 'unsafe-eval'; " +
+          "style-src 'self' 'unsafe-inline'; " +
+          "connect-src 'self' ws://localhost:* blob:; " +
+          "media-src 'self' blob: data:"
+        ]
+      }
+    });
   });
 
   mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);

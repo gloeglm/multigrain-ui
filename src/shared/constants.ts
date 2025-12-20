@@ -48,3 +48,24 @@ export const getPresetFileName = (index: number): string => {
   }
   return `Preset${index.toString().padStart(2, '0')}${FILE_EXTENSIONS.PROJECT_SETTINGS}`;
 };
+
+// Factory project names from Intellijel
+export const FACTORY_PROJECT_NAMES: Record<number, string> = {
+  // Bank X - Intellijel Projects
+  1: 'Intellijel Quick Start Project',
+  2: 'Richard Devine',
+  3: 'Speedy J / STOOR',
+  4: 'Taylor Deupree',
+  // Bank Y - Intellijel Projects
+  9: 'Intellijel - slow wild',
+  10: 'Intellijel - Rau',
+  11: 'Intellijel - Veltenhill',
+  12: 'Intellijel - Jonathan Davies',
+  13: 'Intellijel - Counts!',
+  // Bank Z - Red Means Recording Projects
+  17: 'RMR - Random Metal',
+  18: 'RMR - VocalScapes',
+  19: 'RMR - Instrumentation',
+  20: 'RMR - VRAL Drones',
+  21: 'RMR - Synth Sweeps',
+};

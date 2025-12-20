@@ -16,8 +16,12 @@
   "license": "MIT",
   "dependencies": {
     "electron-squirrel-startup": "^1.0.1",
+    "music-metadata": "^11.10.3",
+    "node-wav": "^0.0.2",
     "react": "^19.2.3",
-    "react-dom": "^19.2.3"
+    "react-dom": "^19.2.3",
+    "wav-file-info": "^0.0.10",
+    "wavesurfer.js": "^7.12.1"
   },
   "devDependencies": {
     "@electron-forge/cli": "^7.10.2",

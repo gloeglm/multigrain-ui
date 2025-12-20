@@ -6,4 +6,7 @@ module.exports = {
   resolve: {
     extensions: ['.js', '.ts', '.jsx', '.tsx', '.css', '.json'],
   },
+  externals: {
+    'music-metadata': 'commonjs2 music-metadata',
+  },
 };
