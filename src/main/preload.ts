@@ -16,6 +16,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Drive detection
   listDrives: () => ipcRenderer.invoke('drives:list'),
 
+  // Multigrain operations
+  validateMultigrain: (rootPath: string) =>
+    ipcRenderer.invoke('multigrain:validate', rootPath),
+  findMultigrainFolder: (searchPath: string) =>
+    ipcRenderer.invoke('multigrain:findFolder', searchPath),
+
   // Audio operations
   convertAudio: (inputPath: string, outputPath: string) =>
     ipcRenderer.invoke('audio:convert', inputPath, outputPath),
@@ -35,6 +41,8 @@ export type ElectronAPI = {
     mtime: Date;
   }>;
   listDrives: () => Promise<string[]>;
+  validateMultigrain: (rootPath: string) => Promise<import('../shared/types').ValidationResult>;
+  findMultigrainFolder: (searchPath: string) => Promise<string | null>;
   convertAudio: (inputPath: string, outputPath: string) => Promise<void>;
 };
 
