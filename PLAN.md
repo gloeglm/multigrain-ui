@@ -257,15 +257,14 @@ npm install fluent-ffmpeg @types/fluent-ffmpeg @ffmpeg-installer/ffmpeg
 numeric prefixes are essential for controlling playback order. This feature makes
 it easier to maintain organized sample banks without manual renaming.
 
-### Phase 5: Project Overview ⚠️ **PARTIALLY COMPLETE**
+### Phase 5: Project Overview ✅ **COMPLETE**
 - [x] Interactive tree view of SD card structure in-app
 - [x] Show storage usage statistics (basic counts)
 - [x] Multigrain node always expanded, clickable to show overview
 - [x] Projects folder clickable to show overview
 - [x] Unified selection architecture with type-safe state management
-- [ ] Show detailed storage limits tracking (e.g., "48/128 samples in project")
 
-**Status**: Overview dashboard functional with basic stats. Clean navigation and selection architecture implemented. Limit enforcement pending. Export moved to Phase 6.
+**Status**: Overview dashboard functional with basic stats. Clean navigation and selection architecture implemented. Detailed storage limit tracking moved to Phase 9 (Nice to Have).
 
 **Architecture Improvements**:
 - **Unified Selection State**: Single `TreeSelection` type replaces multiple callback props
@@ -340,19 +339,10 @@ Generate printable PDF reference sheets to help users remember which projects ar
 - [ ] UI/UX refinements and accessibility improvements
 - [ ] Performance optimization for large sample libraries
 - [ ] User documentation and help system
-- [ ] **Action visibility enhancement**: Surface common actions in right panel
-  - [ ] Show "Create New Project" button on overview page
-  - [ ] Show "Import Samples" / "Rename" buttons when project selected
-  - [ ] Show "Import Samples" button when Wavs/Recs folder selected
-  - [ ] Context menus remain primary interface, panel buttons provide additional discoverability
+- [ ] Comprehensive error messages and user guidance
+- [ ] Edge case handling (corrupted files, permissions issues)
 
 **Status**: Basic error handling exists. Comprehensive testing and polish phase pending.
-
-**Future UX Enhancement Notes**:
-- Context menus provide comprehensive access to all actions
-- Right panel buttons will duplicate key actions for better discoverability
-- Panel buttons should complement, not replace, context menu functionality
-- Examples: "Create New Project" on overview, "Import"/"Rename" when project selected
 
 ### Phase 8: Distribution & Deployment ❌ **NOT STARTED**
 - [ ] GitHub Actions CI/CD workflow for automated builds
@@ -389,9 +379,40 @@ git push origin main --follow-tags
 ```
 GitHub Actions will build installers and create a draft release for review.
 
+### Phase 9: Nice to Have Features ❌ **NOT STARTED**
+
+Optional enhancements that improve user experience but are not essential for core functionality.
+
+- [ ] **Detailed storage limits tracking** (e.g., "48/128 samples in PROJECT folder")
+  - Show current vs. maximum sample counts per location
+  - Visual progress bars or indicators
+  - Warning when approaching limits
+- [ ] **Action visibility in right panel** (from Phase 7)
+  - Show "Create New Project" button on overview page
+  - Show "Import Samples" / "Rename" buttons when project selected
+  - Duplicate key context menu actions as buttons for better discoverability
+- [ ] **Advanced search and filtering**
+  - Search samples by name or description
+  - Filter by sample location (PROJECT/WAVS/RECS)
+  - Filter presets that use specific samples
+- [ ] **Sample waveform thumbnails in lists**
+  - Compact waveform previews in file tree
+  - Visual identification of samples
+- [ ] **Drag-and-drop file import**
+  - Drop files directly onto project/folder nodes
+  - Visual feedback during drag operations
+- [ ] **Keyboard shortcuts**
+  - Common operations (import, export, create project)
+  - Navigation shortcuts
+- [ ] **Dark mode theme**
+  - Alternative color scheme
+  - Respect system preferences
+
+**Status**: Collection of polish features to enhance usability. Implement as time/resources allow.
+
 ---
 
-## Current Progress: ~80% Complete
+## Current Progress: ~82% Complete
 
 ### What's Working
 - ✅ Complete browsing and navigation of Multigrain SD cards
@@ -415,10 +436,10 @@ GitHub Actions will build installers and create a draft release for review.
 ### What's Next (Priority Order)
 1. **Phase 4b**: Move/copy/rename/delete operations
 2. **Phase 4c**: Sample ordering & smart numbering on import
-3. **Phase 5**: Complete overview with storage limit tracking
-4. **Phase 6**: Reference sheet export (printable PDF documentation)
-5. **Phase 7**: Testing, polish, and documentation
-6. **Phase 8**: CI/CD and distribution
+3. **Phase 6**: Reference sheet export (printable PDF documentation)
+4. **Phase 7**: Testing, polish, and documentation
+5. **Phase 8**: CI/CD and distribution
+6. **Phase 9**: Nice to have features (optional enhancements)
 
 ---
 
