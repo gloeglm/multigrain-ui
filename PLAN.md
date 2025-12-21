@@ -295,6 +295,41 @@ it easier to maintain organized sample banks without manual renaming.
 - Panel buttons should complement, not replace, context menu functionality
 - Examples: "Create New Project" on overview, "Import"/"Rename" when project selected
 
+### Phase 7: Distribution & Deployment ❌ **NOT STARTED**
+- [ ] GitHub Actions CI/CD workflow for automated builds
+- [ ] Multi-platform builds (Windows, macOS, Linux) on native runners
+- [ ] Publish to GitHub Releases with draft review
+- [ ] Version tagging and release process documentation
+- [ ] Code signing setup (future)
+  - [ ] macOS: Apple Developer ID signing + notarization
+  - [ ] Windows: Code signing certificate
+- [ ] Auto-update mechanism (future)
+
+**Status**: No CI/CD currently configured. Planning to use GitHub Actions with Electron Forge publishers.
+
+**Implementation Approach**:
+- **GitHub Actions**: Trigger on version tags (`v*.*.*`)
+- **Matrix Build Strategy**: Parallel builds on ubuntu-latest, macos-latest, windows-latest
+- **Electron Forge GitHub Publisher**: Automatically upload artifacts to GitHub Releases
+- **Draft Releases**: Allow review before making public
+- **Auto-generated Release Notes**: Use GitHub's release notes generation from commit history
+- **No Code Signing Initially**: Structure workflow to add signing later when certificates obtained
+
+**Files to Create**:
+1. `.github/workflows/release.yml` - CI/CD workflow configuration
+2. `RELEASING.md` - Release process documentation
+
+**Files to Modify**:
+1. `forge.config.js` - Add `publishers` array with GitHub publisher config
+2. `package.json` - Add `@electron-forge/publisher-github` dev dependency
+
+**Release Process**:
+```bash
+npm version patch  # or minor/major
+git push origin main --follow-tags
+```
+GitHub Actions will build installers and create a draft release for review.
+
 ---
 
 ## Current Progress: ~87% Complete
