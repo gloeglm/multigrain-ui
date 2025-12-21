@@ -139,9 +139,10 @@ const ProjectNode: React.FC<{
   selectedProject?: Project | null;
   onProjectNameChange?: () => void;
   onContextMenu?: (e: React.MouseEvent, project: Project) => void;
+  onSampleContextMenu?: (e: React.MouseEvent, sample: WavFile) => void;
   triggerRename?: boolean;
   onCancelRename?: () => void;
-}> = ({ project, onSelectSample, onSelectPreset, onSelectProject, selectedSample, selectedPreset, selectedProject, onProjectNameChange, onContextMenu, triggerRename, onCancelRename }) => {
+}> = ({ project, onSelectSample, onSelectPreset, onSelectProject, selectedSample, selectedPreset, selectedProject, onProjectNameChange, onContextMenu, onSampleContextMenu, triggerRename, onCancelRename }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [customName, setCustomName] = useState(project.customName || '');
@@ -285,7 +286,7 @@ const ProjectNode: React.FC<{
                   sample={sample}
                   onSelect={onSelectSample}
                   isSelected={selectedSample?.path === sample.path}
-                  onContextMenu={handleSampleContextMenu}
+                  onContextMenu={onSampleContextMenu}
                 />
               ))}
             </TreeNode>
@@ -525,6 +526,7 @@ export const FileTree: React.FC<FileTreeProps> = ({ structure, selection, onSele
                 selectedProject={selection.type === 'project' || (selection.type === 'preset' && selection.project) ? (selection.type === 'project' ? selection.project : selection.project) : null}
                 onProjectNameChange={onProjectNameChange}
                 onContextMenu={handleProjectContextMenu}
+                onSampleContextMenu={handleSampleContextMenu}
                 triggerRename={projectToRename?.path === project.path}
                 onCancelRename={() => setProjectToRename(null)}
               />
