@@ -49,6 +49,35 @@ npm test -- --run
 npm test -- src/path/to/file.test.tsx
 ```
 
+### Release Workflow (`.github/workflows/release.yml`)
+
+Automatically builds and publishes releases when you push a version tag.
+
+**What it does:**
+- Triggers on version tags matching `v*.*.*` (e.g., v1.0.0)
+- Builds installers for Windows, macOS, and Linux in parallel
+- Runs tests, type checking, and linting on each platform
+- Creates a draft GitHub Release with all installers attached
+- Allows you to review and edit release notes before publishing
+
+**Status Badge:**
+```markdown
+![Release](https://github.com/gloeglm/multigrain-ui/actions/workflows/release.yml/badge.svg)
+```
+
+**How to create a release:**
+```bash
+npm version patch  # or minor/major
+git push origin main --follow-tags
+```
+
+See `RELEASING.md` for detailed release process documentation.
+
+**Installers generated:**
+- Windows: Squirrel installer (.exe)
+- macOS: Universal binary (.zip)
+- Linux: .deb (Debian/Ubuntu) and .rpm (Fedora/RedHat)
+
 ## Future Enhancements
 
 ### Multi-Platform Testing
@@ -58,13 +87,6 @@ Expand the test workflow to run on multiple platforms:
 - windows-latest (Windows)
 
 This will catch platform-specific issues early.
-
-### Release Workflow
-Create a separate workflow for building and releasing:
-- Trigger on version tags (`v*.*.*`)
-- Build installers for Windows, macOS, Linux
-- Upload to GitHub Releases
-- Generate release notes automatically
 
 ### Code Coverage
 Add coverage reporting:

@@ -167,25 +167,36 @@ export function registerFileOperationsHandlers(): void {
       const directory = path.dirname(samplePath);
       const newPath = path.join(directory, finalName);
 
+      // Normalize paths for comparison (handles forward/back slash differences)
+      const normalizedOldPath = path.normalize(samplePath);
+      const normalizedNewPath = path.normalize(newPath);
+
+      // If renaming to same name, return success immediately (no-op)
+      if (normalizedNewPath === normalizedOldPath) {
+        return {
+          success: true,
+          newPath: normalizedNewPath.replace(/\\/g, '/'),
+          newName: finalName,
+        };
+      }
+
       // Check if file already exists at new path
-      if (newPath !== samplePath) {
-        try {
-          await fs.promises.access(newPath);
-          return {
-            success: false,
-            error: 'A file with this name already exists',
-          };
-        } catch {
-          // File doesn't exist, which is what we want
-        }
+      try {
+        await fs.promises.access(newPath);
+        return {
+          success: false,
+          error: 'A file with this name already exists',
+        };
+      } catch {
+        // File doesn't exist, which is what we want
       }
 
       // Perform the rename
-      await fs.promises.rename(samplePath, newPath);
+      await fs.promises.rename(normalizedOldPath, normalizedNewPath);
 
       return {
         success: true,
-        newPath,
+        newPath: normalizedNewPath.replace(/\\/g, '/'),
         newName: finalName,
       };
     } catch (error) {

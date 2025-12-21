@@ -114,26 +114,54 @@ async function addInfoChunk(buffer: Buffer, description: string): Promise<Buffer
   paddedCommentBuffer.copy(infoChunk, 20);
 
   let newBuffer: Buffer;
+  const dataChunk = chunks.find((c) => c.id === 'data');
+  if (!dataChunk) throw new Error('No data chunk found');
 
   if (infoChunkPosition !== -1) {
-    // Replace existing INFO chunk
+    // Remove existing INFO chunk first
     const chunk = chunks.find((c) => c.position === infoChunkPosition);
     if (!chunk) throw new Error('Chunk not found');
 
-    const beforeChunk = buffer.subarray(0, infoChunkPosition);
     const chunkPadding = chunk.size % 2;
+    const beforeChunk = buffer.subarray(0, infoChunkPosition);
     const afterChunk = buffer.subarray(infoChunkPosition + 8 + chunk.size + chunkPadding);
+    const bufferWithoutInfo = Buffer.concat([beforeChunk, afterChunk]);
 
-    newBuffer = Buffer.concat([beforeChunk, infoChunk, afterChunk]);
+    // Now insert INFO chunk AFTER data chunk in the cleaned buffer
+    // Re-find data chunk position in the cleaned buffer
+    let newPosition = 12;
+    let newDataPosition = -1;
+
+    while (newPosition < bufferWithoutInfo.length - 8) {
+      const chunkId = bufferWithoutInfo.toString('ascii', newPosition, newPosition + 4);
+      const chunkSize = bufferWithoutInfo.readUInt32LE(newPosition + 4);
+
+      if (chunkId === 'data') {
+        newDataPosition = newPosition;
+        break;
+      }
+
+      newPosition += 8 + chunkSize + (chunkSize % 2);
+    }
+
+    if (newDataPosition === -1) throw new Error('Data chunk not found after removing INFO');
+
+    const dataSize = bufferWithoutInfo.readUInt32LE(newDataPosition + 4);
+    const dataPadding = dataSize % 2;
+    const afterDataPosition = newDataPosition + 8 + dataSize + dataPadding;
+
+    const beforeAndIncludingData = bufferWithoutInfo.subarray(0, afterDataPosition);
+    const afterData = bufferWithoutInfo.subarray(afterDataPosition);
+
+    newBuffer = Buffer.concat([beforeAndIncludingData, infoChunk, afterData]);
   } else {
-    // Insert new INFO chunk before 'data' chunk
-    const dataChunk = chunks.find((c) => c.id === 'data');
-    if (!dataChunk) throw new Error('No data chunk found');
+    // Insert new INFO chunk AFTER 'data' chunk (Multigrain hardware requires this order)
+    const dataPadding = dataChunk.size % 2;
+    const afterDataPosition = dataChunk.position + 8 + dataChunk.size + dataPadding;
+    const beforeAndIncludingData = buffer.subarray(0, afterDataPosition);
+    const afterData = buffer.subarray(afterDataPosition);
 
-    const beforeData = buffer.subarray(0, dataChunk.position);
-    const dataAndAfter = buffer.subarray(dataChunk.position);
-
-    newBuffer = Buffer.concat([beforeData, infoChunk, dataAndAfter]);
+    newBuffer = Buffer.concat([beforeAndIncludingData, infoChunk, afterData]);
   }
 
   // Update RIFF size

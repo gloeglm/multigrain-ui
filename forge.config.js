@@ -3,13 +3,18 @@ const { FuseV1Options, FuseVersion } = require('@electron/fuses');
 
 module.exports = {
   packagerConfig: {
-    asar: true,
+    asar: {
+      unpack: '**/@ffmpeg-installer/**/*',
+    },
+    icon: './assets/icons/icons/icon', // Electron will auto-select .ico, .icns, or .png
   },
   rebuildConfig: {},
   makers: [
     {
       name: '@electron-forge/maker-squirrel',
-      config: {},
+      config: {
+        setupIcon: './assets/icons/icons/icon.ico',
+      },
     },
     {
       name: '@electron-forge/maker-zip',
@@ -48,6 +53,13 @@ module.exports = {
         },
       },
     },
+    {
+      name: '@timfish/forge-externals-plugin',
+      config: {
+        externals: ['@ffmpeg-installer/ffmpeg'],
+        includeDeps: true,
+      },
+    },
     new FusesPlugin({
       version: FuseVersion.V1,
       [FuseV1Options.RunAsNode]: false,
@@ -58,4 +70,17 @@ module.exports = {
       [FuseV1Options.OnlyLoadAppFromAsar]: true,
     }),
   ],
+  publishers: [
+    {
+      name: '@electron-forge/publisher-github',
+      config: {
+        repository: {
+          owner: 'gloeglm',
+          name: 'multigrain-ui'
+        },
+        prerelease: false,
+        draft: true
+      }
+    }
+  ]
 };

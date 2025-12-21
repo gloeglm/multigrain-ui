@@ -8,7 +8,12 @@ import { AudioAnalysis, AudioMetadata, AudioIssue, ConversionResult } from '@sha
 import { AUDIO_SPECS } from '@shared/constants';
 
 // Set FFmpeg path from installer
-ffmpeg.setFfmpegPath(ffmpegInstaller.path);
+// When running from asar, adjust path to use unpacked directory
+let ffmpegPath = ffmpegInstaller.path;
+if (ffmpegPath.includes('app.asar')) {
+  ffmpegPath = ffmpegPath.replace('app.asar', 'app.asar.unpacked');
+}
+ffmpeg.setFfmpegPath(ffmpegPath);
 
 /**
  * Analyze an audio file to determine if it needs conversion
@@ -144,7 +149,11 @@ export async function convertAudioFile(
         .audioCodec('pcm_s16le') // 16-bit PCM
         .audioFrequency(AUDIO_SPECS.SAMPLE_RATE) // 48kHz
         .audioChannels(AUDIO_SPECS.CHANNELS) // Stereo
-        .format('wav'); // WAV format
+        .format('wav') // WAV format
+        .outputOptions([
+          '-map_metadata', '-1', // Strip all metadata
+          '-bitexact', // Don't add encoder info
+        ]);
 
       // Trim if longer than max duration
       // Use -t flag to limit duration to exactly 32 seconds

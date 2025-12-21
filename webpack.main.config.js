@@ -13,8 +13,6 @@ module.exports = {
     },
   },
   externals: {
-    'music-metadata': 'commonjs2 music-metadata',
-    'fluent-ffmpeg': 'commonjs2 fluent-ffmpeg',
     '@ffmpeg-installer/ffmpeg': 'commonjs2 @ffmpeg-installer/ffmpeg',
   },
 };

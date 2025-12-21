@@ -7,6 +7,38 @@ afterEach(() => {
   cleanup();
 });
 
+// Mock localStorage if not available or incomplete
+if (typeof global.localStorage === 'undefined' || !global.localStorage.clear) {
+  const localStorageMock = (() => {
+    let store: Record<string, string> = {};
+
+    return {
+      getItem: (key: string) => store[key] || null,
+      setItem: (key: string, value: string) => {
+        store[key] = value.toString();
+      },
+      removeItem: (key: string) => {
+        delete store[key];
+      },
+      clear: () => {
+        store = {};
+      },
+      get length() {
+        return Object.keys(store).length;
+      },
+      key: (index: number) => {
+        const keys = Object.keys(store);
+        return keys[index] || null;
+      },
+    };
+  })();
+
+  Object.defineProperty(global, 'localStorage', {
+    value: localStorageMock,
+    writable: true,
+  });
+}
+
 // Mock Electron APIs globally
 global.window = global.window || ({} as any);
 global.window.electronAPI = {

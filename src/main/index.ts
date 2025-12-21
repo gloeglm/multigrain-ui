@@ -1,6 +1,7 @@
 import { app, BrowserWindow, session, screen } from 'electron';
 import { registerAllHandlers } from './ipc';
 import Store from 'electron-store';
+import * as path from 'path';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
@@ -54,10 +55,16 @@ const createWindow = (): void => {
     }
   }
 
+  // Determine icon path based on platform
+  const iconPath = process.platform === 'win32'
+    ? path.join(process.cwd(), 'assets/icons/icons/icon.ico')
+    : path.join(process.cwd(), 'assets/icons/icons/icon.png');
+
   const mainWindow = new BrowserWindow({
     ...bounds,
     minWidth: 800,
     minHeight: 600,
+    icon: iconPath,
     webPreferences: {
       preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
       contextIsolation: true,

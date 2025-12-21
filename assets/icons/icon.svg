@@ -1,0 +1,13 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <!-- White circle background -->
+  <circle cx="256" cy="256" r="240" fill="white"/>
+
+  <!-- MG Text - Large and bold, centered -->
+  <text x="256" y="256"
+        font-family="Arial, Helvetica, sans-serif"
+        font-size="240"
+        font-weight="bold"
+        fill="#1a1a1a"
+        text-anchor="middle"
+        dominant-baseline="middle">MG</text>
+</svg>

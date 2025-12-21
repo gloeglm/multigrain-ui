@@ -43,19 +43,34 @@ describe('SampleInfo Component', () => {
   });
 
   describe('Basic Rendering', () => {
-    it('renders sample name', () => {
+    it('renders sample name', async () => {
       render(<SampleInfo sample={defaultSample} />);
       expect(screen.getByTestId('sample-name')).toHaveTextContent('test-sample.wav');
+
+      // Wait for async metadata loading to complete
+      await waitFor(() => {
+        expect(window.electronAPI.readAudioMetadata).toHaveBeenCalled();
+      });
     });
 
-    it('shows rename button', () => {
+    it('shows rename button', async () => {
       render(<SampleInfo sample={defaultSample} />);
       expect(screen.getByTestId('rename-sample-button')).toBeInTheDocument();
+
+      // Wait for async metadata loading to complete
+      await waitFor(() => {
+        expect(window.electronAPI.readAudioMetadata).toHaveBeenCalled();
+      });
     });
 
-    it('shows edit description button', () => {
+    it('shows edit description button', async () => {
       render(<SampleInfo sample={defaultSample} />);
       expect(screen.getByTestId('edit-description-button')).toBeInTheDocument();
+
+      // Wait for async metadata loading to complete
+      await waitFor(() => {
+        expect(window.electronAPI.readAudioMetadata).toHaveBeenCalled();
+      });
     });
   });
 
@@ -349,10 +364,15 @@ describe('SampleInfo Component', () => {
   });
 
   describe('Component Updates', () => {
-    it('updates display when sample prop changes', () => {
+    it('updates display when sample prop changes', async () => {
       const { rerender } = render(<SampleInfo sample={defaultSample} />);
 
       expect(screen.getByText('test-sample.wav')).toBeInTheDocument();
+
+      // Wait for initial metadata load
+      await waitFor(() => {
+        expect(window.electronAPI.readAudioMetadata).toHaveBeenCalledWith(defaultSample.path);
+      });
 
       const newSample = createMockSample({
         name: 'different-sample.wav',
@@ -363,11 +383,21 @@ describe('SampleInfo Component', () => {
 
       expect(screen.getByText('different-sample.wav')).toBeInTheDocument();
       expect(screen.queryByText('test-sample.wav')).not.toBeInTheDocument();
+
+      // Wait for new metadata load to complete
+      await waitFor(() => {
+        expect(window.electronAPI.readAudioMetadata).toHaveBeenCalledWith(newSample.path);
+      });
     });
 
     it('resets edit mode when sample changes', async () => {
       const user = userEvent.setup();
       const { rerender } = render(<SampleInfo sample={defaultSample} />);
+
+      // Wait for initial metadata load
+      await waitFor(() => {
+        expect(window.electronAPI.readAudioMetadata).toHaveBeenCalledWith(defaultSample.path);
+      });
 
       // Enter edit mode
       await user.click(screen.getByTestId('rename-sample-button'));
@@ -383,6 +413,11 @@ describe('SampleInfo Component', () => {
       // Edit mode should be reset
       expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
       expect(screen.getByTestId('rename-sample-button')).toBeInTheDocument();
+
+      // Wait for new metadata load to complete
+      await waitFor(() => {
+        expect(window.electronAPI.readAudioMetadata).toHaveBeenCalledWith(newSample.path);
+      });
     });
 
     it('reloads metadata when sample changes', async () => {
