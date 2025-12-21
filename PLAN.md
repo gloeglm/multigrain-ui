@@ -339,7 +339,144 @@ If synchronization issues persist or state management becomes more complex, cons
 - Better organization and workflow
 - Custom names included in printed reference sheets
 
-### Phase 5: Project Overview ✅ **COMPLETE**
+### Phase 5: Automated Testing 🚧 **IN PROGRESS - HIGH PRIORITY**
+
+Implement automated testing to catch bugs early and enable confident refactoring. Recent rename synchronization issues highlighted the need for comprehensive test coverage.
+
+#### Phase 5a: Testing Infrastructure Setup
+- [ ] Install testing dependencies (vitest, @testing-library/react, memfs)
+- [ ] Configure vitest with TypeScript and React support
+- [ ] Add test scripts to package.json (`npm test`, `npm run test:ui`)
+- [ ] Set up test file structure (`*.test.ts`, `*.test.tsx`)
+- [ ] Configure mock file system for IPC handler tests
+
+**Dependencies to Install**:
+```bash
+npm install -D vitest @vitest/ui @testing-library/react @testing-library/jest-dom @testing-library/user-event memfs happy-dom
+```
+
+**Configuration**:
+- Create `vitest.config.ts` with jsdom/happy-dom environment
+- Add test patterns to include `**/*.test.{ts,tsx}`
+- Configure path aliases to match webpack config
+
+#### Phase 5b: Utility Function Tests (High Value, Low Overhead)
+- [ ] Test `fileConflictResolver.ts` - unique filename generation
+- [ ] Test format helpers (`formatProjectDisplayName`, bank/position utilities)
+- [ ] Test sample resolution logic (PROJECT → WAVS → RECS priority)
+- [ ] Test metadata parsing utilities
+- [ ] Test path manipulation helpers
+
+**Example Test Coverage**:
+```typescript
+// fileConflictResolver.test.ts
+- generateUniqueFilename with no conflicts
+- generateUniqueFilename with existing files (_1, _2, etc.)
+- edge cases: long filenames, special characters
+
+// constants.test.ts
+- formatProjectDisplayName with/without custom names
+- bank position calculation (1-48)
+```
+
+#### Phase 5c: IPC Handler Tests (Critical Business Logic)
+- [ ] Test `renameSample` handler:
+  - Valid rename operations
+  - Invalid character validation
+  - Conflict detection
+  - Security checks (only .wav files)
+  - .wav extension auto-append
+- [ ] Test `deleteSample` and `deleteProject` handlers:
+  - Security validation (only ProjectXX folders and .wav files)
+  - Error handling for missing files
+- [ ] Test audio metadata read/write handlers
+- [ ] Test project metadata handlers
+- [ ] Test import validation:
+  - Format checks (sample rate, bit depth, channels)
+  - Storage limit enforcement
+  - File conflict resolution
+
+**Approach**:
+- Use `memfs` to mock file system operations
+- Mock `ipcMain.handle` calls
+- Test success and error paths
+- Verify security checks prevent malicious operations
+
+#### Phase 5d: React Component Tests (Critical State Management)
+- [ ] Test **App.tsx** selection helpers:
+  - `findSampleByPath` returns correct sample after structure reload
+  - `findSampleByPath` returns null for non-existent paths
+  - `findPresetByPath` resolves correctly
+  - `findProjectByPath` resolves correctly
+- [ ] Test **FileTree** context and state:
+  - Sample selection updates selection state
+  - Project selection shows autosave preset if available
+  - Context menu triggers for rename/delete
+- [ ] Test **AudioPlayer** component:
+  - Renders sample information correctly
+  - Inline rename updates on save
+  - Edit mode keyboard shortcuts (Enter/Escape)
+  - Metadata loading and display
+- [ ] Test **rename synchronization** (regression test):
+  - Rename from FileTree updates AudioPlayer display
+  - Rename from AudioPlayer updates FileTree display
+  - Both views show updated name after reload
+- [ ] Test **delete navigation**:
+  - Deleting selected sample navigates to parent project
+  - Deleting project navigates to overview
+
+**Critical Test Case (Rename Sync Bug)**:
+```typescript
+it('keeps AudioPlayer and FileTree in sync when renaming from tree', async () => {
+  const { structure } = renderWithStructure(<App />);
+  const sample = structure.projects[0].samples[0];
+
+  // Select sample
+  userEvent.click(screen.getByText(sample.name));
+  expect(screen.getByRole('heading', { name: sample.name })).toBeInTheDocument();
+
+  // Rename from tree context menu
+  userEvent.rightClick(screen.getByText(sample.name));
+  userEvent.click(screen.getByText('Rename Sample'));
+  userEvent.clear(screen.getByRole('textbox'));
+  userEvent.type(screen.getByRole('textbox'), 'newname');
+  userEvent.click(screen.getByText('Save'));
+
+  // Wait for reload and verify both views updated
+  await waitFor(() => {
+    expect(screen.getByText('newname.wav')).toBeInTheDocument(); // Tree
+    expect(screen.getByRole('heading', { name: 'newname.wav' })).toBeInTheDocument(); // AudioPlayer
+  });
+});
+```
+
+#### Phase 5e: Integration Test Patterns
+- [ ] Test complete workflows:
+  - Import samples → verify in tree → play sample
+  - Create project → rename project → add samples
+  - Rename sample → delete sample → navigate to overview
+- [ ] Test error recovery:
+  - Failed rename reverts state
+  - Failed delete shows error message
+  - Invalid import shows validation errors
+
+**Status**: Not started. HIGH PRIORITY - implement before adding more features to prevent accumulating technical debt.
+
+**Benefits**:
+- Catch bugs like rename synchronization issues automatically
+- Enable confident refactoring of complex state management
+- Document expected behavior through tests
+- Reduce manual testing time during development
+- Prevent regressions when adding new features
+
+**Testing Philosophy**:
+- Focus on **behavior**, not implementation details
+- Test **critical paths** that users depend on
+- Mock **file system** to avoid real disk I/O
+- Keep tests **fast** and **maintainable**
+- Write tests for **bugs found** (regression prevention)
+
+### Phase 6: Project Overview ✅ **COMPLETE**
 - [x] Interactive tree view of SD card structure in-app
 - [x] Show storage usage statistics (basic counts)
 - [x] Multigrain node always expanded, clickable to show overview
@@ -355,7 +492,7 @@ If synchronization issues persist or state management becomes more complex, cons
 - **Cleaner Interface**: FileTree now has 2 props (`selection`, `onSelectionChange`) instead of 5 callbacks
 - **Better Maintainability**: Easy to add new selection types (folders, categories, etc.)
 
-### Phase 6: Reference Sheet Export ❌ **NOT STARTED**
+### Phase 7: Reference Sheet Export ❌ **NOT STARTED**
 
 Generate printable PDF reference sheets to help users remember which projects are which and which samples are used where.
 
@@ -415,7 +552,7 @@ Generate printable PDF reference sheets to help users remember which projects ar
 - Context menus as primary trigger (consistent with existing UI patterns)
 - Batch export to folder (more efficient than individual file dialogs)
 
-### Phase 7: Polish & Testing ❌ **NOT STARTED**
+### Phase 8: Polish & User Experience ❌ **NOT STARTED**
 - [ ] Enhanced error handling for invalid files/formats
 - [ ] Cross-platform testing (Windows, macOS, Linux)
 - [ ] UI/UX refinements and accessibility improvements
@@ -426,7 +563,7 @@ Generate printable PDF reference sheets to help users remember which projects ar
 
 **Status**: Basic error handling exists. Comprehensive testing and polish phase pending.
 
-### Phase 8: Distribution & Deployment ❌ **NOT STARTED**
+### Phase 9: Distribution & Deployment ❌ **NOT STARTED**
 - [ ] GitHub Actions CI/CD workflow for automated builds
 - [ ] Multi-platform builds (Windows, macOS, Linux) on native runners
 - [ ] Publish to GitHub Releases with draft review
@@ -461,7 +598,7 @@ git push origin main --follow-tags
 ```
 GitHub Actions will build installers and create a draft release for review.
 
-### Phase 9: Nice to Have Features ❌ **NOT STARTED**
+### Phase 10: Nice to Have Features ❌ **NOT STARTED**
 
 Optional enhancements that improve user experience but are not essential for core functionality. Users can work around these limitations manually.
 
@@ -549,11 +686,12 @@ Optional enhancements that improve user experience but are not essential for cor
 - ✅ **Filename validation and conflict detection**
 
 ### What's Next (Priority Order)
-1. **Phase 4d**: Preset custom naming
-2. **Phase 6**: Reference sheet export (printable PDF documentation)
-3. **Phase 7**: Testing, polish, and documentation
-4. **Phase 8**: CI/CD and distribution
-5. **Phase 9**: Nice to have features (move/copy, sample ordering, advanced features)
+1. **Phase 5: Automated Testing** ⚠️ HIGH PRIORITY - Implement ASAP before adding more features
+2. **Phase 4d**: Preset custom naming
+3. **Phase 7**: Reference sheet export (printable PDF documentation)
+4. **Phase 8**: Polish and user experience improvements
+5. **Phase 9**: CI/CD and distribution
+6. **Phase 10**: Nice to have features (move/copy, sample ordering, advanced features)
 
 ---
 
