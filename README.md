@@ -247,4 +247,4 @@ Built for the [Instruō Multigrain](https://www.instruomodular.com/product/multi
 
 ## Roadmap
 
-See [PLAN.md](PLAN.md) for detailed implementation roadmap and technical specifications.
+See [PLAN.md](docs/PLAN.md) for detailed implementation roadmap and technical specifications.

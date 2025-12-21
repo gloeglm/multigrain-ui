@@ -144,6 +144,42 @@ All audio files must meet these specifications:
 | Max Duration | 32 seconds |
 | Encoding | Uncompressed PCM |
 
+### WAV File Chunk Order Requirement
+
+**CRITICAL**: Multigrain hardware requires a specific chunk order in WAV files.
+
+**Required Chunk Order**:
+```
+RIFF header
+├── fmt  (format chunk)
+├── data (audio data chunk)
+└── [optional metadata chunks: LIST/INFO, id3, etc.]
+```
+
+**Problematic Chunk Order** (will cause hardware to reject file):
+```
+RIFF header
+├── fmt  (format chunk)
+├── LIST/INFO (metadata BEFORE data) ❌ INCORRECT
+└── data (audio data chunk)
+```
+
+**Why This Matters**:
+- Many audio tools (including FFmpeg by default) place metadata chunks before the data chunk
+- Files with metadata before data may appear valid but won't load on Multigrain hardware
+- Editing metadata in some audio software can inadvertently reorder chunks incorrectly
+
+**Detection**:
+Use the provided `scripts/check-corrupted-wavs.js` script to scan your SD card for files with incorrect chunk order.
+
+**Prevention**:
+- The Multigrain Sample Manager automatically places INFO chunks after data when writing metadata
+- FFmpeg conversion is configured to strip metadata (`-map_metadata -1`) to avoid this issue
+- Always validate imported files with the chunk order verification script
+
+**Resolution**:
+If a file has incorrect chunk order, re-edit its description in the Sample Manager (even with the same text) to rewrite the file with correct chunk order.
+
 ## Recording Naming Convention
 
 Recordings created by the module follow a sequential pattern:

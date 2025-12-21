@@ -20,7 +20,7 @@ Multigrain Sample Manager is an Electron + React + TypeScript desktop applicatio
 - ✅ Project overview dashboard with statistics
 - ✅ Comprehensive test suite (111 tests) with CI/CD integration
 
-### Remaining Features (See PLAN.md)
+### Remaining Features (See docs/PLAN.md)
 
 - Preset custom naming
 - PDF reference sheet export
