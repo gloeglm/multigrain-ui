@@ -3,14 +3,12 @@ import { useMultigrain } from './hooks/useMultigrain';
 import { FileTree } from './components/FileTree';
 import { AudioPlayer } from './components/AudioPlayer';
 import { PresetViewer } from './components/PresetViewer';
-import { WavFile, Preset, Project } from '../shared/types';
+import { TreeSelection } from '../shared/types';
 import { FACTORY_PROJECT_NAMES, formatProjectDisplayName } from '../shared/constants';
 
 const App: React.FC = () => {
   const { structure, isLoading, error, selectAndValidate, reloadStructure } = useMultigrain();
-  const [selectedSample, setSelectedSample] = useState<WavFile | null>(null);
-  const [selectedPreset, setSelectedPreset] = useState<Preset | null>(null);
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [selection, setSelection] = useState<TreeSelection>({ type: 'overview' });
   const [autoPlay, setAutoPlay] = useState<boolean>(() => {
     // Load auto-play preference from localStorage, default to true
     const saved = localStorage.getItem('multigrain-autoplay');
@@ -21,29 +19,6 @@ const App: React.FC = () => {
   React.useEffect(() => {
     localStorage.setItem('multigrain-autoplay', JSON.stringify(autoPlay));
   }, [autoPlay]);
-
-  const handleSelectSample = (sample: WavFile) => {
-    setSelectedSample(sample);
-    setSelectedPreset(null); // Clear preset selection
-    setSelectedProject(null); // Clear project selection
-  };
-
-  const handleSelectPreset = (preset: Preset) => {
-    setSelectedPreset(preset);
-    setSelectedSample(null); // Clear sample selection
-    setSelectedProject(null); // Clear project selection
-  };
-
-  const handleSelectProject = (project: Project) => {
-    setSelectedProject(project);
-    setSelectedSample(null); // Clear sample selection
-    // Show the autosave preset if available, otherwise clear preset selection
-    if (project.autosave) {
-      setSelectedPreset(project.autosave);
-    } else {
-      setSelectedPreset(null);
-    }
-  };
 
   const handleLoadFactoryNames = async () => {
     if (!structure) return;
@@ -147,9 +122,8 @@ const App: React.FC = () => {
               <div className="flex-1 overflow-y-auto p-2">
                 <FileTree
                   structure={structure}
-                  onSelectSample={handleSelectSample}
-                  onSelectPreset={handleSelectPreset}
-                  onSelectProject={handleSelectProject}
+                  selection={selection}
+                  onSelectionChange={setSelection}
                   onProjectNameChange={reloadStructure}
                   onImportComplete={reloadStructure}
                 />
@@ -168,18 +142,18 @@ const App: React.FC = () => {
 
         {/* Main panel - Preview/Details */}
         <section className="flex-1 p-6 overflow-y-auto bg-white">
-          {selectedSample ? (
+          {selection.type === 'sample' ? (
             <div className="max-w-3xl mx-auto">
-              <AudioPlayer key={selectedSample.path} sample={selectedSample} autoPlay={autoPlay} />
+              <AudioPlayer key={selection.sample.path} sample={selection.sample} autoPlay={autoPlay} />
             </div>
-          ) : selectedPreset && structure ? (
+          ) : selection.type === 'preset' && structure ? (
             <div className="max-w-3xl mx-auto">
               <PresetViewer
-                key={selectedPreset.path}
-                preset={selectedPreset}
+                key={selection.preset.path}
+                preset={selection.preset}
                 structure={structure}
-                onNavigateToSample={handleSelectSample}
-                selectedProject={selectedProject}
+                onNavigateToSample={(sample) => setSelection({ type: 'sample', sample })}
+                selectedProject={selection.project}
               />
             </div>
           ) : structure ? (

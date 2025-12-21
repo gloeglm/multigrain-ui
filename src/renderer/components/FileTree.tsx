@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MultigainStructure, Project, WavFile, Preset } from '../../shared/types';
+import { MultigainStructure, Project, WavFile, Preset, TreeSelection } from '../../shared/types';
 import { ImportDialog } from './ImportDialog';
 import { CreateProjectDialog } from './CreateProjectDialog';
 import { ContextMenu, ContextMenuItem } from './ContextMenu';
@@ -7,9 +7,8 @@ import { formatProjectDisplayName } from '../../shared/constants';
 
 interface FileTreeProps {
   structure: MultigainStructure;
-  onSelectSample?: (sample: WavFile) => void;
-  onSelectPreset?: (preset: Preset) => void;
-  onSelectProject?: (project: Project) => void;
+  selection: TreeSelection;
+  onSelectionChange: (selection: TreeSelection) => void;
   onProjectNameChange?: () => void;
   onImportComplete?: () => void;
 }
@@ -22,6 +21,7 @@ interface TreeNodeProps {
   count?: number;
   onClick?: () => void;
   isSelected?: boolean;
+  alwaysOpen?: boolean;
 }
 
 const TreeNode: React.FC<TreeNodeProps> = ({
@@ -32,9 +32,11 @@ const TreeNode: React.FC<TreeNodeProps> = ({
   count,
   onClick,
   isSelected,
+  alwaysOpen = false,
 }) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const hasChildren = React.Children.count(children) > 0;
+  const isExpanded = alwaysOpen || isOpen;
 
   return (
     <div className="select-none">
@@ -43,15 +45,17 @@ const TreeNode: React.FC<TreeNodeProps> = ({
           isSelected ? 'bg-panel-dark' : ''
         }`}
         onClick={() => {
-          if (hasChildren) setIsOpen(!isOpen);
+          if (hasChildren && !alwaysOpen) setIsOpen(!isOpen);
           onClick?.();
         }}
       >
         {hasChildren ? (
           <span className="w-4 flex items-center justify-center">
             <span
-              className={`border-solid border-label-gray transition-transform ${
-                isOpen
+              className={`border-solid border-label-gray ${
+                alwaysOpen ? '' : 'transition-transform'
+              } ${
+                isExpanded
                   ? 'border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[6px]'
                   : 'border-t-[5px] border-t-transparent border-b-[5px] border-b-transparent border-l-[6px]'
               }`}
@@ -68,7 +72,7 @@ const TreeNode: React.FC<TreeNodeProps> = ({
           </span>
         )}
       </div>
-      {hasChildren && isOpen && (
+      {hasChildren && isExpanded && (
         <div className="ml-4 border-l border-panel-dark pl-2">{children}</div>
       )}
     </div>
@@ -284,36 +288,30 @@ const ProjectNode: React.FC<{
   );
 };
 
-export const FileTree: React.FC<FileTreeProps> = ({ structure, onSelectSample, onSelectPreset, onSelectProject, onProjectNameChange, onImportComplete }) => {
-  const [selectedSample, setSelectedSample] = useState<WavFile | null>(null);
-  const [selectedPreset, setSelectedPreset] = useState<Preset | null>(null);
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+export const FileTree: React.FC<FileTreeProps> = ({ structure, selection, onSelectionChange, onProjectNameChange, onImportComplete }) => {
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [importTarget, setImportTarget] = useState<string>('');
   const [createProjectDialogOpen, setCreateProjectDialogOpen] = useState(false);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; items: ContextMenuItem[] } | null>(null);
   const [projectToRename, setProjectToRename] = useState<Project | null>(null);
   const [wavsExpanded, setWavsExpanded] = useState(false);
+  const [projectsFolderExpanded, setProjectsFolderExpanded] = useState(true);
 
   const handleSelectSample = (sample: WavFile) => {
-    setSelectedSample(sample);
-    setSelectedPreset(null); // Clear preset selection
-    setSelectedProject(null); // Clear project selection
-    onSelectSample?.(sample);
+    onSelectionChange({ type: 'sample', sample });
   };
 
-  const handleSelectPreset = (preset: Preset) => {
-    setSelectedPreset(preset);
-    setSelectedSample(null); // Clear sample selection
-    setSelectedProject(null); // Clear project selection
-    onSelectPreset?.(preset);
+  const handleSelectPreset = (preset: Preset, project?: Project) => {
+    onSelectionChange({ type: 'preset', preset, project });
   };
 
   const handleSelectProject = (project: Project) => {
-    setSelectedProject(project);
-    setSelectedSample(null); // Clear sample selection
-    setSelectedPreset(null); // Clear preset selection
-    onSelectProject?.(project);
+    // When selecting a project, show its autosave if available
+    if (project.autosave) {
+      onSelectionChange({ type: 'preset', preset: project.autosave, project });
+    } else {
+      onSelectionChange({ type: 'project', project });
+    }
   };
 
   const handleImportClick = (targetPath: string) => {
@@ -396,20 +394,45 @@ export const FileTree: React.FC<FileTreeProps> = ({ structure, onSelectSample, o
     });
   };
 
+  const handleShowOverview = () => {
+    onSelectionChange({ type: 'overview' });
+  };
+
   // Pass existing projects to CreateProjectDialog
   const existingProjects = structure.projects;
 
+  // Check what's currently selected for visual feedback
+  const isOverviewSelected = selection.type === 'overview';
+
   return (
     <div className="text-sm">
-      <TreeNode label="Multigrain" icon="💾" defaultOpen>
+      <TreeNode
+        label="Multigrain"
+        icon="💾"
+        alwaysOpen
+        onClick={handleShowOverview}
+      >
         {/* Projects */}
         <div className="select-none">
           <div
-            className="flex items-center gap-2 py-1 px-2 rounded cursor-pointer hover:bg-panel-dark"
+            className={`flex items-center gap-2 py-1 px-2 rounded cursor-pointer hover:bg-panel-dark ${
+              isOverviewSelected ? 'bg-panel-dark' : ''
+            }`}
+            onClick={handleShowOverview}
             onContextMenu={handleProjectsFolderContextMenu}
           >
             <span className="w-4 flex items-center justify-center">
-              <span className="border-solid border-label-gray border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[6px]" />
+              <span
+                className={`border-solid border-label-gray transition-transform ${
+                  projectsFolderExpanded
+                    ? 'border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[6px]'
+                    : 'border-t-[5px] border-t-transparent border-b-[5px] border-b-transparent border-l-[6px]'
+                }`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setProjectsFolderExpanded(!projectsFolderExpanded);
+                }}
+              />
             </span>
             <span>📂</span>
             <span className="flex-1 truncate text-label-black">Projects</span>
@@ -417,7 +440,8 @@ export const FileTree: React.FC<FileTreeProps> = ({ structure, onSelectSample, o
               {structure.projects.length}
             </span>
           </div>
-          <div className="ml-4 border-l border-panel-dark pl-2">
+          {projectsFolderExpanded && (
+            <div className="ml-4 border-l border-panel-dark pl-2">
             {structure.projects.map((project) => (
               <ProjectNode
                 key={project.path}
@@ -425,16 +449,17 @@ export const FileTree: React.FC<FileTreeProps> = ({ structure, onSelectSample, o
                 onSelectSample={handleSelectSample}
                 onSelectPreset={handleSelectPreset}
                 onSelectProject={handleSelectProject}
-                selectedSample={selectedSample}
-                selectedPreset={selectedPreset}
-                selectedProject={selectedProject}
+                selectedSample={selection.type === 'sample' ? selection.sample : null}
+                selectedPreset={selection.type === 'preset' ? selection.preset : null}
+                selectedProject={selection.type === 'project' || (selection.type === 'preset' && selection.project) ? (selection.type === 'project' ? selection.project : selection.project) : null}
                 onProjectNameChange={onProjectNameChange}
                 onContextMenu={handleProjectContextMenu}
                 triggerRename={projectToRename?.path === project.path}
                 onCancelRename={() => setProjectToRename(null)}
               />
             ))}
-          </div>
+            </div>
+          )}
         </div>
 
         {/* Global Wavs */}
@@ -466,7 +491,7 @@ export const FileTree: React.FC<FileTreeProps> = ({ structure, onSelectSample, o
                   key={sample.path}
                   sample={sample}
                   onSelect={handleSelectSample}
-                  isSelected={selectedSample?.path === sample.path}
+                  isSelected={selection.type === 'sample' && selection.sample.path === sample.path}
                 />
               ))}
             </div>
@@ -487,7 +512,7 @@ export const FileTree: React.FC<FileTreeProps> = ({ structure, onSelectSample, o
                 key={sample.path}
                 sample={sample}
                 onSelect={handleSelectSample}
-                isSelected={selectedSample?.path === sample.path}
+                isSelected={selection.type === 'sample' && selection.sample.path === sample.path}
               />
             ))
           )}

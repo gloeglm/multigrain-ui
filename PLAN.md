@@ -260,10 +260,20 @@ it easier to maintain organized sample banks without manual renaming.
 ### Phase 5: Project Overview ⚠️ **PARTIALLY COMPLETE**
 - [x] Interactive tree view of SD card structure in-app
 - [x] Show storage usage statistics (basic counts)
+- [x] Multigrain node always expanded, clickable to show overview
+- [x] Projects folder clickable to show overview
+- [x] Unified selection architecture with type-safe state management
 - [ ] Export compact overview (text/markdown) for reference/printing
 - [ ] Show detailed storage limits tracking (e.g., "48/128 samples in project")
 
-**Status**: Overview dashboard functional with basic stats. Export feature and limit enforcement pending.
+**Status**: Overview dashboard functional with basic stats. Clean navigation and selection architecture implemented. Export feature and limit enforcement pending.
+
+**Architecture Improvements**:
+- **Unified Selection State**: Single `TreeSelection` type replaces multiple callback props
+- **Type Safety**: Discriminated union prevents invalid selection combinations
+- **Simplified State**: One state variable instead of three separate states
+- **Cleaner Interface**: FileTree now has 2 props (`selection`, `onSelectionChange`) instead of 5 callbacks
+- **Better Maintainability**: Easy to add new selection types (folders, categories, etc.)
 
 ### Phase 6: Polish & Testing ❌ **NOT STARTED**
 - [ ] Enhanced error handling for invalid files/formats

@@ -56,5 +56,12 @@ export interface ValidationResult {
   structure?: MultigainStructure;
 }
 
+// Tree selection types - unified selection state for file tree and right panel
+export type TreeSelection =
+  | { type: 'overview' }
+  | { type: 'sample'; sample: WavFile }
+  | { type: 'preset'; preset: Preset; project?: Project }
+  | { type: 'project'; project: Project };
+
 // Import types
 export * from './types/import';
