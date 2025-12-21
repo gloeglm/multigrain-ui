@@ -132,6 +132,20 @@ const App: React.FC = () => {
             </button>
           )}
 
+          {/* Dev mode only: Reset button */}
+          {process.env.NODE_ENV === 'development' && (
+            <button
+              onClick={() => {
+                localStorage.clear();
+                window.location.reload();
+              }}
+              className="bg-button-red hover:bg-opacity-80 text-white px-4 py-2 rounded transition-colors text-sm font-medium"
+              title="Clear stored location and reload (dev only)"
+            >
+              🔄 Reset
+            </button>
+          )}
+
           <button
             onClick={selectAndValidate}
             disabled={isLoading}
