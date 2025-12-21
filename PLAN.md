@@ -229,33 +229,22 @@ npm install fluent-ffmpeg @types/fluent-ffmpeg @ffmpeg-installer/ffmpeg
 6. `src/renderer/components/PresetViewer.tsx` - Updated autosave display formatting
 7. `src/main/index.ts` - Added window state persistence with electron-store
 
-#### Phase 4b: Move/Copy/Rename/Delete (Future)
+#### Phase 4b: Move/Copy/Rename/Delete 🚧 **IN PROGRESS**
+- [x] Delete projects with confirmation dialog
+- [x] Delete samples with confirmation dialog
+- [x] Smart navigation after deletion (to parent project or overview)
+- [x] Security validation (only allow deleting ProjectXX folders and .wav files)
 - [ ] Move/copy samples between folders
 - [ ] Rename samples
-- [ ] Delete samples (with confirmation)
 
-**Status**: Deferred until import feature is complete
+**Status**: Delete functionality complete. Move/copy/rename operations pending.
 
-#### Phase 4c: Sample Ordering & Organization (Future)
-- [ ] **Smart numbering on import**:
-  - [ ] Auto-detect existing numbering scheme in target folder (e.g., 01_, 001_, etc.)
-  - [ ] Continue numbering sequence for newly imported files
-  - [ ] Option to manually prefix imported files with numbers
-  - [ ] Preview final filenames before import
-- [ ] **Reordering capabilities**:
-  - [ ] Drag-and-drop reordering in import dialog preview
-  - [ ] Batch renumber existing samples in file tree
-  - [ ] Visual preview of hardware order (1-128 index)
-- [ ] **Numbering schemes**:
-  - [ ] Support multiple formats: 01_, 001_, 1_, etc.
-  - [ ] Option to add/remove numbering prefixes
-  - [ ] Preserve original filenames after prefix
-
-**Status**: Planned feature for better control over alphabetical ordering on hardware
-
-**Rationale**: Since samples are alphabetically sorted on the Multigrain module,
-numeric prefixes are essential for controlling playback order. This feature makes
-it easier to maintain organized sample banks without manual renaming.
+**Completed Features**:
+- Confirmation dialogs with danger variant styling
+- Comprehensive delete warnings showing what will be removed
+- Auto-navigation after deletion to prevent showing deleted items
+- IPC handlers with security checks in `fileOperations.ts`
+- Context menu integration for projects and samples
 
 #### Phase 4d: Preset Custom Naming (Future)
 - [ ] Allow users to give custom names to presets
@@ -417,13 +406,25 @@ GitHub Actions will build installers and create a draft release for review.
 
 ### Phase 9: Nice to Have Features ❌ **NOT STARTED**
 
-Optional enhancements that improve user experience but are not essential for core functionality.
+Optional enhancements that improve user experience but are not essential for core functionality. Users can work around these limitations manually.
 
+- [ ] **Sample ordering & smart numbering**
+  - Auto-detect existing numbering scheme in target folder (e.g., 01_, 001_, etc.)
+  - Continue numbering sequence for newly imported files
+  - Option to manually prefix imported files with numbers
+  - Preview final filenames before import
+  - Drag-and-drop reordering in import dialog preview
+  - Batch renumber existing samples in file tree
+  - Visual preview of hardware order (1-128 index)
+  - Support multiple formats: 01_, 001_, 1_, etc.
+  - Option to add/remove numbering prefixes
+  - Preserve original filenames after prefix
+  - **Rationale**: Since samples are alphabetically sorted on the Multigrain module, numeric prefixes control playback order. Users can manually rename files to achieve this.
 - [ ] **Detailed storage limits tracking** (e.g., "48/128 samples in PROJECT folder")
   - Show current vs. maximum sample counts per location
   - Visual progress bars or indicators
   - Warning when approaching limits
-- [ ] **Action visibility in right panel** (from Phase 7)
+- [ ] **Action visibility in right panel**
   - Show "Create New Project" button on overview page
   - Show "Import Samples" / "Rename" buttons when project selected
   - Duplicate key context menu actions as buttons for better discoverability
@@ -470,13 +471,12 @@ Optional enhancements that improve user experience but are not essential for cor
 - ✅ **Project creation with bank/position selection UI**
 
 ### What's Next (Priority Order)
-1. **Phase 4b**: Move/copy/rename/delete operations
-2. **Phase 4c**: Sample ordering & smart numbering on import
-3. **Phase 4d**: Preset custom naming
-4. **Phase 6**: Reference sheet export (printable PDF documentation)
-5. **Phase 7**: Testing, polish, and documentation
-6. **Phase 8**: CI/CD and distribution
-7. **Phase 9**: Nice to have features (optional enhancements)
+1. **Phase 4b**: Complete move/copy/rename operations (delete is done)
+2. **Phase 4d**: Preset custom naming
+3. **Phase 6**: Reference sheet export (printable PDF documentation)
+4. **Phase 7**: Testing, polish, and documentation
+5. **Phase 8**: CI/CD and distribution
+6. **Phase 9**: Nice to have features (optional enhancements including sample ordering)
 
 ---
 
