@@ -14,6 +14,7 @@ module.exports = {
     {
       name: '@electron-forge/maker-squirrel',
       config: {
+        name: 'multigrain-sample-manager',
         setupIcon: './assets/icons/icons/icon.ico',
       },
     },
@@ -25,7 +26,9 @@ module.exports = {
       name: '@electron-forge/maker-deb',
       config: {
         options: {
+          name: 'multigrain-sample-manager',
           bin: 'multigrain-sample-manager',
+          productName: 'Multigrain Sample Manager',
         },
       },
     },
@@ -33,7 +36,9 @@ module.exports = {
       name: '@electron-forge/maker-rpm',
       config: {
         options: {
+          name: 'multigrain-sample-manager',
           bin: 'multigrain-sample-manager',
+          productName: 'Multigrain Sample Manager',
         },
       },
     },
