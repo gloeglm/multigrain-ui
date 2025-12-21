@@ -75,444 +75,57 @@ Project
 
 ## Implementation Steps
 
-### Phase 1: Project Setup ✅ **COMPLETE**
-- [x] Initialize Electron + React + TypeScript project
-- [x] Configure Tailwind CSS with custom Multigrain color scheme
-- [x] Set up IPC communication between main/renderer processes
-- [x] Create basic window with file system access
-
-**Status**: All core infrastructure in place. Custom Tailwind theme implemented with Multigrain-inspired colors (blues, grays, reds).
-
-### Phase 2: SD Card Detection & Browsing ✅ **COMPLETE**
-- [x] Implement SD card/drive detection (folder selection dialog)
-- [x] Validate Multigrain folder structure (`src/main/utils/multigrain.ts`)
-- [x] Build file tree component for navigation (`src/renderer/components/FileTree.tsx`)
-- [x] Display project/preset/sample hierarchy
-- [x] **BONUS**: Custom project naming feature with `.multigrain-metadata.txt` storage
-- [x] **BONUS**: Editable project names directly in UI
-
-**Status**: Full browsing capability with enhanced project management features beyond original plan.
-
-### Phase 3: Audio Preview ✅ **COMPLETE**
-- [x] Integrate Web Audio API for playback via WaveSurfer.js
-- [x] Add waveform visualization (`src/renderer/components/AudioPlayer.tsx`)
-- [x] Implement play/pause/stop controls
-- [x] Show sample metadata (duration, sample rate, bit depth, channels)
-- [x] **BONUS**: Auto-play toggle with localStorage persistence
-- [x] **BONUS**: Editable sample descriptions stored in `.metadata.txt` files
-- [x] **BONUS**: Real-time playback progress display
-- [x] **BONUS**: Technical details panel showing audio specs
-
-**Status**: Complete audio preview system with metadata management exceeding original requirements.
-
-### Phase 3.5: Preset Viewer & Advanced Navigation ✅ **COMPLETE**
-- [x] Extract sample references from `.mgp` preset files (`src/main/ipc/preset.ts`)
-- [x] Display preset contents with 8 sample references (`src/renderer/components/PresetViewer.tsx`)
-- [x] Intelligent sample location resolution (PROJECT → WAVS → RECS priority)
-- [x] Color-coded location badges for sample origins
-- [x] Click-to-navigate from preset samples to audio files
-- [x] Autosave.mgp viewer - show current project state when clicking projects
-- [x] Independent scroll areas for file tree and content panel
-- [x] Factory project names initialization button
-- [x] Batch metadata writing for quick setup
-
-**Status**: Advanced preset inspection and navigation features with intelligent sample resolution.
+### Phase 1-3: Core Infrastructure ✅ **COMPLETE**
+- [x] Electron + React + TypeScript with Tailwind CSS custom theme
+- [x] SD card browsing with Multigrain folder structure validation
+- [x] File tree navigation with custom project naming
+- [x] Audio preview with WaveSurfer.js waveform visualization
+- [x] Sample metadata management (descriptions, technical details)
+- [x] Preset viewer with 8-sample references and intelligent location resolution
+- [x] Factory project names initialization, auto-play toggle
 
 ### Phase 4: File Operations 🚧 **IN PROGRESS**
 
-#### Phase 4a: Import Samples ✅ **COMPLETE**
-- [x] Import samples with **automatic format conversion**:
-  - [x] Convert any sample rate → 48 kHz
-  - [x] Convert any bit depth → 16-bit
-  - [x] Convert mono → stereo (duplicate channel)
-  - [x] Auto-trim files longer than 32 seconds
-  - [x] Auto-rename on filename conflicts (file_1.wav, file_2.wav)
-  - [x] Storage limit enforcement (128 samples per project/Wavs)
+#### Phase 4a: Import & Project Creation ✅ **COMPLETE**
+- [x] Sample import with FFmpeg auto-conversion (48kHz, 16-bit, stereo, 32s max)
+- [x] Filename conflict resolution, storage limit enforcement
+- [x] Project creation with bank/position grid, window state persistence
 
-**Status**: ✅ Implementation complete. Import feature fully functional with FFmpeg integration.
+#### Phase 4b-c: Delete & Rename Operations ✅ **COMPLETE**
+- [x] Delete projects/samples with confirmation dialogs and smart navigation
+- [x] Inline sample rename with conflict detection, bidirectional sync (FileTree ↔ SampleInfo)
+- [x] Path-based selection architecture (eliminates stale references)
 
-**Dependencies to install**:
-```bash
-npm install fluent-ffmpeg @types/fluent-ffmpeg @ffmpeg-installer/ffmpeg
-```
-
-**Design Decisions**:
-- **FFmpeg Integration**: Using `fluent-ffmpeg` + `@ffmpeg-installer/ffmpeg` for cross-platform binary bundling
-- **Filename Conflicts**: Auto-rename with numeric suffixes (safe, no data loss)
-- **Import Targets**: Individual project folders + global Wavs folder
-- **Error Handling**: Continue with remaining files on errors, show summary
-- **Long Files**: Auto-trim to 32 seconds with warning
-- **UI**: React modal dialog with validation → progress → results flow
-
-**Files to Create**:
-1. `src/main/utils/fileConflictResolver.ts` - Generate unique filenames
-2. `src/shared/types/import.ts` - Import type definitions
-3. `src/main/ipc/audioConversion.ts` - FFmpeg conversion wrapper
-4. `src/main/ipc/audioImport.ts` - Import orchestration and IPC handlers
-5. `src/renderer/components/ImportDialog.tsx` - Import UI modal
-
-**Files to Modify**:
-1. `src/main/ipc/index.ts` - Register import handlers
-2. `src/main/preload.ts` - Expose import API to renderer
-3. `src/shared/types.ts` - Export import types
-4. `src/renderer/components/FileTree.tsx` - Add import buttons
-5. `src/renderer/hooks/useMultigrain.ts` - Ensure reload works
-
-**Implementation Steps**:
-1. Install dependencies (fluent-ffmpeg, @ffmpeg-installer/ffmpeg)
-2. Create file conflict resolver utility (pure function, easy to test)
-3. Create audio conversion module with FFmpeg integration
-4. Define import type definitions
-5. Create import orchestration IPC handlers
-6. Build ImportDialog React component
-7. Integrate import buttons into FileTree
-8. Testing and polish
-
-**Key Features**:
-- **Validation before import**: Show users what will be converted/trimmed
-- **Progress tracking**: Real-time updates via IPC events
-- **Detailed results**: Show imported count, trimmed files, renamed files, errors
-- **Storage limit checks**: Prevent exceeding 128 samples per location
-- **Auto-refresh**: File tree updates after successful import
-
-**Testing Checklist**:
-- [ ] Convert 44.1kHz file → verify 48kHz output
-- [ ] Convert mono file → verify stereo output
-- [ ] Convert 24-bit file → verify 16-bit output
-- [ ] Import MP3/FLAC → verify WAV output with correct specs
-- [ ] Import file >32s → verify auto-trimmed to exactly 32s
-- [ ] Import with filename conflict → verify auto-renamed
-- [ ] Batch import with mixed valid/invalid → verify continues on errors
-- [ ] Import to project with 127 samples → verify allows 1 more
-- [ ] Import to project with 128 samples → verify blocks with limit error
-
-#### Phase 4a.5: Project Creation ✅ **COMPLETE**
-- [x] UI dialog for creating new projects with bank/position selection
-- [x] Bank selection using Multigrain manual nomenclature (X, Y, Z, XX, YY, ZZ)
-- [x] Position selection grid (1-8) showing existing projects as disabled
-- [x] Project number calculation: (Bank - 1) × 8 + Position
-- [x] Optional custom project naming on creation
-- [x] Validation to prevent creating duplicate projects
-- [x] Automatic .project-metadata.json creation for custom names
-- [x] Auto-refresh file tree after project creation
-- [x] Bank/position display prefix on all project names (e.g., "X / 1 - ProjectName")
-- [x] Preventive UX: Disable unavailable banks and positions
-- [x] Show custom names in occupied slot tooltips
-- [x] Auto-select first available slot on dialog open
-- [x] Auto-switch to available position when changing banks
-- [x] Window state persistence (size and position)
-- [x] Context menu system for file operations (right-click interface)
-
-**Status**: ✅ Implementation complete. Users can create new projects via UI dialog with enhanced UX.
-
-**Implementation Details**:
-- **Bank naming**: Uses manual labels (X, Y, Z, XX, YY, ZZ) instead of numbers
-- **UI/UX**: Visual grid showing all 48 possible project slots with existing ones disabled
-- **Folder creation**: Creates ProjectXX folder with optional metadata file
-- **Integration**: Right-click context menus for all file operations
-- **Smart Selection**: Dialog opens on first available slot and prevents invalid selections
-- **Display Format**: All projects shown as "Bank / Position - Name" throughout the app
-- **State Persistence**: Window size/position saved via electron-store with display validation
-- **Context Menus**: Clean right-click interface replacing inline buttons, scalable for future actions
-
-**Files Created**:
-1. `src/renderer/components/CreateProjectDialog.tsx` - Project creation UI dialog
-2. `src/main/ipc/projectOperations.ts` - IPC handler for project creation
-3. `src/renderer/components/ContextMenu.tsx` - Reusable context menu component
-
-**Files Modified**:
-1. `src/main/ipc/index.ts` - Registered project operations handlers
-2. `src/main/preload.ts` - Exposed createProject API to renderer
-3. `src/renderer/components/FileTree.tsx` - Replaced inline buttons with context menus
-4. `src/shared/constants.ts` - Added bank/position formatting utilities
-5. `src/renderer/App.tsx` - Updated to use formatted project names
-6. `src/renderer/components/PresetViewer.tsx` - Updated autosave display formatting
-7. `src/main/index.ts` - Added window state persistence with electron-store
-
-#### Phase 4b: Delete Operations ✅ **COMPLETE**
-- [x] Delete projects with confirmation dialog
-- [x] Delete samples with confirmation dialog
-- [x] Smart navigation after deletion (to parent project or overview)
-- [x] Security validation (only allow deleting ProjectXX folders and .wav files)
-
-**Status**: Delete functionality complete.
-
-**Completed Features**:
-- Confirmation dialogs with danger variant styling
-- Comprehensive delete warnings showing what will be removed
-- Auto-navigation after deletion to prevent showing deleted items
-- IPC handlers with security checks in `fileOperations.ts`
-- Context menu integration for projects and samples
-
-**Files Created**:
-1. `src/main/ipc/fileOperations.ts` - Delete operations with security validation
-2. `src/renderer/components/ConfirmDialog.tsx` - Reusable confirmation dialog
-
-**Files Modified**:
-1. `src/main/ipc/index.ts` - Registered file operations handlers
-2. `src/main/preload.ts` - Exposed delete APIs
-3. `src/renderer/components/FileTree.tsx` - Added delete context menus and navigation
-
-#### Phase 4c: Rename Operations ✅ **COMPLETE**
-- [x] Rename samples with conflict detection
-- [x] Inline editing UI matching project rename pattern
-- [x] Invalid character validation
-- [x] Auto .wav extension handling
-- [x] Context menu integration
-- [x] Inline rename in AudioPlayer detail view
-- [x] Bidirectional synchronization (rename from tree or AudioPlayer)
-- [ ] Rename projects (already supported via metadata, this would rename the actual folder)
-- [ ] Batch rename capabilities
-
-**Status**: Sample renaming complete with bidirectional sync. Project folder renaming and batch operations deferred.
-
-**Completed Features**:
-- Inline editing with save/cancel buttons in both FileTree and AudioPlayer
-- Enter/Escape keyboard shortcuts
-- Automatic .wav extension handling (adds if missing)
-- Invalid character validation (< > : " | ? *)
-- File conflict detection and prevention
-- IPC handler with security validation
-- Bidirectional synchronization - rename works from either location
-- Both FileTree and AudioPlayer stay in sync after rename
-
-**Files Modified**:
-1. `src/main/ipc/fileOperations.ts` - Added renameSample IPC handler
-2. `src/main/preload.ts` - Exposed renameSample API
-3. `src/renderer/components/FileTree.tsx` - Added rename UI and state management
-4. `src/renderer/components/AudioPlayer.tsx` - Added inline rename UI
-5. `src/renderer/App.tsx` - Path-based selection and helper functions
-6. `src/shared/types.ts` - Updated TreeSelection to store paths
-
-**Architecture Improvements**:
-- Refactored to use React Context to eliminate prop drilling
-- Reduced ProjectNode props from 16 to 4
-- Reduced SampleNode props from 7 to 1
-- Created FileTreeContext for shared state management
-- More maintainable and follows React best practices
-- **Fixed stale object references**: Changed TreeSelection to store paths instead of object references
-  - Selection now stores `samplePath`, `presetPath`, `projectPath` as strings
-  - App.tsx derives fresh objects from current structure using helper functions
-  - Ensures AudioPlayer and FileTree always render with current data after reloads
-  - Eliminates timing issues and guarantees synchronization after mutations
-
-**Architecture Note - Future Consideration**:
-If synchronization issues persist or state management becomes more complex, consider migrating to **optimistic updates pattern**:
-- Immediately update structure state in memory after file operations (faster UI)
-- No need to reload from disk after every mutation
-- Trade-off: More complex state management, risk of divergence from disk if operations fail
-- Current reload-based approach is simpler and always in sync with file system
-
-#### Phase 4d: Preset Custom Naming (Future)
-- [ ] Allow users to give custom names to presets
-- [ ] Store custom names in `.preset-metadata.json` files within project folders
-- [ ] Display custom names in PresetViewer (e.g., "Preset01 - My Bass Patch")
-- [ ] Add "Rename Preset" option to context menu
-- [ ] Inline editing in file tree (similar to project naming)
-- [ ] Show custom names in preset lists and navigation
-- [ ] Include custom preset names in reference sheet exports
-
-**Status**: Not started. Will follow same pattern as project custom naming.
-
-**Implementation Approach**:
-- Reuse metadata storage pattern from `projectMetadata.ts`
-- Create `presetMetadata.ts` IPC handler
-- Store metadata at `ProjectXX/.preset-metadata.json`
-- JSON format: `{ "Preset01.mgp": "My Custom Name", "Preset02.mgp": "Another Name" }`
-- Update `Preset` interface to include `customName?: string`
-- Add inline editing in FileTree's PresetNode component
-- Display format: "Preset01 - My Custom Name" (or just preset name if no custom name)
-
-**Files to Create**:
-1. `src/main/ipc/presetMetadata.ts` - Read/write preset metadata
-
-**Files to Modify**:
-1. `src/shared/types.ts` - Add `customName` to `Preset` interface
-2. `src/main/ipc/index.ts` - Register preset metadata handlers
-3. `src/main/preload.ts` - Expose preset metadata API
-4. `src/main/utils/multigrain.ts` - Load preset metadata during structure scan
-5. `src/renderer/components/FileTree.tsx` - Add preset renaming UI
-6. `src/renderer/components/PresetViewer.tsx` - Display custom names
-
-**User Benefits**:
-- Remember what each preset does (e.g., "Kick Drums", "Ambient Textures")
-- Better organization and workflow
-- Custom names included in printed reference sheets
+#### Phase 4d: Preset Custom Naming ❌ **NOT STARTED**
+- [ ] Custom naming for presets (similar pattern to project naming)
+- [ ] Store in `.preset-metadata.json`, display as "Preset01 - My Custom Name"
 
 ### Phase 5: Automated Testing 🚧 **IN PROGRESS - HIGH PRIORITY**
 
 Implement automated testing to catch bugs early and enable confident refactoring. Recent rename synchronization issues highlighted the need for comprehensive test coverage.
 
-**Current Status**: 86 tests passing (3 infrastructure + 54 utility + 29 IPC handler tests)
+**Current Status**: 109 tests passing (3 infrastructure + 27 constants + 16 utility + 29 IPC handler + 11 App + 23 SampleInfo component tests)
 
-#### Phase 5a: Testing Infrastructure Setup ✅ **COMPLETE**
-- [x] Install testing dependencies (vitest, @testing-library/react, memfs)
-- [x] Configure vitest with TypeScript and React support
-- [x] Add test scripts to package.json (`npm test`, `npm run test:ui`)
-- [x] Set up test file structure (`*.test.ts`, `*.test.tsx`)
-- [x] Configure mock file system for IPC handler tests
-- [x] Create test helpers and mock factories
-- [x] Create testing documentation (README.md)
+#### Phase 5a-d: Test Infrastructure & Core Testing ✅ **COMPLETE**
+- [x] Vitest + React Testing Library setup with memfs for IPC mocking
+- [x] Utility function tests (fileConflictResolver, constants, App helpers) - 54 tests
+- [x] IPC handler tests (rename, delete operations with security validation) - 29 tests
+- [x] Component refactoring: Split AudioPlayer into AudioWaveform, SampleInfo, SampleTechnicalDetails, SampleView
+- [x] SampleInfo component tests (rename, description, validation, error handling) - 23 tests
+- [x] Implemented data-testid best practices, documented in CLAUDE.md
+- [x] Bug fixes: stop button, endless loop, UI consistency
 
-**Dependencies to Install**:
-```bash
-npm install -D vitest @vitest/ui @testing-library/react @testing-library/jest-dom @testing-library/user-event memfs happy-dom
-```
+**Architecture**: Components now follow Single Responsibility Principle for better testability
 
-**Configuration**:
-- Create `vitest.config.ts` with jsdom/happy-dom environment
-- Add test patterns to include `**/*.test.{ts,tsx}`
-- Configure path aliases to match webpack config
-
-#### Phase 5b: Utility Function Tests (High Value, Low Overhead) ✅ **COMPLETE**
-- [x] Test `fileConflictResolver.ts` - unique filename generation (16 tests)
-- [x] Test format helpers (`formatProjectDisplayName`, bank/position utilities) (27 tests)
-- [x] Test App.tsx helper functions - path-based selection logic (11 tests)
-- [x] Verify path-based selection prevents stale references (regression test)
-- [ ] Test metadata parsing utilities (future)
-- [ ] Test path manipulation helpers (future)
-
-**Example Test Coverage**:
-```typescript
-// fileConflictResolver.test.ts
-- generateUniqueFilename with no conflicts
-- generateUniqueFilename with existing files (_1, _2, etc.)
-- edge cases: long filenames, special characters
-
-// constants.test.ts
-- formatProjectDisplayName with/without custom names
-- bank position calculation (1-48)
-```
-
-#### Phase 5c: IPC Handler Tests (Critical Business Logic) ✅ **COMPLETE**
-- [x] Test `renameSample` handler (12 tests):
-  - Valid rename operations
-  - Invalid character validation (< > : " | ? *)
-  - Conflict detection
-  - Security checks (only .wav files)
-  - .wav extension auto-append
-  - Empty filename validation
-  - Case-insensitive .WAV handling
-- [x] Test `deleteSample` handler (5 tests):
-  - Security validation (only .wav files)
-  - Error handling for missing files
-  - Directory rejection
-  - Case-insensitive handling
-- [x] Test `deleteProject` handler (7 tests):
-  - Security validation (only ProjectXX folders with 2-digit numbers)
-  - Recursive content deletion
-  - File path rejection
-  - Invalid folder pattern rejection
-  - All valid project names (01-48) acceptance
-- [x] Test `deleteSamples` batch handler (4 tests):
-  - Multiple deletion success
-  - Partial success with error handling
-  - Empty array handling
-- [ ] Test audio metadata read/write handlers (future)
-- [ ] Test project metadata handlers (future)
-- [ ] Test import validation (future):
-  - Format checks (sample rate, bit depth, channels)
-  - Storage limit enforcement
-  - File conflict resolution
-
-**Status**: ✅ Core file operations tested (28 tests). Metadata and import tests deferred to later phases.
-
-**Implementation Details**:
-- Used `memfs` for in-memory file system mocking
-- Mocked `ipcMain.handle` to capture registered handlers
-- Verified security checks prevent malicious operations
-- Test success and error paths including edge cases
-- **Key insight**: ProjectXX regex accepts any 2-digit number (00-99) for format validation, not project index validation
-
-#### Phase 5d: React Component Tests (Critical State Management)
-- [ ] Test **App.tsx** selection helpers:
-  - `findSampleByPath` returns correct sample after structure reload
-  - `findSampleByPath` returns null for non-existent paths
-  - `findPresetByPath` resolves correctly
-  - `findProjectByPath` resolves correctly
-- [ ] Test **FileTree** context and state:
-  - Sample selection updates selection state
-  - Project selection shows autosave preset if available
-  - Context menu triggers for rename/delete
-- [ ] Test **AudioPlayer** component:
-  - Renders sample information correctly
-  - Inline rename updates on save
-  - Edit mode keyboard shortcuts (Enter/Escape)
-  - Metadata loading and display
-- [ ] Test **rename synchronization** (regression test):
-  - Rename from FileTree updates AudioPlayer display
-  - Rename from AudioPlayer updates FileTree display
-  - Both views show updated name after reload
-- [ ] Test **delete navigation**:
-  - Deleting selected sample navigates to parent project
-  - Deleting project navigates to overview
-
-**Critical Test Case (Rename Sync Bug)**:
-```typescript
-it('keeps AudioPlayer and FileTree in sync when renaming from tree', async () => {
-  const { structure } = renderWithStructure(<App />);
-  const sample = structure.projects[0].samples[0];
-
-  // Select sample
-  userEvent.click(screen.getByText(sample.name));
-  expect(screen.getByRole('heading', { name: sample.name })).toBeInTheDocument();
-
-  // Rename from tree context menu
-  userEvent.rightClick(screen.getByText(sample.name));
-  userEvent.click(screen.getByText('Rename Sample'));
-  userEvent.clear(screen.getByRole('textbox'));
-  userEvent.type(screen.getByRole('textbox'), 'newname');
-  userEvent.click(screen.getByText('Save'));
-
-  // Wait for reload and verify both views updated
-  await waitFor(() => {
-    expect(screen.getByText('newname.wav')).toBeInTheDocument(); // Tree
-    expect(screen.getByRole('heading', { name: 'newname.wav' })).toBeInTheDocument(); // AudioPlayer
-  });
-});
-```
-
-#### Phase 5e: Integration Test Patterns
-- [ ] Test complete workflows:
-  - Import samples → verify in tree → play sample
-  - Create project → rename project → add samples
-  - Rename sample → delete sample → navigate to overview
-- [ ] Test error recovery:
-  - Failed rename reverts state
-  - Failed delete shows error message
-  - Invalid import shows validation errors
-
-**Status**: Not started. HIGH PRIORITY - implement before adding more features to prevent accumulating technical debt.
-
-**Benefits**:
-- Catch bugs like rename synchronization issues automatically
-- Enable confident refactoring of complex state management
-- Document expected behavior through tests
-- Reduce manual testing time during development
-- Prevent regressions when adding new features
-
-**Testing Philosophy**:
-- Focus on **behavior**, not implementation details
-- Test **critical paths** that users depend on
-- Mock **file system** to avoid real disk I/O
-- Keep tests **fast** and **maintainable**
-- Write tests for **bugs found** (regression prevention)
+#### Phase 5e: Additional Component & Integration Tests ❌ **NOT STARTED**
+- [ ] AudioWaveform component tests (WaveSurfer initialization, controls, auto-play)
+- [ ] SampleTechnicalDetails component tests (metadata loading, display)
+- [ ] Integration tests (rename sync between FileTree/SampleInfo, delete navigation, workflows)
+- [ ] Error recovery tests (failed operations, validation)
 
 ### Phase 6: Project Overview ✅ **COMPLETE**
-- [x] Interactive tree view of SD card structure in-app
-- [x] Show storage usage statistics (basic counts)
-- [x] Multigrain node always expanded, clickable to show overview
-- [x] Projects folder clickable to show overview
-- [x] Unified selection architecture with type-safe state management
-
-**Status**: Overview dashboard functional with basic stats. Clean navigation and selection architecture implemented. Detailed storage limit tracking moved to Phase 9 (Nice to Have).
-
-**Architecture Improvements**:
-- **Unified Selection State**: Single `TreeSelection` type replaces multiple callback props
-- **Type Safety**: Discriminated union prevents invalid selection combinations
-- **Simplified State**: One state variable instead of three separate states
-- **Cleaner Interface**: FileTree now has 2 props (`selection`, `onSelectionChange`) instead of 5 callbacks
-- **Better Maintainability**: Easy to add new selection types (folders, categories, etc.)
+- [x] Interactive tree view with clickable Multigrain/Projects nodes for overview
+- [x] Storage usage statistics, unified selection architecture with type-safe state
 
 ### Phase 7: Reference Sheet Export ❌ **NOT STARTED**
 
