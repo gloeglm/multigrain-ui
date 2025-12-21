@@ -6,14 +6,65 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Multigrain Sample Manager is an Electron + React + TypeScript desktop application for managing audio samples on SD cards for the Instruō Multigrain Eurorack synthesizer module.
 
+**Current Status**: ~85% complete. Core features implemented and tested with full CI/CD pipeline.
+
+### Implemented Features
+
+- ✅ Browse & navigate SD card structure with validation
+- ✅ Audio preview with waveform visualization (WaveSurfer.js)
+- ✅ Sample import with auto-conversion (FFmpeg: 48kHz/16-bit/stereo)
+- ✅ File operations: rename samples, delete samples/projects with confirmation
+- ✅ Project management: create projects, custom naming with factory presets
+- ✅ Preset viewer with intelligent sample location resolution (PROJECT → WAVS → RECS)
+- ✅ Metadata editing: custom descriptions for projects and samples
+- ✅ Project overview dashboard with statistics
+- ✅ Comprehensive test suite (111 tests) with CI/CD integration
+
+### Remaining Features (See PLAN.md)
+
+- Preset custom naming
+- PDF reference sheet export
+- Enhanced file operations (move/copy samples)
+- Search and filtering
+
 ## Build Commands
 
 ```bash
-npm start          # Development server with hot reload
-npm run package    # Package for current platform
-npm run make       # Create distributable installers
-npm test           # Run test suite with vitest
+# Development
+npm start              # Development server with hot reload
+npm run package        # Package for current platform
+npm run make           # Create distributable installers
+
+# Code Quality (MUST pass before committing)
+npm run type-check     # TypeScript type checking (0 errors required)
+npm run lint           # ESLint code quality (0 warnings required)
+npm run lint:fix       # Auto-fix linting issues
+npm run format         # Format code with Prettier
+npm run format:check   # Check code formatting
+
+# Testing
+npm test               # Run test suite with vitest (watch mode)
+npm test -- --run      # Run once (CI mode)
+npm run test:ui        # Run tests with UI
+npm run test:coverage  # Generate coverage report
 ```
+
+## Development Workflow
+
+**Before committing ANY code**, ensure all quality checks pass:
+
+```bash
+npm run type-check && npm run lint && npm test -- --run
+```
+
+**CI/CD**: GitHub Actions automatically runs these checks on every push/PR to `main`. All checks must pass.
+
+### Code Quality Standards
+
+- **TypeScript**: Strict mode enabled, 0 type errors required
+- **ESLint 9**: Flat config with TypeScript, React, and Prettier rules, 0 warnings required (`--max-warnings 0`)
+- **Prettier**: Consistent formatting (single quotes, 100 char width, semicolons, LF line endings)
+- **Testing**: Comprehensive test coverage for all new features
 
 ## Testing Requirements
 
@@ -25,6 +76,7 @@ npm test           # Run test suite with vitest
 - **Component Testing**: React Testing Library (@testing-library/react)
 - **User Interactions**: @testing-library/user-event
 - **File System Mocking**: memfs for IPC handler tests
+- **Current Status**: 111 passing tests across 7 test files
 
 ### Test Organization
 
@@ -77,8 +129,8 @@ npm test -- <path>    # Run specific test file
 
 ### Current Test Status
 
-- **109 tests passing** across 6 test files
-- Coverage: Setup, utilities, IPC handlers, components
+- **111 tests passing** across 7 test files (1 skipped test for FileTree rename integration)
+- Coverage: Setup, utilities, IPC handlers (fileOperations, audio, projectMetadata), components (App, SampleInfo), integration tests
 
 ## Architecture
 
@@ -102,25 +154,30 @@ All main process functionality is exposed through typed IPC handlers:
 
 | Module | Purpose |
 |--------|---------|
-| `fileSystem.ts` | Directory reading, metadata files (.project-metadata.json, .metadata.txt) |
-| `audio.ts` | WAV metadata extraction using music-metadata library |
+| `index.ts` | File system operations, folder selection, SD card navigation |
+| `audio.ts` | WAV metadata extraction/writing using music-metadata library |
+| `audioConversion.ts` | FFmpeg wrapper for WAV conversion (48kHz, 16-bit, stereo) |
+| `audioImport.ts` | Sample import orchestration with validation and conflict resolution |
+| `fileOperations.ts` | Rename/delete operations for samples and projects with security validation |
 | `preset.ts` | Binary .mgp preset file parsing to extract sample references |
 | `projectMetadata.ts` | Custom project naming, factory names batch updates |
-| `drives.ts` | Drive/volume detection |
-| `multigrain.ts` | SD card structure validation |
+| `multigrain.ts` | SD card structure validation (in utils/) |
 
 ### UI Components
 
 | Component | Purpose |
 |-----------|---------|
-| `FileTree.tsx` | Hierarchical file browser for Projects/Wavs/Recs |
+| `FileTree.tsx` | Hierarchical file browser for Projects/Wavs/Recs with context menus for operations |
 | `SampleView.tsx` | Composition component for sample display (name, audio, technical details) |
 | `AudioWaveform.tsx` | WaveSurfer.js waveform visualization and playback controls |
 | `SampleInfo.tsx` | Editable sample information (inline rename, description editing) |
 | `SampleTechnicalDetails.tsx` | Read-only technical metadata display |
-| `PresetViewer.tsx` | Displays 8 sample references from .mgp presets |
+| `PresetViewer.tsx` | Displays 8 sample references from .mgp presets with intelligent location resolution |
+| `ImportDialog.tsx` | Sample import UI with validation and conflict resolution |
+| `ProjectCreationDialog.tsx` | New project creation with bank/position grid selection |
+| `ConfirmDialog.tsx` | Reusable confirmation dialog for destructive operations |
 
-**Component Architecture**: Components follow Single Responsibility Principle for better maintainability and testability.
+**Component Architecture**: Components follow Single Responsibility Principle for better maintainability and testability. Path-based selection eliminates stale references.
 
 ### State Management
 
