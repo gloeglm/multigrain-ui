@@ -12,9 +12,73 @@ Multigrain Sample Manager is an Electron + React + TypeScript desktop applicatio
 npm start          # Development server with hot reload
 npm run package    # Package for current platform
 npm run make       # Create distributable installers
+npm test           # Run test suite with vitest
 ```
 
-No testing or linting is currently configured.
+## Testing Requirements
+
+**IMPORTANT: All new functionality MUST be covered by tests before committing.**
+
+### Test Infrastructure
+
+- **Test Runner**: Vitest with globals enabled (`describe`, `it`, `expect` available without imports)
+- **Component Testing**: React Testing Library (@testing-library/react)
+- **User Interactions**: @testing-library/user-event
+- **File System Mocking**: memfs for IPC handler tests
+
+### Test Organization
+
+```
+src/
+├── test/
+│   ├── setup.ts              # Global test setup, memfs mocking
+│   └── helpers.ts            # Mock data factories (createMockSample, createMockProject)
+├── main/
+│   ├── ipc/*.test.ts         # IPC handler tests
+│   └── utils/*.test.ts       # Utility function tests
+├── renderer/
+│   └── components/*.test.tsx # Component tests
+└── shared/
+    └── *.test.ts             # Shared logic tests
+```
+
+### Testing Guidelines
+
+#### Component Tests
+- **Use `data-testid` attributes** for stable test selectors (not text content)
+  ```typescript
+  // Component
+  <button data-testid="rename-sample-button">✎</button>
+
+  // Test
+  screen.getByTestId('rename-sample-button')
+  ```
+- Test user interactions with `userEvent.setup()`
+- Mock IPC calls in `beforeEach` using `vi.mocked(window.electronAPI.method)`
+- Test loading states, error handling, and edge cases
+
+#### IPC Handler Tests
+- Use memfs for file system operations
+- Test success paths, validation, and error handling
+- Verify correct return types match TypeScript definitions
+
+#### Test Coverage Expectations
+- **New components**: Comprehensive test suite covering all user interactions
+- **Bug fixes**: Add regression test demonstrating the fix
+- **Refactoring**: Ensure existing tests still pass
+
+### Running Tests
+
+```bash
+npm test              # Run tests in watch mode
+npm test -- --run     # Run once (CI mode)
+npm test -- <path>    # Run specific test file
+```
+
+### Current Test Status
+
+- **109 tests passing** across 6 test files
+- Coverage: Setup, utilities, IPC handlers, components
 
 ## Architecture
 
@@ -50,8 +114,13 @@ All main process functionality is exposed through typed IPC handlers:
 | Component | Purpose |
 |-----------|---------|
 | `FileTree.tsx` | Hierarchical file browser for Projects/Wavs/Recs |
-| `AudioPlayer.tsx` | WaveSurfer.js waveform visualization and playback |
+| `SampleView.tsx` | Composition component for sample display (name, audio, technical details) |
+| `AudioWaveform.tsx` | WaveSurfer.js waveform visualization and playback controls |
+| `SampleInfo.tsx` | Editable sample information (inline rename, description editing) |
+| `SampleTechnicalDetails.tsx` | Read-only technical metadata display |
 | `PresetViewer.tsx` | Displays 8 sample references from .mgp presets |
+
+**Component Architecture**: Components follow Single Responsibility Principle for better maintainability and testability.
 
 ### State Management
 
