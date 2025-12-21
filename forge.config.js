@@ -7,6 +7,7 @@ module.exports = {
       unpack: '**/@ffmpeg-installer/**/*',
     },
     icon: './assets/icons/icons/icon', // Electron will auto-select .ico, .icns, or .png
+    executableName: 'multigrain-sample-manager',
   },
   rebuildConfig: {},
   makers: [
