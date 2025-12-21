@@ -278,6 +278,13 @@ npm install fluent-ffmpeg @types/fluent-ffmpeg @ffmpeg-installer/ffmpeg
 2. `src/main/preload.ts` - Exposed renameSample API
 3. `src/renderer/components/FileTree.tsx` - Added rename UI and state management
 
+**Architecture Improvements**:
+- Refactored to use React Context to eliminate prop drilling
+- Reduced ProjectNode props from 16 to 4
+- Reduced SampleNode props from 7 to 1
+- Created FileTreeContext for shared state management
+- More maintainable and follows React best practices
+
 #### Phase 4d: Preset Custom Naming (Future)
 - [ ] Allow users to give custom names to presets
 - [ ] Store custom names in `.preset-metadata.json` files within project folders
@@ -497,7 +504,7 @@ Optional enhancements that improve user experience but are not essential for cor
 
 ---
 
-## Current Progress: ~82% Complete
+## Current Progress: ~85% Complete
 
 ### What's Working
 - ✅ Complete browsing and navigation of Multigrain SD cards
