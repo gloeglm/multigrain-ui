@@ -343,6 +343,8 @@ If synchronization issues persist or state management becomes more complex, cons
 
 Implement automated testing to catch bugs early and enable confident refactoring. Recent rename synchronization issues highlighted the need for comprehensive test coverage.
 
+**Current Status**: 86 tests passing (3 infrastructure + 54 utility + 29 IPC handler tests)
+
 #### Phase 5a: Testing Infrastructure Setup ✅ **COMPLETE**
 - [x] Install testing dependencies (vitest, @testing-library/react, memfs)
 - [x] Configure vitest with TypeScript and React support
@@ -382,28 +384,45 @@ npm install -D vitest @vitest/ui @testing-library/react @testing-library/jest-do
 - bank position calculation (1-48)
 ```
 
-#### Phase 5c: IPC Handler Tests (Critical Business Logic)
-- [ ] Test `renameSample` handler:
+#### Phase 5c: IPC Handler Tests (Critical Business Logic) ✅ **COMPLETE**
+- [x] Test `renameSample` handler (12 tests):
   - Valid rename operations
-  - Invalid character validation
+  - Invalid character validation (< > : " | ? *)
   - Conflict detection
   - Security checks (only .wav files)
   - .wav extension auto-append
-- [ ] Test `deleteSample` and `deleteProject` handlers:
-  - Security validation (only ProjectXX folders and .wav files)
+  - Empty filename validation
+  - Case-insensitive .WAV handling
+- [x] Test `deleteSample` handler (5 tests):
+  - Security validation (only .wav files)
   - Error handling for missing files
-- [ ] Test audio metadata read/write handlers
-- [ ] Test project metadata handlers
-- [ ] Test import validation:
+  - Directory rejection
+  - Case-insensitive handling
+- [x] Test `deleteProject` handler (7 tests):
+  - Security validation (only ProjectXX folders with 2-digit numbers)
+  - Recursive content deletion
+  - File path rejection
+  - Invalid folder pattern rejection
+  - All valid project names (01-48) acceptance
+- [x] Test `deleteSamples` batch handler (4 tests):
+  - Multiple deletion success
+  - Partial success with error handling
+  - Empty array handling
+- [ ] Test audio metadata read/write handlers (future)
+- [ ] Test project metadata handlers (future)
+- [ ] Test import validation (future):
   - Format checks (sample rate, bit depth, channels)
   - Storage limit enforcement
   - File conflict resolution
 
-**Approach**:
-- Use `memfs` to mock file system operations
-- Mock `ipcMain.handle` calls
-- Test success and error paths
-- Verify security checks prevent malicious operations
+**Status**: ✅ Core file operations tested (28 tests). Metadata and import tests deferred to later phases.
+
+**Implementation Details**:
+- Used `memfs` for in-memory file system mocking
+- Mocked `ipcMain.handle` to capture registered handlers
+- Verified security checks prevent malicious operations
+- Test success and error paths including edge cases
+- **Key insight**: ProjectXX regex accepts any 2-digit number (00-99) for format validation, not project index validation
 
 #### Phase 5d: React Component Tests (Critical State Management)
 - [ ] Test **App.tsx** selection helpers:
