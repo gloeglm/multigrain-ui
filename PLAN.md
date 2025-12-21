@@ -193,6 +193,27 @@ npm install fluent-ffmpeg @types/fluent-ffmpeg @ffmpeg-installer/ffmpeg
 
 **Status**: Deferred until import feature is complete
 
+#### Phase 4c: Sample Ordering & Organization (Future)
+- [ ] **Smart numbering on import**:
+  - [ ] Auto-detect existing numbering scheme in target folder (e.g., 01_, 001_, etc.)
+  - [ ] Continue numbering sequence for newly imported files
+  - [ ] Option to manually prefix imported files with numbers
+  - [ ] Preview final filenames before import
+- [ ] **Reordering capabilities**:
+  - [ ] Drag-and-drop reordering in import dialog preview
+  - [ ] Batch renumber existing samples in file tree
+  - [ ] Visual preview of hardware order (1-128 index)
+- [ ] **Numbering schemes**:
+  - [ ] Support multiple formats: 01_, 001_, 1_, etc.
+  - [ ] Option to add/remove numbering prefixes
+  - [ ] Preserve original filenames after prefix
+
+**Status**: Planned feature for better control over alphabetical ordering on hardware
+
+**Rationale**: Since samples are alphabetically sorted on the Multigrain module,
+numeric prefixes are essential for controlling playback order. This feature makes
+it easier to maintain organized sample banks without manual renaming.
+
 ### Phase 5: Project Overview ⚠️ **PARTIALLY COMPLETE**
 - [x] Interactive tree view of SD card structure in-app
 - [x] Show storage usage statistics (basic counts)
@@ -234,8 +255,9 @@ npm install fluent-ffmpeg @types/fluent-ffmpeg @ffmpeg-installer/ffmpeg
 
 ### What's Next (Priority Order)
 1. **Phase 4b**: Move/copy/rename/delete operations
-2. **Phase 5**: Complete overview with export functionality
-3. **Phase 6**: Testing, polish, and documentation
+2. **Phase 4c**: Sample ordering & smart numbering on import
+3. **Phase 5**: Complete overview with export functionality
+4. **Phase 6**: Testing, polish, and documentation
 
 ---
 
