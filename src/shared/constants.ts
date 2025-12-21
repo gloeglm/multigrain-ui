@@ -49,6 +49,35 @@ export const getPresetFileName = (index: number): string => {
   return `Preset${index.toString().padStart(2, '0')}${FILE_EXTENSIONS.PROJECT_SETTINGS}`;
 };
 
+// Bank names following Multigrain manual nomenclature
+export const BANK_NAMES = ['X', 'Y', 'Z', 'XX', 'YY', 'ZZ'] as const;
+
+// Get bank and position from project index (1-48)
+export const getProjectBankInfo = (projectIndex: number): { bank: string; position: number } => {
+  if (projectIndex < 1 || projectIndex > 48) {
+    throw new Error(`Project index must be between 1 and 48, got ${projectIndex}`);
+  }
+
+  const bankIndex = Math.floor((projectIndex - 1) / 8);
+  const position = ((projectIndex - 1) % 8) + 1;
+
+  return {
+    bank: BANK_NAMES[bankIndex],
+    position,
+  };
+};
+
+// Format project display name with bank/position prefix
+export const formatProjectDisplayName = (
+  projectIndex: number,
+  projectName: string,
+  customName?: string
+): string => {
+  const { bank, position } = getProjectBankInfo(projectIndex);
+  const displayName = customName || projectName;
+  return `${bank} / ${position} - ${displayName}`;
+};
+
 // Factory project names from Intellijel
 export const FACTORY_PROJECT_NAMES: Record<number, string> = {
   // Bank X - Intellijel Projects

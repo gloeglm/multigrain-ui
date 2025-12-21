@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { MultigainStructure, Project, WavFile, Preset } from '../../shared/types';
 import { ImportDialog } from './ImportDialog';
 import { CreateProjectDialog } from './CreateProjectDialog';
+import { formatProjectDisplayName } from '../../shared/constants';
 
 interface FileTreeProps {
   structure: MultigainStructure;
@@ -132,7 +133,7 @@ const ProjectNode: React.FC<{
   const [customName, setCustomName] = useState(project.customName || '');
   const [isSaving, setIsSaving] = useState(false);
 
-  const displayName = project.customName || project.name;
+  const displayName = formatProjectDisplayName(project.index, project.name, project.customName);
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -218,9 +219,6 @@ const ProjectNode: React.FC<{
           <>
             <span className="flex-1 truncate text-label-black">
               {displayName}
-              {project.customName && (
-                <span className="text-xs text-label-gray ml-1">({project.name})</span>
-              )}
             </span>
             <button
               onClick={(e) => {
@@ -328,12 +326,8 @@ export const FileTree: React.FC<FileTreeProps> = ({ structure, onSelectSample, o
     onImportComplete?.();
   };
 
-  // Calculate existing project numbers for CreateProjectDialog
-  const existingProjectNumbers = structure.projects.map(project => {
-    // Extract project number from name (e.g., "Project01" -> 1)
-    const match = project.name.match(/Project(\d+)/);
-    return match ? parseInt(match[1], 10) : 0;
-  }).filter(num => num > 0);
+  // Pass existing projects to CreateProjectDialog
+  const existingProjects = structure.projects;
 
   return (
     <div className="text-sm">
@@ -446,7 +440,7 @@ export const FileTree: React.FC<FileTreeProps> = ({ structure, onSelectSample, o
       {/* Create Project Dialog */}
       <CreateProjectDialog
         isOpen={createProjectDialogOpen}
-        existingProjects={existingProjectNumbers}
+        existingProjects={existingProjects}
         onClose={() => setCreateProjectDialogOpen(false)}
         onCreateProject={handleCreateProject}
       />

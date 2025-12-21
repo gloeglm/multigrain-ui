@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Preset, MultigainStructure, WavFile, Project } from '../../shared/types';
+import { formatProjectDisplayName } from '../../shared/constants';
 
 interface PresetViewerProps {
   preset: Preset;
@@ -91,7 +92,19 @@ export const PresetViewer: React.FC<PresetViewerProps> = ({ preset, structure, o
             <>
               Autosave for{' '}
               <span className="font-medium text-label-black">
-                {selectedProject?.customName || selectedProject?.name || currentProject?.name}
+                {selectedProject
+                  ? formatProjectDisplayName(
+                      selectedProject.index,
+                      selectedProject.name,
+                      selectedProject.customName
+                    )
+                  : currentProject
+                  ? formatProjectDisplayName(
+                      currentProject.index,
+                      currentProject.name,
+                      currentProject.customName
+                    )
+                  : 'Unknown Project'}
               </span>
             </>
           ) : (

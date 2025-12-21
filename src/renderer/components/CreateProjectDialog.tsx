@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
+import { Project } from '../../shared/types';
+import { formatProjectDisplayName } from '../../shared/constants';
 
 interface CreateProjectDialogProps {
   isOpen: boolean;
-  existingProjects: number[]; // Array of existing project numbers (1-48)
+  existingProjects: Project[]; // Array of existing projects
   onClose: () => void;
   onCreateProject: (projectNumber: number, customName?: string) => Promise<void>;
 }
@@ -15,26 +17,79 @@ export function CreateProjectDialog({
   onClose,
   onCreateProject,
 }: CreateProjectDialogProps) {
-  const [selectedBank, setSelectedBank] = useState(1);
-  const [selectedPosition, setSelectedPosition] = useState(1);
+  // Find first available slot
+  const findFirstAvailableSlot = (): { bank: number; position: number } => {
+    for (let bank = 1; bank <= 6; bank++) {
+      for (let position = 1; position <= 8; position++) {
+        const projNum = (bank - 1) * 8 + position;
+        if (!existingProjects.find(p => p.index === projNum)) {
+          return { bank, position };
+        }
+      }
+    }
+    // Fallback to 1,1 if all slots are full
+    return { bank: 1, position: 1 };
+  };
+
+  const firstAvailable = findFirstAvailableSlot();
+  const [selectedBank, setSelectedBank] = useState(firstAvailable.bank);
+  const [selectedPosition, setSelectedPosition] = useState(firstAvailable.position);
   const [customName, setCustomName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
+
+  // Find first available position in a specific bank
+  const findFirstAvailablePositionInBank = (bankNumber: number): number | null => {
+    for (let pos = 1; pos <= 8; pos++) {
+      const projNum = (bankNumber - 1) * 8 + pos;
+      if (!existingProjects.find(p => p.index === projNum)) {
+        return pos;
+      }
+    }
+    return null;
+  };
+
+  // When bank changes, ensure selected position is available
+  React.useEffect(() => {
+    const projNum = (selectedBank - 1) * 8 + selectedPosition;
+    const isCurrentPositionOccupied = !!existingProjects.find(p => p.index === projNum);
+
+    if (isCurrentPositionOccupied) {
+      const firstAvailablePos = findFirstAvailablePositionInBank(selectedBank);
+      if (firstAvailablePos !== null) {
+        setSelectedPosition(firstAvailablePos);
+      }
+    }
+  }, [selectedBank]);
 
   // Calculate project number from bank and position
   // Bank 1-6, Position 1-8
   // Project number = (Bank - 1) * 8 + Position
   const projectNumber = (selectedBank - 1) * 8 + selectedPosition;
 
-  const projectExists = existingProjects.includes(projectNumber);
+  // Check if a bank has any available positions
+  const isBankAvailable = (bankNumber: number) => {
+    for (let pos = 1; pos <= 8; pos++) {
+      const projNum = (bankNumber - 1) * 8 + pos;
+      if (!existingProjects.find(p => p.index === projNum)) {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  // Check if current selection exists
+  const existingProject = existingProjects.find(p => p.index === projectNumber);
+  const projectExists = !!existingProject;
 
   const handleCreate = async () => {
     setIsCreating(true);
     try {
       await onCreateProject(projectNumber, customName || undefined);
       onClose();
-      // Reset form
-      setSelectedBank(1);
-      setSelectedPosition(1);
+      // Reset form to first available slot
+      const newFirstAvailable = findFirstAvailableSlot();
+      setSelectedBank(newFirstAvailable.bank);
+      setSelectedPosition(newFirstAvailable.position);
       setCustomName('');
     } catch (error) {
       console.error('Failed to create project:', error);
@@ -71,15 +126,20 @@ export function CreateProjectDialog({
             <div className="grid grid-cols-6 gap-2">
               {BANK_NAMES.map((bankName, index) => {
                 const bankNumber = index + 1;
+                const isAvailable = isBankAvailable(bankNumber);
                 return (
                   <button
                     key={bankNumber}
                     onClick={() => setSelectedBank(bankNumber)}
+                    disabled={!isAvailable}
                     className={`py-2 rounded font-medium transition-colors ${
                       selectedBank === bankNumber
                         ? 'bg-label-blue text-white'
-                        : 'bg-panel-dark text-label-black hover:bg-button-gray'
+                        : isAvailable
+                        ? 'bg-panel-dark text-label-black hover:bg-button-gray'
+                        : 'bg-button-gray text-label-gray cursor-not-allowed opacity-50'
                     }`}
+                    title={!isAvailable ? 'Bank full' : ''}
                   >
                     {bankName}
                   </button>
@@ -96,7 +156,11 @@ export function CreateProjectDialog({
             <div className="grid grid-cols-8 gap-2">
               {[1, 2, 3, 4, 5, 6, 7, 8].map((position) => {
                 const projNum = (selectedBank - 1) * 8 + position;
-                const exists = existingProjects.includes(projNum);
+                const existingProj = existingProjects.find(p => p.index === projNum);
+                const exists = !!existingProj;
+                const tooltipText = exists && existingProj
+                  ? formatProjectDisplayName(existingProj.index, existingProj.name, existingProj.customName)
+                  : '';
                 return (
                   <button
                     key={position}
@@ -109,32 +173,13 @@ export function CreateProjectDialog({
                         ? 'bg-button-gray text-label-gray cursor-not-allowed opacity-50'
                         : 'bg-panel-dark text-label-black hover:bg-button-gray'
                     }`}
-                    title={exists ? `Project${String(projNum).padStart(2, '0')} already exists` : ''}
+                    title={exists ? `${tooltipText} already exists` : ''}
                   >
                     {position}
                   </button>
                 );
               })}
             </div>
-          </div>
-
-          {/* Project Number Display */}
-          <div
-            className={`p-3 rounded ${
-              projectExists
-                ? 'bg-button-red bg-opacity-20 border border-button-red'
-                : 'bg-label-blue bg-opacity-10 border border-label-blue'
-            }`}
-          >
-            <p className="text-sm font-medium">
-              {projectExists ? '⚠ Project Already Exists' : '✓ Available'}
-            </p>
-            <p className="text-lg font-bold mt-1">
-              Project{String(projectNumber).padStart(2, '0')}
-            </p>
-            <p className="text-xs text-label-gray mt-1">
-              Bank {BANK_NAMES[selectedBank - 1]}, Position {selectedPosition}
-            </p>
           </div>
 
           {/* Custom Name (Optional) */}
@@ -164,7 +209,7 @@ export function CreateProjectDialog({
           </button>
           <button
             onClick={handleCreate}
-            disabled={isCreating || projectExists}
+            disabled={isCreating}
             className="px-4 py-2 bg-label-blue hover:bg-knob-ring disabled:bg-button-gray disabled:cursor-not-allowed text-white rounded"
           >
             {isCreating ? 'Creating...' : 'Create Project'}

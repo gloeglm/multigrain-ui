@@ -4,7 +4,7 @@ import { FileTree } from './components/FileTree';
 import { AudioPlayer } from './components/AudioPlayer';
 import { PresetViewer } from './components/PresetViewer';
 import { WavFile, Preset, Project } from '../shared/types';
-import { FACTORY_PROJECT_NAMES } from '../shared/constants';
+import { FACTORY_PROJECT_NAMES, formatProjectDisplayName } from '../shared/constants';
 
 const App: React.FC = () => {
   const { structure, isLoading, error, selectAndValidate, reloadStructure } = useMultigrain();
@@ -220,10 +220,7 @@ const App: React.FC = () => {
                     {structure.projects.map((project) => (
                       <tr key={project.path} className="border-b border-panel-dark last:border-0 hover:bg-panel-light">
                         <td className="px-4 py-2 text-label-black">
-                          {project.customName || project.name}
-                          {project.customName && (
-                            <span className="text-xs text-label-gray ml-1">({project.name})</span>
-                          )}
+                          {formatProjectDisplayName(project.index, project.name, project.customName)}
                         </td>
                         <td className="text-right px-4 py-2 text-label-gray">
                           {project.samples.length}

@@ -195,14 +195,23 @@ npm install fluent-ffmpeg @types/fluent-ffmpeg @ffmpeg-installer/ffmpeg
 - [x] Validation to prevent creating duplicate projects
 - [x] Automatic .project-metadata.json creation for custom names
 - [x] Auto-refresh file tree after project creation
+- [x] Bank/position display prefix on all project names (e.g., "X / 1 - ProjectName")
+- [x] Preventive UX: Disable unavailable banks and positions
+- [x] Show custom names in occupied slot tooltips
+- [x] Auto-select first available slot on dialog open
+- [x] Auto-switch to available position when changing banks
+- [x] Window state persistence (size and position)
 
-**Status**: ✅ Implementation complete. Users can create new projects via UI dialog.
+**Status**: ✅ Implementation complete. Users can create new projects via UI dialog with enhanced UX.
 
 **Implementation Details**:
 - **Bank naming**: Uses manual labels (X, Y, Z, XX, YY, ZZ) instead of numbers
 - **UI/UX**: Visual grid showing all 48 possible project slots with existing ones disabled
 - **Folder creation**: Creates ProjectXX folder with optional metadata file
 - **Integration**: "+" button appears on hover over Projects section in file tree
+- **Smart Selection**: Dialog opens on first available slot and prevents invalid selections
+- **Display Format**: All projects shown as "Bank / Position - Name" throughout the app
+- **State Persistence**: Window size/position saved via electron-store with display validation
 
 **Files Created**:
 1. `src/renderer/components/CreateProjectDialog.tsx` - Project creation UI dialog
@@ -212,6 +221,10 @@ npm install fluent-ffmpeg @types/fluent-ffmpeg @ffmpeg-installer/ffmpeg
 1. `src/main/ipc/index.ts` - Registered project operations handlers
 2. `src/main/preload.ts` - Exposed createProject API to renderer
 3. `src/renderer/components/FileTree.tsx` - Integrated create dialog with "+" button
+4. `src/shared/constants.ts` - Added bank/position formatting utilities
+5. `src/renderer/App.tsx` - Updated to use formatted project names
+6. `src/renderer/components/PresetViewer.tsx` - Updated autosave display formatting
+7. `src/main/index.ts` - Added window state persistence with electron-store
 
 #### Phase 4b: Move/Copy/Rename/Delete (Future)
 - [ ] Move/copy samples between folders
