@@ -201,6 +201,7 @@ npm install fluent-ffmpeg @types/fluent-ffmpeg @ffmpeg-installer/ffmpeg
 - [x] Auto-select first available slot on dialog open
 - [x] Auto-switch to available position when changing banks
 - [x] Window state persistence (size and position)
+- [x] Context menu system for file operations (right-click interface)
 
 **Status**: ✅ Implementation complete. Users can create new projects via UI dialog with enhanced UX.
 
@@ -208,19 +209,21 @@ npm install fluent-ffmpeg @types/fluent-ffmpeg @ffmpeg-installer/ffmpeg
 - **Bank naming**: Uses manual labels (X, Y, Z, XX, YY, ZZ) instead of numbers
 - **UI/UX**: Visual grid showing all 48 possible project slots with existing ones disabled
 - **Folder creation**: Creates ProjectXX folder with optional metadata file
-- **Integration**: "+" button appears on hover over Projects section in file tree
+- **Integration**: Right-click context menus for all file operations
 - **Smart Selection**: Dialog opens on first available slot and prevents invalid selections
 - **Display Format**: All projects shown as "Bank / Position - Name" throughout the app
 - **State Persistence**: Window size/position saved via electron-store with display validation
+- **Context Menus**: Clean right-click interface replacing inline buttons, scalable for future actions
 
 **Files Created**:
 1. `src/renderer/components/CreateProjectDialog.tsx` - Project creation UI dialog
 2. `src/main/ipc/projectOperations.ts` - IPC handler for project creation
+3. `src/renderer/components/ContextMenu.tsx` - Reusable context menu component
 
 **Files Modified**:
 1. `src/main/ipc/index.ts` - Registered project operations handlers
 2. `src/main/preload.ts` - Exposed createProject API to renderer
-3. `src/renderer/components/FileTree.tsx` - Integrated create dialog with "+" button
+3. `src/renderer/components/FileTree.tsx` - Replaced inline buttons with context menus
 4. `src/shared/constants.ts` - Added bank/position formatting utilities
 5. `src/renderer/App.tsx` - Updated to use formatted project names
 6. `src/renderer/components/PresetViewer.tsx` - Updated autosave display formatting

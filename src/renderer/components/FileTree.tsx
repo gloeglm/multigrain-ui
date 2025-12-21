@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { MultigainStructure, Project, WavFile, Preset } from '../../shared/types';
 import { ImportDialog } from './ImportDialog';
 import { CreateProjectDialog } from './CreateProjectDialog';
+import { ContextMenu, ContextMenuItem } from './ContextMenu';
 import { formatProjectDisplayName } from '../../shared/constants';
 
 interface FileTreeProps {
@@ -126,12 +127,21 @@ const ProjectNode: React.FC<{
   selectedPreset?: Preset | null;
   selectedProject?: Project | null;
   onProjectNameChange?: () => void;
-  onImportClick?: (targetPath: string) => void;
-}> = ({ project, onSelectSample, onSelectPreset, onSelectProject, selectedSample, selectedPreset, selectedProject, onProjectNameChange, onImportClick }) => {
+  onContextMenu?: (e: React.MouseEvent, project: Project) => void;
+  triggerRename?: boolean;
+  onCancelRename?: () => void;
+}> = ({ project, onSelectSample, onSelectPreset, onSelectProject, selectedSample, selectedPreset, selectedProject, onProjectNameChange, onContextMenu, triggerRename, onCancelRename }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [customName, setCustomName] = useState(project.customName || '');
   const [isSaving, setIsSaving] = useState(false);
+
+  // Trigger edit mode from parent
+  React.useEffect(() => {
+    if (triggerRename) {
+      setIsEditing(true);
+    }
+  }, [triggerRename]);
 
   const displayName = formatProjectDisplayName(project.index, project.name, project.customName);
 
@@ -141,6 +151,7 @@ const ProjectNode: React.FC<{
       const result = await window.electronAPI.writeProjectMetadata(project.path, customName);
       if (result.success) {
         setIsEditing(false);
+        onCancelRename?.(); // Clear trigger state in parent
         onProjectNameChange?.();
       } else {
         alert(`Failed to save project name: ${result.error}`);
@@ -156,6 +167,7 @@ const ProjectNode: React.FC<{
   const handleCancel = () => {
     setCustomName(project.customName || '');
     setIsEditing(false);
+    onCancelRename?.(); // Clear trigger state in parent
   };
 
   const isSelected = selectedProject?.path === project.path;
@@ -163,7 +175,7 @@ const ProjectNode: React.FC<{
   return (
     <div className="select-none">
       <div
-        className={`flex items-center gap-2 py-1 px-2 rounded hover:bg-panel-dark group cursor-pointer ${
+        className={`flex items-center gap-2 py-1 px-2 rounded hover:bg-panel-dark cursor-pointer ${
           isSelected ? 'bg-label-blue bg-opacity-10 border-l-2 border-label-blue' : ''
         }`}
         onClick={() => {
@@ -171,6 +183,13 @@ const ProjectNode: React.FC<{
             setIsOpen(!isOpen);
             // Select project to show autosave
             onSelectProject?.(project);
+          }
+        }}
+        onContextMenu={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (!isEditing) {
+            onContextMenu?.(e, project);
           }
         }}
       >
@@ -197,9 +216,13 @@ const ProjectNode: React.FC<{
                 if (e.key === 'Enter') handleSave();
                 if (e.key === 'Escape') handleCancel();
               }}
+              onClick={(e) => e.stopPropagation()}
             />
             <button
-              onClick={handleSave}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleSave();
+              }}
               disabled={isSaving}
               className="text-xs px-2 py-0.5 bg-label-blue hover:bg-button-dark disabled:bg-button-gray text-white rounded"
               title="Save"
@@ -207,7 +230,10 @@ const ProjectNode: React.FC<{
               ✓
             </button>
             <button
-              onClick={handleCancel}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleCancel();
+              }}
               disabled={isSaving}
               className="text-xs px-2 py-0.5 bg-button-gray hover:bg-button-dark disabled:bg-panel text-white rounded"
               title="Cancel"
@@ -220,26 +246,6 @@ const ProjectNode: React.FC<{
             <span className="flex-1 truncate text-label-black">
               {displayName}
             </span>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onImportClick?.(project.path);
-              }}
-              className="opacity-0 group-hover:opacity-100 text-xs px-2 py-0.5 bg-label-blue hover:bg-knob-ring text-white rounded transition-opacity flex-shrink-0"
-              title="Import samples"
-            >
-              +
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsEditing(true);
-              }}
-              className="opacity-0 group-hover:opacity-100 text-xs px-2 py-0.5 bg-button-dark hover:bg-knob-ring text-white rounded transition-opacity flex-shrink-0"
-              title="Edit project name"
-            >
-              ✎
-            </button>
             <span className="text-xs text-label-gray bg-panel-dark px-1.5 py-0.5 rounded flex-shrink-0">
               {project.samples.length}
             </span>
@@ -285,6 +291,9 @@ export const FileTree: React.FC<FileTreeProps> = ({ structure, onSelectSample, o
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [importTarget, setImportTarget] = useState<string>('');
   const [createProjectDialogOpen, setCreateProjectDialogOpen] = useState(false);
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; items: ContextMenuItem[] } | null>(null);
+  const [projectToRename, setProjectToRename] = useState<Project | null>(null);
+  const [wavsExpanded, setWavsExpanded] = useState(false);
 
   const handleSelectSample = (sample: WavFile) => {
     setSelectedSample(sample);
@@ -326,6 +335,67 @@ export const FileTree: React.FC<FileTreeProps> = ({ structure, onSelectSample, o
     onImportComplete?.();
   };
 
+  const handleProjectContextMenu = (e: React.MouseEvent, project: Project) => {
+    const items: ContextMenuItem[] = [
+      {
+        label: 'Import Samples',
+        icon: '📥',
+        onClick: () => handleImportClick(project.path),
+      },
+      {
+        label: 'Rename Project',
+        icon: '✎',
+        onClick: () => {
+          setProjectToRename(project);
+        },
+      },
+    ];
+
+    setContextMenu({
+      x: e.clientX,
+      y: e.clientY,
+      items,
+    });
+  };
+
+  const handleProjectsFolderContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const items: ContextMenuItem[] = [
+      {
+        label: 'Create New Project',
+        icon: '➕',
+        onClick: () => setCreateProjectDialogOpen(true),
+      },
+    ];
+
+    setContextMenu({
+      x: e.clientX,
+      y: e.clientY,
+      items,
+    });
+  };
+
+  const handleWavsFolderContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const items: ContextMenuItem[] = [
+      {
+        label: 'Import Samples',
+        icon: '📥',
+        onClick: () => handleImportClick(structure.rootPath + '/Wavs'),
+      },
+    ];
+
+    setContextMenu({
+      x: e.clientX,
+      y: e.clientY,
+      items,
+    });
+  };
+
   // Pass existing projects to CreateProjectDialog
   const existingProjects = structure.projects;
 
@@ -334,22 +404,15 @@ export const FileTree: React.FC<FileTreeProps> = ({ structure, onSelectSample, o
       <TreeNode label="Multigrain" icon="💾" defaultOpen>
         {/* Projects */}
         <div className="select-none">
-          <div className="flex items-center gap-2 py-1 px-2 rounded cursor-pointer hover:bg-panel-dark group">
+          <div
+            className="flex items-center gap-2 py-1 px-2 rounded cursor-pointer hover:bg-panel-dark"
+            onContextMenu={handleProjectsFolderContextMenu}
+          >
             <span className="w-4 flex items-center justify-center">
               <span className="border-solid border-label-gray border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[6px]" />
             </span>
             <span>📂</span>
             <span className="flex-1 truncate text-label-black">Projects</span>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setCreateProjectDialogOpen(true);
-              }}
-              className="opacity-0 group-hover:opacity-100 text-xs px-2 py-0.5 bg-label-blue hover:bg-knob-ring text-white rounded transition-opacity flex-shrink-0"
-              title="Create new project"
-            >
-              +
-            </button>
             <span className="text-xs text-label-gray bg-panel-dark px-1.5 py-0.5 rounded flex-shrink-0">
               {structure.projects.length}
             </span>
@@ -366,7 +429,9 @@ export const FileTree: React.FC<FileTreeProps> = ({ structure, onSelectSample, o
                 selectedPreset={selectedPreset}
                 selectedProject={selectedProject}
                 onProjectNameChange={onProjectNameChange}
-                onImportClick={handleImportClick}
+                onContextMenu={handleProjectContextMenu}
+                triggerRename={projectToRename?.path === project.path}
+                onCancelRename={() => setProjectToRename(null)}
               />
             ))}
           </div>
@@ -374,38 +439,38 @@ export const FileTree: React.FC<FileTreeProps> = ({ structure, onSelectSample, o
 
         {/* Global Wavs */}
         <div className="select-none">
-          <div className="flex items-center gap-2 py-1 px-2 rounded cursor-pointer hover:bg-panel-dark group">
+          <div
+            className="flex items-center gap-2 py-1 px-2 rounded cursor-pointer hover:bg-panel-dark"
+            onClick={() => setWavsExpanded(!wavsExpanded)}
+            onContextMenu={handleWavsFolderContextMenu}
+          >
             <span className="w-4 flex items-center justify-center">
-              <span className="border-solid border-label-gray border-t-[5px] border-t-transparent border-b-[5px] border-b-transparent border-l-[6px]" />
+              <span
+                className={`border-solid border-label-gray transition-transform ${
+                  wavsExpanded
+                    ? 'border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[6px]'
+                    : 'border-t-[5px] border-t-transparent border-b-[5px] border-b-transparent border-l-[6px]'
+                }`}
+              />
             </span>
             <span>🎶</span>
             <span className="flex-1 truncate text-label-black">Wavs</span>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                // Get the Wavs folder path from structure
-                const wavsPath = structure.rootPath + '/Wavs';
-                handleImportClick(wavsPath);
-              }}
-              className="opacity-0 group-hover:opacity-100 text-xs px-2 py-0.5 bg-label-blue hover:bg-knob-ring text-white rounded transition-opacity flex-shrink-0"
-              title="Import samples"
-            >
-              +
-            </button>
             <span className="text-xs text-label-gray bg-panel-dark px-1.5 py-0.5 rounded flex-shrink-0">
               {structure.globalWavs.length}
             </span>
           </div>
-          <div className="ml-4 border-l border-panel-dark pl-2">
-            {structure.globalWavs.map((sample) => (
-              <SampleNode
-                key={sample.path}
-                sample={sample}
-                onSelect={handleSelectSample}
-                isSelected={selectedSample?.path === sample.path}
-              />
-            ))}
-          </div>
+          {wavsExpanded && (
+            <div className="ml-4 border-l border-panel-dark pl-2">
+              {structure.globalWavs.map((sample) => (
+                <SampleNode
+                  key={sample.path}
+                  sample={sample}
+                  onSelect={handleSelectSample}
+                  isSelected={selectedSample?.path === sample.path}
+                />
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Recordings */}
@@ -444,6 +509,16 @@ export const FileTree: React.FC<FileTreeProps> = ({ structure, onSelectSample, o
         onClose={() => setCreateProjectDialogOpen(false)}
         onCreateProject={handleCreateProject}
       />
+
+      {/* Context Menu */}
+      {contextMenu && (
+        <ContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          items={contextMenu.items}
+          onClose={() => setContextMenu(null)}
+        />
+      )}
     </div>
   );
 };
