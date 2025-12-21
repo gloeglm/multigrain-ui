@@ -65,6 +65,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('files:deleteSample', samplePath),
   deleteSamples: (samplePaths: string[]) =>
     ipcRenderer.invoke('files:deleteSamples', samplePaths),
+
+  // File operations (rename)
+  renameSample: (samplePath: string, newName: string) =>
+    ipcRenderer.invoke('files:renameSample', samplePath, newName),
 });
 
 export type ElectronAPI = {
@@ -147,6 +151,12 @@ export type ElectronAPI = {
     count?: number;
     total?: number;
     results?: Array<{ path: string; success: boolean; error?: string }>;
+  }>;
+  renameSample: (samplePath: string, newName: string) => Promise<{
+    success: boolean;
+    newPath?: string;
+    newName?: string;
+    error?: string;
   }>;
 };
 

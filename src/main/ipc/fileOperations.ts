@@ -118,4 +118,82 @@ export function registerFileOperationsHandlers(): void {
       results,
     };
   });
+
+  // Rename a sample file
+  ipcMain.handle('files:renameSample', async (_event, samplePath: string, newName: string) => {
+    try {
+      // Verify the path exists and is a file
+      const stats = await fs.promises.stat(samplePath);
+      if (!stats.isFile()) {
+        return {
+          success: false,
+          error: 'Path is not a file',
+        };
+      }
+
+      // Security check: ensure we're renaming a .wav file
+      if (!samplePath.toLowerCase().endsWith('.wav')) {
+        return {
+          success: false,
+          error: 'Only .wav files can be renamed',
+        };
+      }
+
+      // Validate new filename
+      const trimmedName = newName.trim();
+      if (!trimmedName) {
+        return {
+          success: false,
+          error: 'Filename cannot be empty',
+        };
+      }
+
+      // Ensure new filename ends with .wav
+      let finalName = trimmedName;
+      if (!finalName.toLowerCase().endsWith('.wav')) {
+        finalName += '.wav';
+      }
+
+      // Check for invalid characters in filename
+      const invalidChars = /[<>:"|?*]/;
+      if (invalidChars.test(finalName)) {
+        return {
+          success: false,
+          error: 'Filename contains invalid characters',
+        };
+      }
+
+      // Construct new path
+      const directory = path.dirname(samplePath);
+      const newPath = path.join(directory, finalName);
+
+      // Check if file already exists at new path
+      if (newPath !== samplePath) {
+        try {
+          await fs.promises.access(newPath);
+          return {
+            success: false,
+            error: 'A file with this name already exists',
+          };
+        } catch {
+          // File doesn't exist, which is what we want
+        }
+      }
+
+      // Perform the rename
+      await fs.promises.rename(samplePath, newPath);
+
+      return {
+        success: true,
+        newPath,
+        newName: finalName,
+      };
+    } catch (error) {
+      console.error('Error renaming sample:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  });
 }

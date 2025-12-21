@@ -85,10 +85,102 @@ interface SampleNodeProps {
   onSelect?: (sample: WavFile) => void;
   isSelected?: boolean;
   onContextMenu?: (e: React.MouseEvent, sample: WavFile) => void;
+  triggerRename?: boolean;
+  onCancelRename?: () => void;
+  onRenameComplete?: () => void;
 }
 
-const SampleNode: React.FC<SampleNodeProps> = ({ sample, onSelect, isSelected, onContextMenu }) => {
+const SampleNode: React.FC<SampleNodeProps> = ({
+  sample,
+  onSelect,
+  isSelected,
+  onContextMenu,
+  triggerRename,
+  onCancelRename,
+  onRenameComplete
+}) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
   const sizeKB = Math.round(sample.size / 1024);
+
+  // Trigger edit mode from parent
+  React.useEffect(() => {
+    if (triggerRename) {
+      // Strip .wav extension for editing
+      const nameWithoutExt = sample.name.replace(/\.wav$/i, '');
+      setNewName(nameWithoutExt);
+      setIsEditing(true);
+    }
+  }, [triggerRename, sample.name]);
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      const result = await window.electronAPI.renameSample(sample.path, newName);
+      if (result.success) {
+        setIsEditing(false);
+        onCancelRename?.();
+        onRenameComplete?.();
+      } else {
+        alert(`Failed to rename sample: ${result.error}`);
+      }
+    } catch (error) {
+      console.error('Error renaming sample:', error);
+      alert('Failed to rename sample');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleCancel = () => {
+    setNewName('');
+    setIsEditing(false);
+    onCancelRename?.();
+  };
+
+  if (isEditing) {
+    return (
+      <div className="flex items-center gap-2 py-1 px-2 rounded ml-6">
+        <span className="text-label-blue">♪</span>
+        <input
+          type="text"
+          value={newName}
+          onChange={(e) => setNewName(e.target.value)}
+          placeholder="Sample name"
+          className="flex-1 px-2 py-0.5 text-sm border border-panel-dark rounded focus:border-label-blue focus:outline-none"
+          autoFocus
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') handleSave();
+            if (e.key === 'Escape') handleCancel();
+          }}
+          onClick={(e) => e.stopPropagation()}
+        />
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handleSave();
+          }}
+          disabled={isSaving}
+          className="text-xs px-2 py-0.5 bg-label-blue hover:bg-button-dark disabled:bg-button-gray text-white rounded"
+          title="Save"
+        >
+          ✓
+        </button>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handleCancel();
+          }}
+          disabled={isSaving}
+          className="text-xs px-2 py-0.5 bg-button-gray hover:bg-button-dark disabled:bg-panel text-white rounded"
+          title="Cancel"
+        >
+          ✕
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -287,6 +379,9 @@ const ProjectNode: React.FC<{
                   onSelect={onSelectSample}
                   isSelected={selectedSample?.path === sample.path}
                   onContextMenu={onSampleContextMenu}
+                  triggerRename={sampleToRename?.path === sample.path}
+                  onCancelRename={() => setSampleToRename(null)}
+                  onRenameComplete={onImportComplete}
                 />
               ))}
             </TreeNode>
@@ -303,6 +398,7 @@ export const FileTree: React.FC<FileTreeProps> = ({ structure, selection, onSele
   const [createProjectDialogOpen, setCreateProjectDialogOpen] = useState(false);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; items: ContextMenuItem[] } | null>(null);
   const [projectToRename, setProjectToRename] = useState<Project | null>(null);
+  const [sampleToRename, setSampleToRename] = useState<WavFile | null>(null);
   const [wavsExpanded, setWavsExpanded] = useState(false);
   const [projectsFolderExpanded, setProjectsFolderExpanded] = useState(true);
   const [deleteConfirm, setDeleteConfirm] = useState<{
@@ -420,6 +516,13 @@ export const FileTree: React.FC<FileTreeProps> = ({ structure, selection, onSele
 
   const handleSampleContextMenu = (e: React.MouseEvent, sample: WavFile) => {
     const items: ContextMenuItem[] = [
+      {
+        label: 'Rename Sample',
+        icon: '✎',
+        onClick: () => {
+          setSampleToRename(sample);
+        },
+      },
       {
         label: 'Delete Sample',
         icon: '🗑️',
@@ -585,6 +688,9 @@ export const FileTree: React.FC<FileTreeProps> = ({ structure, selection, onSele
                   onSelect={handleSelectSample}
                   isSelected={selection.type === 'sample' && selection.sample.path === sample.path}
                   onContextMenu={handleSampleContextMenu}
+                  triggerRename={sampleToRename?.path === sample.path}
+                  onCancelRename={() => setSampleToRename(null)}
+                  onRenameComplete={onImportComplete}
                 />
               ))}
             </div>
@@ -607,6 +713,9 @@ export const FileTree: React.FC<FileTreeProps> = ({ structure, selection, onSele
                 onSelect={handleSelectSample}
                 isSelected={selection.type === 'sample' && selection.sample.path === sample.path}
                 onContextMenu={handleSampleContextMenu}
+                triggerRename={sampleToRename?.path === sample.path}
+                onCancelRename={() => setSampleToRename(null)}
+                onRenameComplete={onImportComplete}
               />
             ))
           )}
