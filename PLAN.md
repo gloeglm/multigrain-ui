@@ -271,8 +271,19 @@ it easier to maintain organized sample banks without manual renaming.
 - [ ] UI/UX refinements and accessibility improvements
 - [ ] Performance optimization for large sample libraries
 - [ ] User documentation and help system
+- [ ] **Action visibility enhancement**: Surface common actions in right panel
+  - [ ] Show "Create New Project" button on overview page
+  - [ ] Show "Import Samples" / "Rename" buttons when project selected
+  - [ ] Show "Import Samples" button when Wavs/Recs folder selected
+  - [ ] Context menus remain primary interface, panel buttons provide additional discoverability
 
 **Status**: Basic error handling exists. Comprehensive testing and polish phase pending.
+
+**Future UX Enhancement Notes**:
+- Context menus provide comprehensive access to all actions
+- Right panel buttons will duplicate key actions for better discoverability
+- Panel buttons should complement, not replace, context menu functionality
+- Examples: "Create New Project" on overview, "Import"/"Rename" when project selected
 
 ---
 
