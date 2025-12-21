@@ -124,7 +124,7 @@ const SampleNode: React.FC<SampleNodeProps> = ({ sample }) => {
     sampleToRename,
     setSampleToRename,
     onImportComplete,
-    onSampleRenamed
+    onSampleRenamed,
   } = useFileTreeContext();
 
   const [isEditing, setIsEditing] = useState(false);
@@ -261,7 +261,12 @@ interface ProjectNodeProps {
   onContextMenu: (e: React.MouseEvent, project: Project) => void;
 }
 
-const ProjectNode: React.FC<ProjectNodeProps> = ({ project, triggerRename, onCancelRename, onContextMenu }) => {
+const ProjectNode: React.FC<ProjectNodeProps> = ({
+  project,
+  triggerRename,
+  onCancelRename,
+  onContextMenu,
+}) => {
   const { selection, onSelectPreset, onSelectProject, onProjectNameChange } = useFileTreeContext();
   const [isOpen, setIsOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -302,7 +307,12 @@ const ProjectNode: React.FC<ProjectNodeProps> = ({ project, triggerRename, onCan
     onCancelRename?.(); // Clear trigger state in parent
   };
 
-  const selectedProjectPath = selection.type === 'project' ? selection.projectPath : (selection.type === 'preset' ? selection.projectPath : null);
+  const selectedProjectPath =
+    selection.type === 'project'
+      ? selection.projectPath
+      : selection.type === 'preset'
+        ? selection.projectPath
+        : null;
   const selectedPresetPath = selection.type === 'preset' ? selection.presetPath : null;
   const isSelected = selectedProjectPath === project.path;
 
@@ -378,9 +388,7 @@ const ProjectNode: React.FC<ProjectNodeProps> = ({ project, triggerRename, onCan
           </div>
         ) : (
           <>
-            <span className="flex-1 truncate text-label-black">
-              {displayName}
-            </span>
+            <span className="flex-1 truncate text-label-black">{displayName}</span>
             <span className="text-xs text-label-gray bg-panel-dark px-1.5 py-0.5 rounded flex-shrink-0">
               {project.samples.length}
             </span>
@@ -414,11 +422,22 @@ const ProjectNode: React.FC<ProjectNodeProps> = ({ project, triggerRename, onCan
   );
 };
 
-export const FileTree: React.FC<FileTreeProps> = ({ structure, selection, onSelectionChange, onProjectNameChange, onImportComplete, onSampleRenamed }) => {
+export const FileTree: React.FC<FileTreeProps> = ({
+  structure,
+  selection,
+  onSelectionChange,
+  onProjectNameChange,
+  onImportComplete,
+  onSampleRenamed,
+}) => {
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [importTarget, setImportTarget] = useState<string>('');
   const [createProjectDialogOpen, setCreateProjectDialogOpen] = useState(false);
-  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; items: ContextMenuItem[] } | null>(null);
+  const [contextMenu, setContextMenu] = useState<{
+    x: number;
+    y: number;
+    items: ContextMenuItem[];
+  } | null>(null);
   const [projectToRename, setProjectToRename] = useState<Project | null>(null);
   const [sampleToRename, setSampleToRename] = useState<WavFile | null>(null);
   const [wavsExpanded, setWavsExpanded] = useState(false);
@@ -439,7 +458,11 @@ export const FileTree: React.FC<FileTreeProps> = ({ structure, selection, onSele
   const handleSelectProject = (project: Project) => {
     // When selecting a project, show its autosave if available
     if (project.autosave) {
-      onSelectionChange({ type: 'preset', presetPath: project.autosave.path, projectPath: project.path });
+      onSelectionChange({
+        type: 'preset',
+        presetPath: project.autosave.path,
+        projectPath: project.path,
+      });
     } else {
       onSelectionChange({ type: 'project', projectPath: project.path });
     }
@@ -456,7 +479,11 @@ export const FileTree: React.FC<FileTreeProps> = ({ structure, selection, onSele
   };
 
   const handleCreateProject = async (projectNumber: number, customName?: string) => {
-    const result = await window.electronAPI.createProject(structure.rootPath, projectNumber, customName);
+    const result = await window.electronAPI.createProject(
+      structure.rootPath,
+      projectNumber,
+      customName
+    );
     if (!result.success) {
       throw new Error(result.error || 'Failed to create project');
     }
@@ -586,14 +613,18 @@ export const FileTree: React.FC<FileTreeProps> = ({ structure, selection, onSele
         // Determine where to navigate after deletion
         // Check if this sample is in a project, Wavs, or Recs folder
         const samplePath = sample.path;
-        const parentProject = structure.projects.find(p =>
-          p.samples.some(s => s.path === samplePath)
+        const parentProject = structure.projects.find((p) =>
+          p.samples.some((s) => s.path === samplePath)
         );
 
         if (parentProject) {
           // Navigate to the parent project
           if (parentProject.autosave) {
-            onSelectionChange({ type: 'preset', presetPath: parentProject.autosave.path, projectPath: parentProject.path });
+            onSelectionChange({
+              type: 'preset',
+              presetPath: parentProject.autosave.path,
+              projectPath: parentProject.path,
+            });
           } else {
             onSelectionChange({ type: 'project', projectPath: parentProject.path });
           }
@@ -637,155 +668,144 @@ export const FileTree: React.FC<FileTreeProps> = ({ structure, selection, onSele
   return (
     <FileTreeContext.Provider value={contextValue}>
       <div className="text-sm">
-      <TreeNode
-        label="Multigrain"
-        icon="💾"
-        alwaysOpen
-        onClick={handleShowOverview}
-      >
-        {/* Projects */}
-        <div className="select-none">
-          <div
-            className={`flex items-center gap-2 py-1 px-2 rounded cursor-pointer hover:bg-panel-dark ${
-              isOverviewSelected ? 'bg-panel-dark' : ''
-            }`}
-            onClick={handleShowOverview}
-            onContextMenu={handleProjectsFolderContextMenu}
-          >
-            <span className="w-4 flex items-center justify-center">
-              <span
-                className={`border-solid border-label-gray transition-transform ${
-                  projectsFolderExpanded
-                    ? 'border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[6px]'
-                    : 'border-t-[5px] border-t-transparent border-b-[5px] border-b-transparent border-l-[6px]'
-                }`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setProjectsFolderExpanded(!projectsFolderExpanded);
-                }}
-              />
-            </span>
-            <span>📂</span>
-            <span className="flex-1 truncate text-label-black">Projects</span>
-            <span className="text-xs text-label-gray bg-panel-dark px-1.5 py-0.5 rounded flex-shrink-0">
-              {structure.projects.length}
-            </span>
-          </div>
-          {projectsFolderExpanded && (
-            <div className="ml-4 border-l border-panel-dark pl-2">
-            {structure.projects.map((project) => (
-              <ProjectNode
-                key={project.path}
-                project={project}
-                triggerRename={projectToRename?.path === project.path}
-                onCancelRename={() => setProjectToRename(null)}
-                onContextMenu={handleProjectContextMenu}
-              />
-            ))}
+        <TreeNode label="Multigrain" icon="💾" alwaysOpen onClick={handleShowOverview}>
+          {/* Projects */}
+          <div className="select-none">
+            <div
+              className={`flex items-center gap-2 py-1 px-2 rounded cursor-pointer hover:bg-panel-dark ${
+                isOverviewSelected ? 'bg-panel-dark' : ''
+              }`}
+              onClick={handleShowOverview}
+              onContextMenu={handleProjectsFolderContextMenu}
+            >
+              <span className="w-4 flex items-center justify-center">
+                <span
+                  className={`border-solid border-label-gray transition-transform ${
+                    projectsFolderExpanded
+                      ? 'border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[6px]'
+                      : 'border-t-[5px] border-t-transparent border-b-[5px] border-b-transparent border-l-[6px]'
+                  }`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setProjectsFolderExpanded(!projectsFolderExpanded);
+                  }}
+                />
+              </span>
+              <span>📂</span>
+              <span className="flex-1 truncate text-label-black">Projects</span>
+              <span className="text-xs text-label-gray bg-panel-dark px-1.5 py-0.5 rounded flex-shrink-0">
+                {structure.projects.length}
+              </span>
             </div>
-          )}
-        </div>
-
-        {/* Global Wavs */}
-        <div className="select-none">
-          <div
-            className="flex items-center gap-2 py-1 px-2 rounded cursor-pointer hover:bg-panel-dark"
-            onClick={() => setWavsExpanded(!wavsExpanded)}
-            onContextMenu={handleWavsFolderContextMenu}
-          >
-            <span className="w-4 flex items-center justify-center">
-              <span
-                className={`border-solid border-label-gray transition-transform ${
-                  wavsExpanded
-                    ? 'border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[6px]'
-                    : 'border-t-[5px] border-t-transparent border-b-[5px] border-b-transparent border-l-[6px]'
-                }`}
-              />
-            </span>
-            <span>🎶</span>
-            <span className="flex-1 truncate text-label-black">Wavs</span>
-            <span className="text-xs text-label-gray bg-panel-dark px-1.5 py-0.5 rounded flex-shrink-0">
-              {structure.globalWavs.length}
-            </span>
+            {projectsFolderExpanded && (
+              <div className="ml-4 border-l border-panel-dark pl-2">
+                {structure.projects.map((project) => (
+                  <ProjectNode
+                    key={project.path}
+                    project={project}
+                    triggerRename={projectToRename?.path === project.path}
+                    onCancelRename={() => setProjectToRename(null)}
+                    onContextMenu={handleProjectContextMenu}
+                  />
+                ))}
+              </div>
+            )}
           </div>
-          {wavsExpanded && (
-            <div className="ml-4 border-l border-panel-dark pl-2">
-              {structure.globalWavs.map((sample) => (
-                <SampleNode key={sample.path} sample={sample} />
-              ))}
-            </div>
-          )}
-        </div>
 
-        {/* Recordings */}
-        <TreeNode
-          label="Recs"
-          icon="🎤"
-          count={structure.recordings.length}
-        >
-          {structure.recordings.length === 0 ? (
-            <div className="text-label-gray text-xs ml-6 py-1">No recordings</div>
-          ) : (
-            structure.recordings.map((sample) => (
-              <SampleNode key={sample.path} sample={sample} />
-            ))
-          )}
+          {/* Global Wavs */}
+          <div className="select-none">
+            <div
+              className="flex items-center gap-2 py-1 px-2 rounded cursor-pointer hover:bg-panel-dark"
+              onClick={() => setWavsExpanded(!wavsExpanded)}
+              onContextMenu={handleWavsFolderContextMenu}
+            >
+              <span className="w-4 flex items-center justify-center">
+                <span
+                  className={`border-solid border-label-gray transition-transform ${
+                    wavsExpanded
+                      ? 'border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[6px]'
+                      : 'border-t-[5px] border-t-transparent border-b-[5px] border-b-transparent border-l-[6px]'
+                  }`}
+                />
+              </span>
+              <span>🎶</span>
+              <span className="flex-1 truncate text-label-black">Wavs</span>
+              <span className="text-xs text-label-gray bg-panel-dark px-1.5 py-0.5 rounded flex-shrink-0">
+                {structure.globalWavs.length}
+              </span>
+            </div>
+            {wavsExpanded && (
+              <div className="ml-4 border-l border-panel-dark pl-2">
+                {structure.globalWavs.map((sample) => (
+                  <SampleNode key={sample.path} sample={sample} />
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Recordings */}
+          <TreeNode label="Recs" icon="🎤" count={structure.recordings.length}>
+            {structure.recordings.length === 0 ? (
+              <div className="text-label-gray text-xs ml-6 py-1">No recordings</div>
+            ) : (
+              structure.recordings.map((sample) => <SampleNode key={sample.path} sample={sample} />)
+            )}
+          </TreeNode>
         </TreeNode>
-      </TreeNode>
 
-      {/* Import Dialog */}
-      <ImportDialog
-        isOpen={importDialogOpen}
-        targetPath={importTarget}
-        onClose={() => setImportDialogOpen(false)}
-        onImportComplete={handleImportComplete}
-      />
-
-      {/* Create Project Dialog */}
-      <CreateProjectDialog
-        isOpen={createProjectDialogOpen}
-        existingProjects={existingProjects}
-        onClose={() => setCreateProjectDialogOpen(false)}
-        onCreateProject={handleCreateProject}
-      />
-
-      {/* Context Menu */}
-      {contextMenu && (
-        <ContextMenu
-          x={contextMenu.x}
-          y={contextMenu.y}
-          items={contextMenu.items}
-          onClose={() => setContextMenu(null)}
+        {/* Import Dialog */}
+        <ImportDialog
+          isOpen={importDialogOpen}
+          targetPath={importTarget}
+          onClose={() => setImportDialogOpen(false)}
+          onImportComplete={handleImportComplete}
         />
-      )}
 
-      {/* Delete Confirmation Dialog */}
-      {deleteConfirm && (
-        <ConfirmDialog
-          isOpen={true}
-          title={deleteConfirm.type === 'project' ? 'Delete Project' : 'Delete Sample'}
-          message={
-            deleteConfirm.type === 'project'
-              ? `Are you sure you want to delete project "${formatProjectDisplayName(
-                  (deleteConfirm.item as Project).index,
-                  (deleteConfirm.item as Project).name,
-                  (deleteConfirm.item as Project).customName
-                )}"?\n\nThis will permanently delete the project folder and all its contents including:\n- All presets (up to 48)\n- All samples in the project folder\n- All metadata\n\nThis action cannot be undone.`
-              : `Are you sure you want to delete sample "${(deleteConfirm.item as WavFile).name}"?\n\nThis action cannot be undone.`
-          }
-          confirmLabel={deleteConfirm.type === 'project' ? 'Delete Project' : 'Delete Sample'}
-          cancelLabel="Cancel"
-          confirmVariant="danger"
-          onConfirm={() => {
-            if (deleteConfirm.type === 'project') {
-              handleDeleteProject(deleteConfirm.item as Project);
-            } else {
-              handleDeleteSample(deleteConfirm.item as WavFile);
+        {/* Create Project Dialog */}
+        <CreateProjectDialog
+          isOpen={createProjectDialogOpen}
+          existingProjects={existingProjects}
+          onClose={() => setCreateProjectDialogOpen(false)}
+          onCreateProject={handleCreateProject}
+        />
+
+        {/* Context Menu */}
+        {contextMenu && (
+          <ContextMenu
+            x={contextMenu.x}
+            y={contextMenu.y}
+            items={contextMenu.items}
+            onClose={() => setContextMenu(null)}
+          />
+        )}
+
+        {/* Delete Confirmation Dialog */}
+        {deleteConfirm && (
+          <ConfirmDialog
+            isOpen={true}
+            title={deleteConfirm.type === 'project' ? 'Delete Project' : 'Delete Sample'}
+            message={
+              deleteConfirm.type === 'project'
+                ? `Are you sure you want to delete project "${formatProjectDisplayName(
+                    (deleteConfirm.item as Project).index,
+                    (deleteConfirm.item as Project).name,
+                    (deleteConfirm.item as Project).customName
+                  )}"?\n\nThis will permanently delete the project folder and all its contents including:\n- All presets (up to 48)\n- All samples in the project folder\n- All metadata\n\nThis action cannot be undone.`
+                : `Are you sure you want to delete sample "${(deleteConfirm.item as WavFile).name}"?\n\nThis action cannot be undone.`
             }
-          }}
-          onCancel={() => setDeleteConfirm(null)}
-        />
-      )}
+            confirmLabel={deleteConfirm.type === 'project' ? 'Delete Project' : 'Delete Sample'}
+            cancelLabel="Cancel"
+            confirmVariant="danger"
+            onConfirm={() => {
+              if (deleteConfirm.type === 'project') {
+                handleDeleteProject(deleteConfirm.item as Project);
+              } else {
+                handleDeleteSample(deleteConfirm.item as WavFile);
+              }
+            }}
+            onCancel={() => setDeleteConfirm(null)}
+          />
+        )}
       </div>
     </FileTreeContext.Provider>
   );

@@ -37,7 +37,12 @@ export const AudioWaveform: React.FC<AudioWaveformProps> = ({ samplePath, autoPl
     const loadAudio = async () => {
       try {
         const buffer = await window.electronAPI.readFile(samplePath);
-        const blob = new Blob([buffer], { type: 'audio/wav' });
+        // Convert Buffer to ArrayBuffer for Blob
+        const arrayBuffer = buffer.buffer.slice(
+          buffer.byteOffset,
+          buffer.byteOffset + buffer.byteLength
+        ) as ArrayBuffer;
+        const blob = new Blob([arrayBuffer], { type: 'audio/wav' });
         wavesurfer.loadBlob(blob);
       } catch (error) {
         console.error('Error loading audio file:', error);
@@ -86,7 +91,6 @@ export const AudioWaveform: React.FC<AudioWaveformProps> = ({ samplePath, autoPl
     if (isReady && autoPlay && wavesurferRef.current) {
       wavesurferRef.current.play();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isReady, autoPlay]); // Don't include isPlaying to prevent auto-play after finish
 
   const handlePlayPause = () => {

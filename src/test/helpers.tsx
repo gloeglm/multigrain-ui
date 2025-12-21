@@ -5,10 +5,7 @@ import { MultigainStructure, WavFile, Preset, Project } from '../shared/types';
 /**
  * Custom render function that can wrap components with providers if needed
  */
-export function renderWithProviders(
-  ui: ReactElement,
-  options?: Omit<RenderOptions, 'wrapper'>
-) {
+export function renderWithProviders(ui: ReactElement, options?: Omit<RenderOptions, 'wrapper'>) {
   return render(ui, { ...options });
 }
 
@@ -81,7 +78,11 @@ export function createMockStructureWithData(): MultigainStructure {
   ];
 
   const presets = [
-    createMockPreset({ name: 'Preset01.mgp', path: '/test/multigrain/Project01/Preset01.mgp', index: 1 }),
+    createMockPreset({
+      name: 'Preset01.mgp',
+      path: '/test/multigrain/Project01/Preset01.mgp',
+      index: 1,
+    }),
   ];
 
   const project = createMockProject({
@@ -123,6 +124,6 @@ export async function waitForCondition(
     if (Date.now() - startTime > timeout) {
       throw new Error('Condition timeout');
     }
-    await new Promise(resolve => setTimeout(resolve, interval));
+    await new Promise((resolve) => setTimeout(resolve, interval));
   }
 }

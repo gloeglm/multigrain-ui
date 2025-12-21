@@ -15,13 +15,18 @@ interface ResolvedSample {
   sample?: WavFile;
 }
 
-export const PresetViewer: React.FC<PresetViewerProps> = ({ preset, structure, onNavigateToSample, selectedProject }) => {
+export const PresetViewer: React.FC<PresetViewerProps> = ({
+  preset,
+  structure,
+  onNavigateToSample,
+  selectedProject,
+}) => {
   const [resolvedSamples, setResolvedSamples] = useState<ResolvedSample[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // Find which project this preset belongs to
-  const currentProject = structure.projects.find(p => preset.path.startsWith(p.path));
+  const currentProject = structure.projects.find((p) => preset.path.startsWith(p.path));
 
   // Check if this is the Autosave preset
   const isAutosave = preset.index === 0 && preset.name === 'Autosave';
@@ -30,20 +35,20 @@ export const PresetViewer: React.FC<PresetViewerProps> = ({ preset, structure, o
   const resolveSampleLocation = (sampleName: string): ResolvedSample => {
     // 1. Check current project folder first
     if (currentProject) {
-      const projectSample = currentProject.samples.find(s => s.name === sampleName);
+      const projectSample = currentProject.samples.find((s) => s.name === sampleName);
       if (projectSample) {
         return { name: sampleName, location: 'PROJECT', sample: projectSample };
       }
     }
 
     // 2. Check global WAVS folder
-    const wavsSample = structure.globalWavs.find(s => s.name === sampleName);
+    const wavsSample = structure.globalWavs.find((s) => s.name === sampleName);
     if (wavsSample) {
       return { name: sampleName, location: 'WAVS', sample: wavsSample };
     }
 
     // 3. Check RECS folder
-    const recsSample = structure.recordings.find(s => s.name === sampleName);
+    const recsSample = structure.recordings.find((s) => s.name === sampleName);
     if (recsSample) {
       return { name: sampleName, location: 'RECS', sample: recsSample };
     }
@@ -73,6 +78,7 @@ export const PresetViewer: React.FC<PresetViewerProps> = ({ preset, structure, o
     };
 
     loadSamples();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [preset.path, structure]);
 
   return (
@@ -99,12 +105,12 @@ export const PresetViewer: React.FC<PresetViewerProps> = ({ preset, structure, o
                       selectedProject.customName
                     )
                   : currentProject
-                  ? formatProjectDisplayName(
-                      currentProject.index,
-                      currentProject.name,
-                      currentProject.customName
-                    )
-                  : 'Unknown Project'}
+                    ? formatProjectDisplayName(
+                        currentProject.index,
+                        currentProject.name,
+                        currentProject.customName
+                      )
+                    : 'Unknown Project'}
               </span>
             </>
           ) : (
@@ -115,28 +121,21 @@ export const PresetViewer: React.FC<PresetViewerProps> = ({ preset, structure, o
         </div>
         {isAutosave && (
           <div className="mt-2 text-xs text-label-gray italic">
-            This preset is automatically loaded when you select this project on the Multigrain module
+            This preset is automatically loaded when you select this project on the Multigrain
+            module
           </div>
         )}
       </div>
 
       {/* Samples List */}
       <div className="bg-white rounded border-2 border-panel-dark p-4">
-        <h4 className="text-sm font-medium text-label-blue mb-3">
-          Referenced Samples (8 Sounds)
-        </h4>
+        <h4 className="text-sm font-medium text-label-blue mb-3">Referenced Samples (8 Sounds)</h4>
 
         {isLoading && (
-          <div className="text-center py-8 text-label-gray text-sm">
-            Loading preset data...
-          </div>
+          <div className="text-center py-8 text-label-gray text-sm">Loading preset data...</div>
         )}
 
-        {error && (
-          <div className="text-center py-4 text-button-red text-sm">
-            Error: {error}
-          </div>
-        )}
+        {error && <div className="text-center py-4 text-button-red text-sm">Error: {error}</div>}
 
         {!isLoading && !error && resolvedSamples.length > 0 && (
           <div className="space-y-2">

@@ -9,10 +9,7 @@ import * as path from 'path';
  * @param desiredName - Desired filename (e.g., "kick.wav")
  * @returns Promise<string> - Available filename that doesn't conflict
  */
-export async function resolveConflict(
-  targetDir: string,
-  desiredName: string
-): Promise<string> {
+export async function resolveConflict(targetDir: string, desiredName: string): Promise<string> {
   // Parse the filename into name and extension
   const ext = path.extname(desiredName);
   const baseName = path.basename(desiredName, ext);
@@ -29,7 +26,8 @@ export async function resolveConflict(
 
   // File exists, try numeric suffixes
   let counter = 1;
-  while (counter < 1000) { // Safety limit to prevent infinite loops
+  while (counter < 1000) {
+    // Safety limit to prevent infinite loops
     const newName = `${baseName}_${counter}${ext}`;
     const newPath = path.join(targetDir, newName);
 

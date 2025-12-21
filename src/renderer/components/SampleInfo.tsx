@@ -121,7 +121,9 @@ export const SampleInfo: React.FC<SampleInfoProps> = ({ sample, onRenameComplete
             </div>
           ) : (
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-medium text-label-black" data-testid="sample-name">{sample.name}</h3>
+              <h3 className="text-lg font-medium text-label-black" data-testid="sample-name">
+                {sample.name}
+              </h3>
               <button
                 onClick={handleStartRename}
                 data-testid="rename-sample-button"
@@ -166,7 +168,10 @@ export const SampleInfo: React.FC<SampleInfoProps> = ({ sample, onRenameComplete
             className="w-full h-24 px-3 py-2 border-2 border-panel-dark rounded resize-none focus:border-label-blue focus:outline-none text-sm"
           />
         ) : (
-          <p className="text-sm text-label-black whitespace-pre-wrap" data-testid="description-text">
+          <p
+            className="text-sm text-label-black whitespace-pre-wrap"
+            data-testid="description-text"
+          >
             {description || <span className="text-label-gray italic">No description</span>}
           </p>
         )}

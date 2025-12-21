@@ -10,15 +10,18 @@ if (require('electron-squirrel-startup')) {
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
 declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
 
-// Store for persisting window state
-const store = new Store();
-
 interface WindowBounds {
   x: number;
   y: number;
   width: number;
   height: number;
 }
+
+// Store for persisting window state
+interface StoreSchema {
+  windowBounds?: WindowBounds;
+}
+const store = new Store<StoreSchema>();
 
 const createWindow = (): void => {
   // Get stored window bounds or use defaults
@@ -27,6 +30,7 @@ const createWindow = (): void => {
     height: 800,
   };
 
+  // @ts-expect-error - electron-store types don't properly infer get/set methods
   const storedBounds = store.get('windowBounds') as WindowBounds | undefined;
 
   // Validate that the stored position is still within display bounds
@@ -34,7 +38,7 @@ const createWindow = (): void => {
 
   if (storedBounds) {
     const displays = screen.getAllDisplays();
-    const isValidPosition = displays.some(display => {
+    const isValidPosition = displays.some((display) => {
       const area = display.workArea;
       return (
         storedBounds.x >= area.x &&
@@ -64,6 +68,7 @@ const createWindow = (): void => {
   // Save window bounds when they change
   const saveBounds = () => {
     if (!mainWindow.isMaximized() && !mainWindow.isMinimized()) {
+      // @ts-expect-error - electron-store types don't properly infer get/set methods
       store.set('windowBounds', mainWindow.getBounds());
     }
   };
@@ -79,12 +84,12 @@ const createWindow = (): void => {
         ...details.responseHeaders,
         'Content-Security-Policy': [
           "default-src 'self' 'unsafe-inline' data: blob:; " +
-          "script-src 'self' 'unsafe-eval'; " +
-          "style-src 'self' 'unsafe-inline'; " +
-          "connect-src 'self' ws://localhost:* blob:; " +
-          "media-src 'self' blob: data:"
-        ]
-      }
+            "script-src 'self' 'unsafe-eval'; " +
+            "style-src 'self' 'unsafe-inline'; " +
+            "connect-src 'self' ws://localhost:* blob:; " +
+            "media-src 'self' blob: data:",
+        ],
+      },
     });
   });
 

@@ -1,9 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-  AudioAnalysis,
-  ImportProgress,
-  ImportResult,
-} from '@shared/types/import';
+import { AudioAnalysis, ImportProgress, ImportResult } from '@shared/types/import';
 
 interface ImportDialogProps {
   isOpen: boolean;
@@ -14,12 +10,7 @@ interface ImportDialogProps {
 
 type Stage = 'selecting' | 'validation' | 'progress' | 'results';
 
-export function ImportDialog({
-  isOpen,
-  targetPath,
-  onClose,
-  onImportComplete,
-}: ImportDialogProps) {
+export function ImportDialog({ isOpen, targetPath, onClose, onImportComplete }: ImportDialogProps) {
   const [stage, setStage] = useState<Stage>('selecting');
   const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
   const [analyses, setAnalyses] = useState<AudioAnalysis[]>([]);
@@ -38,6 +29,7 @@ export function ImportDialog({
     if (isOpen && stage === 'selecting') {
       handleSelectFiles();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, stage]);
 
   // Register progress listener
@@ -62,10 +54,7 @@ export function ImportDialog({
       setStage('validation');
 
       // Validate files
-      const validationResult = await window.electronAPI.validateImportFiles(
-        files,
-        targetPath
-      );
+      const validationResult = await window.electronAPI.validateImportFiles(files, targetPath);
       setAnalyses(validationResult.analyses);
       setStorageInfo(validationResult.storageInfo);
     } catch (error) {
@@ -79,10 +68,7 @@ export function ImportDialog({
     setStage('progress');
 
     try {
-      const importResult = await window.electronAPI.executeImport(
-        selectedFiles,
-        targetPath
-      );
+      const importResult = await window.electronAPI.executeImport(selectedFiles, targetPath);
       setResult(importResult);
       setStage('results');
     } catch (error) {
@@ -174,15 +160,10 @@ export function ImportDialog({
               {/* File list */}
               <div className="space-y-2">
                 {analyses.map((analysis, index) => (
-                  <div
-                    key={index}
-                    className="p-3 bg-panel-dark rounded border border-panel-border"
-                  >
+                  <div key={index} className="p-3 bg-panel-dark rounded border border-panel-border">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <p className="font-medium text-label-black truncate">
-                          {analysis.filename}
-                        </p>
+                        <p className="font-medium text-label-black truncate">{analysis.filename}</p>
                         {analysis.isValid ? (
                           <div className="mt-1 space-y-1">
                             {analysis.needsConversion || analysis.willBeTrimmed ? (
@@ -244,9 +225,7 @@ export function ImportDialog({
                 />
               </div>
 
-              <p className="text-center text-sm text-label-gray mt-2">
-                {progress.percent}%
-              </p>
+              <p className="text-center text-sm text-label-gray mt-2">{progress.percent}%</p>
             </div>
           )}
 

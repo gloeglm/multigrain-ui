@@ -134,9 +134,7 @@ export async function validateMultigrainStructure(rootPath: string): Promise<Val
   // Check if this is a Multigrain root or if we need to look for the Multigrain folder
   let multigrainPath = rootPath;
   const entries = await getDirectoryEntries(rootPath);
-  const hasMultigrainFolder = entries.some(
-    (e) => e.isDirectory && e.name === FOLDER_NAMES.ROOT
-  );
+  const hasMultigrainFolder = entries.some((e) => e.isDirectory && e.name === FOLDER_NAMES.ROOT);
 
   if (hasMultigrainFolder) {
     multigrainPath = path.join(rootPath, FOLDER_NAMES.ROOT);
@@ -205,9 +203,7 @@ export async function findMultigrainFolder(searchPath: string): Promise<string |
   }
 
   // Look for Multigrain folder in current directory
-  const multigrainEntry = entries.find(
-    (e) => e.isDirectory && e.name === FOLDER_NAMES.ROOT
-  );
+  const multigrainEntry = entries.find((e) => e.isDirectory && e.name === FOLDER_NAMES.ROOT);
 
   if (multigrainEntry) {
     return multigrainEntry.path;

@@ -72,7 +72,6 @@ describe('SampleInfo Component', () => {
       });
     });
 
-
     it('displays "No description" when description is empty', async () => {
       vi.mocked(window.electronAPI.readAudioMetadata).mockResolvedValue({
         description: '',
@@ -219,11 +218,18 @@ describe('SampleInfo Component', () => {
     it('shows "Saving..." state during rename', async () => {
       const user = userEvent.setup();
       vi.mocked(window.electronAPI.renameSample).mockImplementation(
-        () => new Promise(resolve => setTimeout(() => resolve({
-          success: true,
-          newName: 'renamed.wav',
-          newPath: '/test/renamed.wav',
-        }), 100))
+        () =>
+          new Promise((resolve) =>
+            setTimeout(
+              () =>
+                resolve({
+                  success: true,
+                  newName: 'renamed.wav',
+                  newPath: '/test/renamed.wav',
+                }),
+              100
+            )
+          )
       );
 
       render(<SampleInfo sample={defaultSample} />);

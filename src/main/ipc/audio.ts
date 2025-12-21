@@ -11,11 +11,9 @@ export function registerAudioHandlers(): void {
       // Try to get description from various metadata fields
       // music-metadata returns comments as objects with {text, language, descriptor}
       const commentObj = metadata.common.comment?.[0];
-      const commentText = typeof commentObj === 'string'
-        ? commentObj
-        : commentObj?.text || '';
+      const commentText = typeof commentObj === 'string' ? commentObj : commentObj?.text || '';
 
-      const riffComment = metadata.native?.['RIFF']?.find(tag => tag.id === 'ICMT')?.value;
+      const riffComment = metadata.native?.['RIFF']?.find((tag) => tag.id === 'ICMT')?.value;
       const description = commentText || riffComment || '';
 
       return {
@@ -58,7 +56,7 @@ export function registerAudioHandlers(): void {
       console.error('Error writing metadata:', error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
   });
@@ -119,7 +117,7 @@ async function addInfoChunk(buffer: Buffer, description: string): Promise<Buffer
 
   if (infoChunkPosition !== -1) {
     // Replace existing INFO chunk
-    const chunk = chunks.find(c => c.position === infoChunkPosition);
+    const chunk = chunks.find((c) => c.position === infoChunkPosition);
     if (!chunk) throw new Error('Chunk not found');
 
     const beforeChunk = buffer.subarray(0, infoChunkPosition);
@@ -129,7 +127,7 @@ async function addInfoChunk(buffer: Buffer, description: string): Promise<Buffer
     newBuffer = Buffer.concat([beforeChunk, infoChunk, afterChunk]);
   } else {
     // Insert new INFO chunk before 'data' chunk
-    const dataChunk = chunks.find(c => c.id === 'data');
+    const dataChunk = chunks.find((c) => c.id === 'data');
     if (!dataChunk) throw new Error('No data chunk found');
 
     const beforeData = buffer.subarray(0, dataChunk.position);

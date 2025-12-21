@@ -4,12 +4,7 @@ import * as fs from 'fs/promises';
 import ffmpeg from 'fluent-ffmpeg';
 import ffmpegInstaller from '@ffmpeg-installer/ffmpeg';
 import { parseFile } from 'music-metadata';
-import {
-  AudioAnalysis,
-  AudioMetadata,
-  AudioIssue,
-  ConversionResult,
-} from '@shared/types/import';
+import { AudioAnalysis, AudioMetadata, AudioIssue, ConversionResult } from '@shared/types/import';
 import { AUDIO_SPECS } from '@shared/constants';
 
 // Set FFmpeg path from installer
@@ -146,10 +141,10 @@ export async function convertAudioFile(
     try {
       // Create FFmpeg command
       let command = ffmpeg(sourcePath)
-        .audioCodec('pcm_s16le')        // 16-bit PCM
-        .audioFrequency(AUDIO_SPECS.SAMPLE_RATE)  // 48kHz
-        .audioChannels(AUDIO_SPECS.CHANNELS)      // Stereo
-        .format('wav');                  // WAV format
+        .audioCodec('pcm_s16le') // 16-bit PCM
+        .audioFrequency(AUDIO_SPECS.SAMPLE_RATE) // 48kHz
+        .audioChannels(AUDIO_SPECS.CHANNELS) // Stereo
+        .format('wav'); // WAV format
 
       // Trim if longer than max duration
       // Use -t flag to limit duration to exactly 32 seconds

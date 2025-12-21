@@ -19,14 +19,14 @@ vi.mock('node:fs', () => ({
 import { registerFileOperationsHandlers } from './fileOperations';
 
 describe('fileOperations IPC Handlers', () => {
-  let handlers: Map<string, Function>;
+  let handlers: Map<string, any>;
 
   beforeEach(() => {
     vol.reset();
     handlers = new Map();
 
     // Capture registered handlers
-    vi.mocked(ipcMain.handle).mockImplementation((channel: string, handler: Function) => {
+    vi.mocked(ipcMain.handle).mockImplementation((channel: string, handler: any) => {
       handlers.set(channel, handler);
     });
 
@@ -93,7 +93,15 @@ describe('fileOperations IPC Handlers', () => {
 
     it('rejects invalid characters', async () => {
       const handler = handlers.get(channel)!;
-      const invalidNames = ['bad:name', 'bad<name', 'bad>name', 'bad|name', 'bad?name', 'bad*name', 'bad"name'];
+      const invalidNames = [
+        'bad:name',
+        'bad<name',
+        'bad>name',
+        'bad|name',
+        'bad?name',
+        'bad*name',
+        'bad"name',
+      ];
 
       for (const name of invalidNames) {
         const result = await handler(null, '/test/sample.wav', name);
@@ -331,9 +339,9 @@ describe('fileOperations IPC Handlers', () => {
 
     it('rejects invalid project folder patterns', async () => {
       vol.fromJSON({
-        '/test/Project1': null,  // Missing leading zero
-        '/test/Project001': null,  // Too many digits
-        '/test/ProjectAB': null,  // Not digits
+        '/test/Project1': null, // Missing leading zero
+        '/test/Project001': null, // Too many digits
+        '/test/ProjectAB': null, // Not digits
       });
 
       const handler = handlers.get(channel)!;
@@ -363,17 +371,14 @@ describe('fileOperations IPC Handlers', () => {
 
     it('deletes multiple samples successfully', async () => {
       const handler = handlers.get(channel)!;
-      const result = await handler(null, [
-        '/test/sample1.wav',
-        '/test/sample2.wav',
-      ]);
+      const result = await handler(null, ['/test/sample1.wav', '/test/sample2.wav']);
 
       expect(result.success).toBe(true);
       expect(result.count).toBe(2);
       expect(result.total).toBe(2);
       expect(result.results).toHaveLength(2);
 
-      result.results.forEach((r: any) => {
+      result.results.forEach((r: { success: boolean }) => {
         expect(r.success).toBe(true);
       });
     });
@@ -382,13 +387,13 @@ describe('fileOperations IPC Handlers', () => {
       const handler = handlers.get(channel)!;
       const result = await handler(null, [
         '/test/sample1.wav',
-        '/test/invalid.txt',  // Will fail
+        '/test/invalid.txt', // Will fail
         '/test/sample2.wav',
-        '/test/nonexistent.wav',  // Will fail
+        '/test/nonexistent.wav', // Will fail
       ]);
 
-      expect(result.success).toBe(true);  // At least some succeeded
-      expect(result.count).toBe(2);  // 2 successful
+      expect(result.success).toBe(true); // At least some succeeded
+      expect(result.count).toBe(2); // 2 successful
       expect(result.total).toBe(4);
       expect(result.results).toHaveLength(4);
 
@@ -401,10 +406,7 @@ describe('fileOperations IPC Handlers', () => {
 
     it('returns false when all operations fail', async () => {
       const handler = handlers.get(channel)!;
-      const result = await handler(null, [
-        '/test/invalid.txt',
-        '/test/nonexistent.wav',
-      ]);
+      const result = await handler(null, ['/test/invalid.txt', '/test/nonexistent.wav']);
 
       expect(result.success).toBe(false);
       expect(result.count).toBe(0);

@@ -1,14 +1,7 @@
-import { ipcMain, dialog, BrowserWindow } from 'electron';
+import { ipcMain, dialog } from 'electron';
 import * as path from 'path';
 import * as fs from 'fs/promises';
-import {
-  ImportRequest,
-  ImportResult,
-  ImportProgress,
-  AudioAnalysis,
-  RenamedFile,
-  ImportError,
-} from '@shared/types/import';
+import { ImportRequest, ImportResult, ImportProgress, AudioAnalysis } from '@shared/types/import';
 import {
   analyzeAudioFile,
   convertAudioFile,
@@ -28,7 +21,7 @@ async function getWavFileCount(dirPath: string): Promise<number> {
       (entry) => entry.isFile() && entry.name.toLowerCase().endsWith('.wav')
     );
     return wavFiles.length;
-  } catch (error) {
+  } catch {
     return 0;
   }
 }
@@ -178,20 +171,14 @@ export function registerAudioImportHandlers(): void {
 
           tempFilePath = getTempConversionPath(filename);
 
-          const conversionResult = await convertAudioFile(
-            filePath,
-            tempFilePath,
-            (percent) => {
-              // Update progress with conversion percentage
-              const overallPercent = Math.round(
-                ((i + percent / 100) / files.length) * 100
-              );
-              event.sender.send('import:progress', {
-                ...progress,
-                percent: overallPercent,
-              });
-            }
-          );
+          const conversionResult = await convertAudioFile(filePath, tempFilePath, (percent) => {
+            // Update progress with conversion percentage
+            const overallPercent = Math.round(((i + percent / 100) / files.length) * 100);
+            event.sender.send('import:progress', {
+              ...progress,
+              percent: overallPercent,
+            });
+          });
 
           if (!conversionResult.success) {
             result.errors.push({

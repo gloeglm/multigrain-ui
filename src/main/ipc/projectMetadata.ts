@@ -18,7 +18,7 @@ export function registerProjectMetadataHandlers(): void {
       return {
         customName: metadata.customName || '',
       };
-    } catch (error) {
+    } catch {
       // File doesn't exist or is invalid - return defaults
       return {
         customName: '',

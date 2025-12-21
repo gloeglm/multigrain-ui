@@ -17,16 +17,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
   listDrives: () => ipcRenderer.invoke('drives:list'),
 
   // Multigrain operations
-  validateMultigrain: (rootPath: string) =>
-    ipcRenderer.invoke('multigrain:validate', rootPath),
+  validateMultigrain: (rootPath: string) => ipcRenderer.invoke('multigrain:validate', rootPath),
   findMultigrainFolder: (searchPath: string) =>
     ipcRenderer.invoke('multigrain:findFolder', searchPath),
 
   // Audio operations
   convertAudio: (inputPath: string, outputPath: string) =>
     ipcRenderer.invoke('audio:convert', inputPath, outputPath),
-  readAudioMetadata: (filePath: string) =>
-    ipcRenderer.invoke('audio:readMetadata', filePath),
+  readAudioMetadata: (filePath: string) => ipcRenderer.invoke('audio:readMetadata', filePath),
   writeAudioMetadata: (filePath: string, description: string) =>
     ipcRenderer.invoke('audio:writeMetadata', filePath, description),
 
@@ -43,8 +41,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('project:create', rootPath, projectNumber, customName),
 
   // Preset operations
-  readPresetSamples: (filePath: string) =>
-    ipcRenderer.invoke('preset:readSamples', filePath),
+  readPresetSamples: (filePath: string) => ipcRenderer.invoke('preset:readSamples', filePath),
 
   // Import operations
   selectImportFiles: () => ipcRenderer.invoke('import:selectFiles'),
@@ -52,19 +49,19 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('import:validateFiles', { files, targetPath }),
   executeImport: (files: string[], targetPath: string) =>
     ipcRenderer.invoke('import:executeBatch', { files, targetPath }),
-  onImportProgress: (callback: (progress: any) => void) => {
-    const handler = (_: any, progress: any) => callback(progress);
+  onImportProgress: (
+    callback: (progress: import('../shared/types/import').ImportProgress) => void
+  ) => {
+    const handler = (_event: Electron.IpcRendererEvent, progress: unknown) =>
+      callback(progress as import('../shared/types/import').ImportProgress);
     ipcRenderer.on('import:progress', handler);
     return () => ipcRenderer.removeListener('import:progress', handler);
   },
 
   // File operations (delete)
-  deleteProject: (projectPath: string) =>
-    ipcRenderer.invoke('files:deleteProject', projectPath),
-  deleteSample: (samplePath: string) =>
-    ipcRenderer.invoke('files:deleteSample', samplePath),
-  deleteSamples: (samplePaths: string[]) =>
-    ipcRenderer.invoke('files:deleteSamples', samplePaths),
+  deleteProject: (projectPath: string) => ipcRenderer.invoke('files:deleteProject', projectPath),
+  deleteSample: (samplePath: string) => ipcRenderer.invoke('files:deleteSample', samplePath),
+  deleteSamples: (samplePaths: string[]) => ipcRenderer.invoke('files:deleteSamples', samplePaths),
 
   // File operations (rename)
   renameSample: (samplePath: string, newName: string) =>
@@ -97,14 +94,20 @@ export type ElectronAPI = {
     bitDepth: number;
     channels: number;
   }>;
-  writeAudioMetadata: (filePath: string, description: string) => Promise<{
+  writeAudioMetadata: (
+    filePath: string,
+    description: string
+  ) => Promise<{
     success: boolean;
     error?: string;
   }>;
   readProjectMetadata: (projectPath: string) => Promise<{
     customName: string;
   }>;
-  writeProjectMetadata: (projectPath: string, customName: string) => Promise<{
+  writeProjectMetadata: (
+    projectPath: string,
+    customName: string
+  ) => Promise<{
     success: boolean;
     error?: string;
   }>;
@@ -115,7 +118,11 @@ export type ElectronAPI = {
     count?: number;
     error?: string;
   }>;
-  createProject: (rootPath: string, projectNumber: number, customName?: string) => Promise<{
+  createProject: (
+    rootPath: string,
+    projectNumber: number,
+    customName?: string
+  ) => Promise<{
     success: boolean;
     projectPath?: string;
     projectName?: string;
@@ -127,7 +134,10 @@ export type ElectronAPI = {
     error?: string;
   }>;
   selectImportFiles: () => Promise<string[] | null>;
-  validateImportFiles: (files: string[], targetPath: string) => Promise<{
+  validateImportFiles: (
+    files: string[],
+    targetPath: string
+  ) => Promise<{
     analyses: import('../shared/types/import').AudioAnalysis[];
     storageInfo: {
       currentCount: number;
@@ -136,8 +146,13 @@ export type ElectronAPI = {
       wouldExceed: boolean;
     };
   }>;
-  executeImport: (files: string[], targetPath: string) => Promise<import('../shared/types/import').ImportResult>;
-  onImportProgress: (callback: (progress: import('../shared/types/import').ImportProgress) => void) => () => void;
+  executeImport: (
+    files: string[],
+    targetPath: string
+  ) => Promise<import('../shared/types/import').ImportResult>;
+  onImportProgress: (
+    callback: (progress: import('../shared/types/import').ImportProgress) => void
+  ) => () => void;
   deleteProject: (projectPath: string) => Promise<{
     success: boolean;
     error?: string;
@@ -152,7 +167,10 @@ export type ElectronAPI = {
     total?: number;
     results?: Array<{ path: string; success: boolean; error?: string }>;
   }>;
-  renameSample: (samplePath: string, newName: string) => Promise<{
+  renameSample: (
+    samplePath: string,
+    newName: string
+  ) => Promise<{
     success: boolean;
     newPath?: string;
     newName?: string;

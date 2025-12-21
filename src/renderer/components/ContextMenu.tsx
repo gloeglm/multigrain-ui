@@ -44,8 +44,10 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, items, onClose }
   useEffect(() => {
     if (menuRef.current) {
       const rect = menuRef.current.getBoundingClientRect();
-      const adjustedX = x + rect.width > window.innerWidth ? window.innerWidth - rect.width - 10 : x;
-      const adjustedY = y + rect.height > window.innerHeight ? window.innerHeight - rect.height - 10 : y;
+      const adjustedX =
+        x + rect.width > window.innerWidth ? window.innerWidth - rect.width - 10 : x;
+      const adjustedY =
+        y + rect.height > window.innerHeight ? window.innerHeight - rect.height - 10 : y;
 
       menuRef.current.style.left = `${adjustedX}px`;
       menuRef.current.style.top = `${adjustedY}px`;
@@ -58,7 +60,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, items, onClose }
       className="fixed z-50 bg-white border-2 border-panel-dark rounded shadow-lg py-1 min-w-[180px]"
       style={{ left: x, top: y }}
     >
-      {items.map((item, index) => (
+      {items.map((item, index) =>
         item.separator ? (
           <div key={index} className="my-1 border-t border-panel-dark" />
         ) : (
@@ -81,7 +83,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, items, onClose }
             <span>{item.label}</span>
           </button>
         )
-      ))}
+      )}
     </div>
   );
 };

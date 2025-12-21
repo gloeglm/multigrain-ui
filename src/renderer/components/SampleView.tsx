@@ -10,7 +10,11 @@ interface SampleViewProps {
   onRenameComplete?: (newPath: string) => void;
 }
 
-export const SampleView: React.FC<SampleViewProps> = ({ sample, autoPlay = false, onRenameComplete }) => {
+export const SampleView: React.FC<SampleViewProps> = ({
+  sample,
+  autoPlay = false,
+  onRenameComplete,
+}) => {
   return (
     <div className="space-y-4">
       {/* Section 1: Editable information (Name, Description) */}

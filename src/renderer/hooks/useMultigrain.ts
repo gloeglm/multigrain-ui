@@ -83,6 +83,7 @@ export function useMultigrain(): UseMultigrainReturn {
     } else {
       console.log('No last path found in localStorage');
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Empty deps - only run once on mount
 
   return {

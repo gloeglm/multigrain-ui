@@ -104,7 +104,7 @@ Project
 
 Implement automated testing to catch bugs early and enable confident refactoring. Recent rename synchronization issues highlighted the need for comprehensive test coverage.
 
-**Current Status**: 109 tests passing (3 infrastructure + 27 constants + 16 utility + 29 IPC handler + 11 App + 23 SampleInfo component tests)
+**Current Status**: 111 tests passing (54 infrastructure/utility + 29 IPC handler + 11 App + 23 SampleInfo + 2 integration tests)
 
 #### Phase 5a-d: Test Infrastructure & Core Testing ✅ **COMPLETE**
 - [x] Vitest + React Testing Library setup with memfs for IPC mocking
@@ -117,11 +117,12 @@ Implement automated testing to catch bugs early and enable confident refactoring
 
 **Architecture**: Components now follow Single Responsibility Principle for better testability
 
-#### Phase 5e: Additional Component & Integration Tests ❌ **NOT STARTED**
+#### Phase 5e: Additional Component & Integration Tests 🚧 **IN PROGRESS**
 - [ ] AudioWaveform component tests (WaveSurfer initialization, controls, auto-play)
 - [ ] SampleTechnicalDetails component tests (metadata loading, display)
-- [ ] Integration tests (rename sync between FileTree/SampleInfo, delete navigation, workflows)
+- [x] Integration tests (rename sync between FileTree/SampleInfo verified) - 2 tests
 - [ ] Error recovery tests (failed operations, validation)
+- [ ] Additional integration workflows (delete navigation, multi-step operations)
 
 ### Phase 6: Project Overview ✅ **COMPLETE**
 - [x] Interactive tree view with clickable Multigrain/Projects nodes for overview
@@ -198,8 +199,39 @@ Generate printable PDF reference sheets to help users remember which projects ar
 
 **Status**: Basic error handling exists. Comprehensive testing and polish phase pending.
 
-### Phase 9: Distribution & Deployment ❌ **NOT STARTED**
-- [ ] GitHub Actions CI/CD workflow for automated builds
+### Phase 9: Distribution & Deployment 🚧 **IN PROGRESS**
+
+#### Phase 9a: CI/CD Testing Pipeline ✅ **COMPLETE**
+- [x] GitHub Actions workflow for automated testing
+- [x] Run on push and pull requests to main branch
+- [x] Type checking with TypeScript (tsc --noEmit)
+- [x] Code linting with ESLint (strict mode, --max-warnings 0)
+- [x] Test suite execution (111 tests)
+- [x] Test results artifact upload
+- [x] Status badge in README
+
+**Test Workflow** (`.github/workflows/test.yml`):
+- Runs on ubuntu-latest with Node.js 20
+- Executes: `npm ci → type-check → lint → test`
+- Badge: `![Tests](https://github.com/gloeglm/multigrain-ui/actions/workflows/test.yml/badge.svg)`
+
+#### Phase 9b: Code Quality & Linting ✅ **COMPLETE**
+- [x] ESLint 9 with flat config (eslint.config.js)
+- [x] TypeScript ESLint plugin with recommended rules
+- [x] React and React Hooks linting
+- [x] Prettier integration for code formatting
+- [x] Strict linting: --max-warnings 0 (zero tolerance)
+- [x] Separate rules for test files (relaxed any types)
+- [x] Scripts: lint, lint:fix, format, format:check, type-check
+- [x] All 111 tests pass, zero linting warnings, zero type errors
+
+**Linting Configuration**:
+- ESLint 9 flat config with TypeScript, React, Prettier plugins
+- Prettier for consistent formatting (single quotes, 100 char width, semicolons)
+- Test files allow `any` types for mocking flexibility
+- React hooks exhaustive-deps disabled where intentional
+
+#### Phase 9c: Build & Release Automation ❌ **NOT STARTED**
 - [ ] Multi-platform builds (Windows, macOS, Linux) on native runners
 - [ ] Publish to GitHub Releases with draft review
 - [ ] Version tagging and release process documentation
@@ -208,7 +240,7 @@ Generate printable PDF reference sheets to help users remember which projects ar
   - [ ] Windows: Code signing certificate
 - [ ] Auto-update mechanism (future)
 
-**Status**: No CI/CD currently configured. Planning to use GitHub Actions with Electron Forge publishers.
+**Status**: Testing pipeline complete with linting and type checking. Build/release automation pending.
 
 **Implementation Approach**:
 - **GitHub Actions**: Trigger on version tags (`v*.*.*`)
@@ -363,7 +395,16 @@ Configuration Files:
 ├── tailwind.config.js        ✅ Custom theme configuration
 ├── webpack.main.config.js    ✅ Main process webpack config
 ├── forge.config.js           ✅ Electron Forge configuration
-└── tsconfig.json             ✅ TypeScript configuration
+├── tsconfig.json             ✅ TypeScript configuration
+├── eslint.config.js          ✅ ESLint 9 flat config
+├── .prettierrc.json          ✅ Prettier formatting rules
+└── .prettierignore           ✅ Prettier exclusions
+
+CI/CD Files:
+└── .github/
+    ├── workflows/
+    │   └── test.yml          ✅ GitHub Actions test workflow
+    └── CI_CD.md              ✅ CI/CD documentation
 ```
 
 ### Files for Phase 4a: Import Feature ✅ **COMPLETE**

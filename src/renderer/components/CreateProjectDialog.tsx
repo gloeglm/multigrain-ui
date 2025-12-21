@@ -22,7 +22,7 @@ export function CreateProjectDialog({
     for (let bank = 1; bank <= 6; bank++) {
       for (let position = 1; position <= 8; position++) {
         const projNum = (bank - 1) * 8 + position;
-        if (!existingProjects.find(p => p.index === projNum)) {
+        if (!existingProjects.find((p) => p.index === projNum)) {
           return { bank, position };
         }
       }
@@ -41,7 +41,7 @@ export function CreateProjectDialog({
   const findFirstAvailablePositionInBank = (bankNumber: number): number | null => {
     for (let pos = 1; pos <= 8; pos++) {
       const projNum = (bankNumber - 1) * 8 + pos;
-      if (!existingProjects.find(p => p.index === projNum)) {
+      if (!existingProjects.find((p) => p.index === projNum)) {
         return pos;
       }
     }
@@ -51,7 +51,7 @@ export function CreateProjectDialog({
   // When bank changes, ensure selected position is available
   React.useEffect(() => {
     const projNum = (selectedBank - 1) * 8 + selectedPosition;
-    const isCurrentPositionOccupied = !!existingProjects.find(p => p.index === projNum);
+    const isCurrentPositionOccupied = !!existingProjects.find((p) => p.index === projNum);
 
     if (isCurrentPositionOccupied) {
       const firstAvailablePos = findFirstAvailablePositionInBank(selectedBank);
@@ -59,6 +59,7 @@ export function CreateProjectDialog({
         setSelectedPosition(firstAvailablePos);
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedBank]);
 
   // Calculate project number from bank and position
@@ -70,16 +71,12 @@ export function CreateProjectDialog({
   const isBankAvailable = (bankNumber: number) => {
     for (let pos = 1; pos <= 8; pos++) {
       const projNum = (bankNumber - 1) * 8 + pos;
-      if (!existingProjects.find(p => p.index === projNum)) {
+      if (!existingProjects.find((p) => p.index === projNum)) {
         return true;
       }
     }
     return false;
   };
-
-  // Check if current selection exists
-  const existingProject = existingProjects.find(p => p.index === projectNumber);
-  const projectExists = !!existingProject;
 
   const handleCreate = async () => {
     setIsCreating(true);
@@ -93,7 +90,9 @@ export function CreateProjectDialog({
       setCustomName('');
     } catch (error) {
       console.error('Failed to create project:', error);
-      alert(`Failed to create project: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      alert(
+        `Failed to create project: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     } finally {
       setIsCreating(false);
     }
@@ -120,9 +119,7 @@ export function CreateProjectDialog({
         <div className="px-6 py-4 space-y-4">
           {/* Bank Selection */}
           <div>
-            <label className="block text-sm font-medium text-label-black mb-2">
-              Bank
-            </label>
+            <label className="block text-sm font-medium text-label-black mb-2">Bank</label>
             <div className="grid grid-cols-6 gap-2">
               {BANK_NAMES.map((bankName, index) => {
                 const bankNumber = index + 1;
@@ -136,8 +133,8 @@ export function CreateProjectDialog({
                       selectedBank === bankNumber
                         ? 'bg-label-blue text-white'
                         : isAvailable
-                        ? 'bg-panel-dark text-label-black hover:bg-button-gray'
-                        : 'bg-button-gray text-label-gray cursor-not-allowed opacity-50'
+                          ? 'bg-panel-dark text-label-black hover:bg-button-gray'
+                          : 'bg-button-gray text-label-gray cursor-not-allowed opacity-50'
                     }`}
                     title={!isAvailable ? 'Bank full' : ''}
                   >
@@ -156,11 +153,16 @@ export function CreateProjectDialog({
             <div className="grid grid-cols-8 gap-2">
               {[1, 2, 3, 4, 5, 6, 7, 8].map((position) => {
                 const projNum = (selectedBank - 1) * 8 + position;
-                const existingProj = existingProjects.find(p => p.index === projNum);
+                const existingProj = existingProjects.find((p) => p.index === projNum);
                 const exists = !!existingProj;
-                const tooltipText = exists && existingProj
-                  ? formatProjectDisplayName(existingProj.index, existingProj.name, existingProj.customName)
-                  : '';
+                const tooltipText =
+                  exists && existingProj
+                    ? formatProjectDisplayName(
+                        existingProj.index,
+                        existingProj.name,
+                        existingProj.customName
+                      )
+                    : '';
                 return (
                   <button
                     key={position}
@@ -170,8 +172,8 @@ export function CreateProjectDialog({
                       selectedPosition === position && selectedBank === selectedBank
                         ? 'bg-label-blue text-white'
                         : exists
-                        ? 'bg-button-gray text-label-gray cursor-not-allowed opacity-50'
-                        : 'bg-panel-dark text-label-black hover:bg-button-gray'
+                          ? 'bg-button-gray text-label-gray cursor-not-allowed opacity-50'
+                          : 'bg-panel-dark text-label-black hover:bg-button-gray'
                     }`}
                     title={exists ? `${tooltipText} already exists` : ''}
                   >

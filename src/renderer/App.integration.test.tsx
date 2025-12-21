@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import App from './App';
@@ -36,7 +36,6 @@ describe('App Integration Tests', () => {
     // Mock validateMultigrain to return a structure with samples
     vi.mocked(window.electronAPI.validateMultigrain).mockResolvedValue({
       isValid: true,
-      valid: true,
       errors: [],
       structure: createMockStructure({
         rootPath: '/test/Multigrain',
@@ -93,7 +92,9 @@ describe('App Integration Tests', () => {
       await user.click(screen.getByTestId('project-node-/test/Multigrain/Project01'));
 
       await waitFor(() => {
-        expect(screen.getByTestId('sample-node-/test/Multigrain/Project01/kick.wav')).toBeInTheDocument();
+        expect(
+          screen.getByTestId('sample-node-/test/Multigrain/Project01/kick.wav')
+        ).toBeInTheDocument();
       });
 
       // Select the sample
@@ -107,7 +108,6 @@ describe('App Integration Tests', () => {
       // Mock the structure reload with renamed sample
       vi.mocked(window.electronAPI.validateMultigrain).mockResolvedValue({
         isValid: true,
-        valid: true,
         errors: [],
         structure: createMockStructure({
           rootPath: '/test/Multigrain',
@@ -190,7 +190,6 @@ describe('App Integration Tests', () => {
         // Mock the structure reload with renamed sample
         vi.mocked(window.electronAPI.validateMultigrain).mockResolvedValue({
           isValid: true,
-          valid: true,
           errors: [],
           structure: createMockStructure({
             rootPath: '/test/Multigrain',
@@ -252,7 +251,9 @@ describe('App Integration Tests', () => {
 
       await user.click(screen.getByTestId('project-node-/test/Multigrain/Project01'));
       await waitFor(() => {
-        expect(screen.getByTestId('sample-node-/test/Multigrain/Project01/kick.wav')).toBeInTheDocument();
+        expect(
+          screen.getByTestId('sample-node-/test/Multigrain/Project01/kick.wav')
+        ).toBeInTheDocument();
       });
 
       await user.click(screen.getByTestId('sample-node-/test/Multigrain/Project01/kick.wav'));

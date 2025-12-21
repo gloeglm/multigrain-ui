@@ -22,14 +22,14 @@ const App: React.FC = () => {
     if (!structure) return null;
     // Check in all projects
     for (const project of structure.projects) {
-      const sample = project.samples.find(s => s.path === path);
+      const sample = project.samples.find((s) => s.path === path);
       if (sample) return sample;
     }
     // Check in global wavs
-    const globalSample = structure.globalWavs.find(s => s.path === path);
+    const globalSample = structure.globalWavs.find((s) => s.path === path);
     if (globalSample) return globalSample;
     // Check in recordings
-    const recording = structure.recordings.find(s => s.path === path);
+    const recording = structure.recordings.find((s) => s.path === path);
     if (recording) return recording;
     return null;
   };
@@ -38,7 +38,7 @@ const App: React.FC = () => {
   const findPresetByPath = (path: string) => {
     if (!structure) return null;
     for (const project of structure.projects) {
-      const preset = project.presets.find(p => p.path === path);
+      const preset = project.presets.find((p) => p.path === path);
       if (preset) return preset;
       if (project.autosave?.path === path) return project.autosave;
     }
@@ -48,7 +48,7 @@ const App: React.FC = () => {
   // Helper function to find project by path
   const findProjectByPath = (path: string) => {
     if (!structure) return null;
-    return structure.projects.find(p => p.path === path) || null;
+    return structure.projects.find((p) => p.path === path) || null;
   };
 
   // Save auto-play preference when it changes
@@ -95,9 +95,7 @@ const App: React.FC = () => {
     <div className="h-screen bg-white text-label-black flex flex-col overflow-hidden">
       {/* Header */}
       <header className="flex-shrink-0 bg-panel-light border-b-2 border-panel-dark px-6 py-4 flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-label-black">
-          Multigrain Sample Manager
-        </h1>
+        <h1 className="text-xl font-semibold text-label-black">Multigrain Sample Manager</h1>
         <div className="flex items-center gap-4">
           {/* Auto-play toggle */}
           <label className="flex items-center gap-2 cursor-pointer">
@@ -113,7 +111,11 @@ const App: React.FC = () => {
                   ? 'bg-label-blue text-white shadow-sm'
                   : 'bg-white border-2 border-panel-dark text-label-gray hover:bg-panel-light'
               }`}
-              title={autoPlay ? 'Auto-play enabled - Click to disable' : 'Auto-play disabled - Click to enable'}
+              title={
+                autoPlay
+                  ? 'Auto-play enabled - Click to disable'
+                  : 'Auto-play disabled - Click to enable'
+              }
             >
               <span className="text-base">{autoPlay ? '▶' : '⏸'}</span>
               <span>Auto-play</span>
@@ -153,7 +155,10 @@ const App: React.FC = () => {
           {structure ? (
             <>
               {/* Fixed path display */}
-              <div className="flex-shrink-0 text-xs text-label-gray px-4 py-2 border-b border-panel-dark truncate" title={structure.rootPath}>
+              <div
+                className="flex-shrink-0 text-xs text-label-gray px-4 py-2 border-b border-panel-dark truncate"
+                title={structure.rootPath}
+              >
                 {structure.rootPath}
               </div>
               {/* Scrollable tree */}
@@ -176,7 +181,9 @@ const App: React.FC = () => {
               <div>
                 <div className="text-4xl mb-4">💾</div>
                 <p className="mb-2 text-label-black">No SD card selected</p>
-                <p className="text-xs">Click "Select SD Card" to browse your Multigrain samples</p>
+                <p className="text-xs">
+                  Click &quot;Select SD Card&quot; to browse your Multigrain samples
+                </p>
               </div>
             </div>
           )}
@@ -184,50 +191,58 @@ const App: React.FC = () => {
 
         {/* Main panel - Preview/Details */}
         <section className="flex-1 p-6 overflow-y-auto bg-white">
-          {selection.type === 'sample' ? (() => {
-            const sample = findSampleByPath(selection.samplePath);
-            if (!sample) {
+          {selection.type === 'sample' ? (
+            (() => {
+              const sample = findSampleByPath(selection.samplePath);
+              if (!sample) {
+                return (
+                  <div className="flex items-center justify-center h-full text-label-gray">
+                    <p>Sample not found</p>
+                  </div>
+                );
+              }
               return (
-                <div className="flex items-center justify-center h-full text-label-gray">
-                  <p>Sample not found</p>
+                <div className="max-w-3xl mx-auto">
+                  <SampleView
+                    key={selection.samplePath}
+                    sample={sample}
+                    autoPlay={autoPlay}
+                    onRenameComplete={(newPath) => {
+                      setSelection({ type: 'sample', samplePath: newPath });
+                      reloadStructure();
+                    }}
+                  />
                 </div>
               );
-            }
-            return (
-              <div className="max-w-3xl mx-auto">
-                <SampleView
-                  key={selection.samplePath}
-                  sample={sample}
-                  autoPlay={autoPlay}
-                  onRenameComplete={(newPath) => {
-                    setSelection({ type: 'sample', samplePath: newPath });
-                    reloadStructure();
-                  }}
-                />
-              </div>
-            );
-          })() : selection.type === 'preset' && structure ? (() => {
-            const preset = findPresetByPath(selection.presetPath);
-            const project = selection.projectPath ? findProjectByPath(selection.projectPath) : undefined;
-            if (!preset) {
+            })()
+          ) : selection.type === 'preset' && structure ? (
+            (() => {
+              const preset = findPresetByPath(selection.presetPath);
+              const project = selection.projectPath
+                ? findProjectByPath(selection.projectPath)
+                : undefined;
+              if (!preset) {
+                return (
+                  <div className="flex items-center justify-center h-full text-label-gray">
+                    <p>Preset not found</p>
+                  </div>
+                );
+              }
               return (
-                <div className="flex items-center justify-center h-full text-label-gray">
-                  <p>Preset not found</p>
+                <div className="max-w-3xl mx-auto">
+                  <PresetViewer
+                    key={selection.presetPath}
+                    preset={preset}
+                    structure={structure}
+                    onNavigateToSample={(sample) =>
+                      setSelection({ type: 'sample', samplePath: sample.path })
+                    }
+                    selectedProject={project}
+                  />
                 </div>
               );
-            }
-            return (
-              <div className="max-w-3xl mx-auto">
-                <PresetViewer
-                  key={selection.presetPath}
-                  preset={preset}
-                  structure={structure}
-                  onNavigateToSample={(sample) => setSelection({ type: 'sample', samplePath: sample.path })}
-                  selectedProject={project}
-                />
-              </div>
-            );
-          })() : structure ? (
+            })()
+          ) : structure ? (
             <div className="max-w-2xl">
               <h2 className="text-lg font-medium mb-4 text-label-blue">Overview</h2>
               <div className="grid grid-cols-3 gap-4 mb-6">
@@ -263,9 +278,16 @@ const App: React.FC = () => {
                   </thead>
                   <tbody>
                     {structure.projects.map((project) => (
-                      <tr key={project.path} className="border-b border-panel-dark last:border-0 hover:bg-panel-light">
+                      <tr
+                        key={project.path}
+                        className="border-b border-panel-dark last:border-0 hover:bg-panel-light"
+                      >
                         <td className="px-4 py-2 text-label-black">
-                          {formatProjectDisplayName(project.index, project.name, project.customName)}
+                          {formatProjectDisplayName(
+                            project.index,
+                            project.name,
+                            project.customName
+                          )}
                         </td>
                         <td className="text-right px-4 py-2 text-label-gray">
                           {project.samples.length}
@@ -283,7 +305,9 @@ const App: React.FC = () => {
             <div className="flex items-center justify-center h-full text-label-gray">
               <div className="text-center">
                 <div className="text-6xl mb-4">🎛️</div>
-                <h2 className="text-xl mb-2 text-label-black">Welcome to Multigrain Sample Manager</h2>
+                <h2 className="text-xl mb-2 text-label-black">
+                  Welcome to Multigrain Sample Manager
+                </h2>
                 <p className="text-sm">Select your SD card location to get started</p>
               </div>
             </div>
