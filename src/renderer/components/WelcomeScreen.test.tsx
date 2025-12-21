@@ -68,6 +68,14 @@ describe('WelcomeScreen', () => {
 
       expect(screen.queryByText(/⚠️ Previous location not accessible:/)).not.toBeInTheDocument();
     });
+
+    it('should render beta software warning', () => {
+      render(<WelcomeScreen onSelectCard={mockOnSelectCard} />);
+
+      expect(screen.getByText('Beta Software Warning')).toBeInTheDocument();
+      expect(screen.getByText(/This is beta software/)).toBeInTheDocument();
+      expect(screen.getByText(/Please back up your SD card content/)).toBeInTheDocument();
+    });
   });
 
   describe('Error display', () => {

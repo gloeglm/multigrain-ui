@@ -25,6 +25,22 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
           </div>
         )}
 
+        {/* Beta warning banner */}
+        <div className="mb-6 p-4 bg-yellow-50 border-2 border-yellow-400 rounded-lg">
+          <div className="flex items-start gap-3">
+            <div className="text-2xl">⚠️</div>
+            <div className="flex-1">
+              <h3 className="text-sm font-bold text-yellow-800 mb-1">Beta Software Warning</h3>
+              <p className="text-xs text-yellow-900 mb-2">
+                This is beta software and may contain bugs that could affect your data.
+              </p>
+              <p className="text-xs font-semibold text-yellow-900">
+                ⚡ Please back up your SD card content before using this application.
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* Hero section */}
         <div className="text-center mb-8">
           <div className="text-5xl mb-3">🎛️</div>
