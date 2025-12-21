@@ -189,6 +189,28 @@ Generate printable PDF reference sheets to help users remember which projects ar
 - Batch export to folder (more efficient than individual file dialogs)
 
 ### Phase 8: Polish & User Experience ❌ **NOT STARTED**
+
+#### Phase 8a: Keyboard Navigation
+- [ ] Arrow key navigation (up/down) through file tree items
+- [ ] Build flattened navigation list respecting expansion states
+- [ ] Add keyboard event handler at FileTree root
+- [ ] Focus management with visible focus indicator
+- [ ] Handle rename mode conflicts (skip navigation when editing)
+- [ ] Test navigation at boundaries and with collapsed sections
+
+#### Phase 8b: Multi-Select Delete
+- [ ] Multi-select state for samples with Ctrl/Cmd+Click toggle
+- [ ] Shift+Click range selection
+- [ ] Visual feedback for multi-selected items (blue highlight)
+- [ ] Floating action bar with delete/cancel buttons
+- [ ] Batch delete confirmation dialog with sample count
+- [ ] Delete key shortcut for batch delete
+- [ ] Escape key to exit multi-select mode
+- [ ] Error handling for partial batch delete failures
+
+**Note**: Full implementation plan available in `.claude/plans/serialized-questing-honey.md`
+
+#### Phase 8c: General Polish
 - [ ] Enhanced error handling for invalid files/formats
 - [ ] Cross-platform testing (Windows, macOS, Linux)
 - [ ] UI/UX refinements and accessibility improvements

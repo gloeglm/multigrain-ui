@@ -1,4 +1,4 @@
-import { app, BrowserWindow, session, screen } from 'electron';
+import { app, BrowserWindow, session, screen, Menu } from 'electron';
 import { registerAllHandlers } from './ipc';
 import Store from 'electron-store';
 import * as path from 'path';
@@ -109,6 +109,9 @@ const createWindow = (): void => {
 };
 
 app.whenReady().then(() => {
+  // Remove the default menu
+  Menu.setApplicationMenu(null);
+
   registerAllHandlers();
   createWindow();
 
