@@ -41,6 +41,18 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Preset operations
   readPresetSamples: (filePath: string) =>
     ipcRenderer.invoke('preset:readSamples', filePath),
+
+  // Import operations
+  selectImportFiles: () => ipcRenderer.invoke('import:selectFiles'),
+  validateImportFiles: (files: string[], targetPath: string) =>
+    ipcRenderer.invoke('import:validateFiles', { files, targetPath }),
+  executeImport: (files: string[], targetPath: string) =>
+    ipcRenderer.invoke('import:executeBatch', { files, targetPath }),
+  onImportProgress: (callback: (progress: any) => void) => {
+    const handler = (_: any, progress: any) => callback(progress);
+    ipcRenderer.on('import:progress', handler);
+    return () => ipcRenderer.removeListener('import:progress', handler);
+  },
 });
 
 export type ElectronAPI = {
@@ -92,6 +104,18 @@ export type ElectronAPI = {
     samples?: string[];
     error?: string;
   }>;
+  selectImportFiles: () => Promise<string[] | null>;
+  validateImportFiles: (files: string[], targetPath: string) => Promise<{
+    analyses: import('../shared/types/import').AudioAnalysis[];
+    storageInfo: {
+      currentCount: number;
+      limit: number;
+      availableSlots: number;
+      wouldExceed: boolean;
+    };
+  }>;
+  executeImport: (files: string[], targetPath: string) => Promise<import('../shared/types/import').ImportResult>;
+  onImportProgress: (callback: (progress: import('../shared/types/import').ImportProgress) => void) => () => void;
 };
 
 declare global {

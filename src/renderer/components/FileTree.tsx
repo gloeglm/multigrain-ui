@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { MultigainStructure, Project, WavFile, Preset } from '../../shared/types';
+import { ImportDialog } from './ImportDialog';
 
 interface FileTreeProps {
   structure: MultigainStructure;
@@ -7,6 +8,7 @@ interface FileTreeProps {
   onSelectPreset?: (preset: Preset) => void;
   onSelectProject?: (project: Project) => void;
   onProjectNameChange?: () => void;
+  onImportComplete?: () => void;
 }
 
 interface TreeNodeProps {
@@ -116,7 +118,8 @@ const ProjectNode: React.FC<{
   selectedPreset?: Preset | null;
   selectedProject?: Project | null;
   onProjectNameChange?: () => void;
-}> = ({ project, onSelectSample, onSelectPreset, onSelectProject, selectedSample, selectedPreset, selectedProject, onProjectNameChange }) => {
+  onImportClick?: (targetPath: string) => void;
+}> = ({ project, onSelectSample, onSelectPreset, onSelectProject, selectedSample, selectedPreset, selectedProject, onProjectNameChange, onImportClick }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [customName, setCustomName] = useState(project.customName || '');
@@ -209,6 +212,16 @@ const ProjectNode: React.FC<{
             <button
               onClick={(e) => {
                 e.stopPropagation();
+                onImportClick?.(project.path);
+              }}
+              className="opacity-0 group-hover:opacity-100 text-xs px-2 py-0.5 bg-label-blue hover:bg-knob-ring text-white rounded transition-opacity flex-shrink-0"
+              title="Import samples"
+            >
+              +
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
                 setIsEditing(true);
               }}
               className="opacity-0 group-hover:opacity-100 text-xs px-2 py-0.5 bg-button-dark hover:bg-knob-ring text-white rounded transition-opacity flex-shrink-0"
@@ -254,10 +267,12 @@ const ProjectNode: React.FC<{
   );
 };
 
-export const FileTree: React.FC<FileTreeProps> = ({ structure, onSelectSample, onSelectPreset, onSelectProject, onProjectNameChange }) => {
+export const FileTree: React.FC<FileTreeProps> = ({ structure, onSelectSample, onSelectPreset, onSelectProject, onProjectNameChange, onImportComplete }) => {
   const [selectedSample, setSelectedSample] = useState<WavFile | null>(null);
   const [selectedPreset, setSelectedPreset] = useState<Preset | null>(null);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [importTarget, setImportTarget] = useState<string>('');
 
   const handleSelectSample = (sample: WavFile) => {
     setSelectedSample(sample);
@@ -278,6 +293,16 @@ export const FileTree: React.FC<FileTreeProps> = ({ structure, onSelectSample, o
     setSelectedSample(null); // Clear sample selection
     setSelectedPreset(null); // Clear preset selection
     onSelectProject?.(project);
+  };
+
+  const handleImportClick = (targetPath: string) => {
+    setImportTarget(targetPath);
+    setImportDialogOpen(true);
+  };
+
+  const handleImportComplete = () => {
+    setImportDialogOpen(false);
+    onImportComplete?.();
   };
 
   return (
@@ -301,25 +326,44 @@ export const FileTree: React.FC<FileTreeProps> = ({ structure, onSelectSample, o
               selectedPreset={selectedPreset}
               selectedProject={selectedProject}
               onProjectNameChange={onProjectNameChange}
+              onImportClick={handleImportClick}
             />
           ))}
         </TreeNode>
 
         {/* Global Wavs */}
-        <TreeNode
-          label="Wavs"
-          icon="🎶"
-          count={structure.globalWavs.length}
-        >
-          {structure.globalWavs.map((sample) => (
-            <SampleNode
-              key={sample.path}
-              sample={sample}
-              onSelect={handleSelectSample}
-              isSelected={selectedSample?.path === sample.path}
-            />
-          ))}
-        </TreeNode>
+        <div className="select-none">
+          <div className="flex items-center gap-2 py-1 px-2 rounded cursor-pointer hover:bg-panel-dark group">
+            <span className="text-label-gray w-4 text-center">▶</span>
+            <span>🎶</span>
+            <span className="flex-1 truncate text-label-black">Wavs</span>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                // Get the Wavs folder path from structure
+                const wavsPath = structure.rootPath + '/Wavs';
+                handleImportClick(wavsPath);
+              }}
+              className="opacity-0 group-hover:opacity-100 text-xs px-2 py-0.5 bg-label-blue hover:bg-knob-ring text-white rounded transition-opacity flex-shrink-0"
+              title="Import samples"
+            >
+              +
+            </button>
+            <span className="text-xs text-label-gray bg-panel-dark px-1.5 py-0.5 rounded flex-shrink-0">
+              {structure.globalWavs.length}
+            </span>
+          </div>
+          <div className="ml-4 border-l border-panel-dark pl-2">
+            {structure.globalWavs.map((sample) => (
+              <SampleNode
+                key={sample.path}
+                sample={sample}
+                onSelect={handleSelectSample}
+                isSelected={selectedSample?.path === sample.path}
+              />
+            ))}
+          </div>
+        </div>
 
         {/* Recordings */}
         <TreeNode
@@ -341,6 +385,14 @@ export const FileTree: React.FC<FileTreeProps> = ({ structure, onSelectSample, o
           )}
         </TreeNode>
       </TreeNode>
+
+      {/* Import Dialog */}
+      <ImportDialog
+        isOpen={importDialogOpen}
+        targetPath={importTarget}
+        onClose={() => setImportDialogOpen(false)}
+        onImportComplete={handleImportComplete}
+      />
     </div>
   );
 };

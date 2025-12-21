@@ -55,3 +55,6 @@ export interface ValidationResult {
   errors: string[];
   structure?: MultigainStructure;
 }
+
+// Import types
+export * from './types/import';

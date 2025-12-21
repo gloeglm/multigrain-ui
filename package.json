@@ -15,7 +15,10 @@
   "author": "gloeg",
   "license": "MIT",
   "dependencies": {
+    "@ffmpeg-installer/ffmpeg": "^1.1.0",
+    "@types/fluent-ffmpeg": "^2.1.28",
     "electron-squirrel-startup": "^1.0.1",
+    "fluent-ffmpeg": "^2.1.3",
     "music-metadata": "^11.10.3",
     "node-wav": "^0.0.2",
     "react": "^19.2.3",

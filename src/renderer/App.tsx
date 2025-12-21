@@ -151,6 +151,7 @@ const App: React.FC = () => {
                   onSelectPreset={handleSelectPreset}
                   onSelectProject={handleSelectProject}
                   onProjectNameChange={reloadStructure}
+                  onImportComplete={reloadStructure}
                 />
               </div>
             </>
