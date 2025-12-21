@@ -423,6 +423,15 @@ GitHub Actions will build installers and create a draft release for review.
 
 Optional enhancements that improve user experience but are not essential for core functionality. Users can work around these limitations manually.
 
+- [ ] **Export samples to local file system**
+  - Export individual samples to computer
+  - Batch export multiple samples at once
+  - Export entire project folder contents
+  - Export all recordings from Recs folder
+  - Select destination folder via native dialog
+  - Progress indicator for batch exports
+  - Option to preserve or flatten folder structure
+  - **Use Case**: Especially useful for backing up recordings made on the hardware to the computer. Users can currently access files via SD card reader or Finder/Explorer.
 - [ ] **Move/Copy samples between folders**
   - Move samples between Projects, Wavs, and Recs folders
   - Copy samples to create duplicates
