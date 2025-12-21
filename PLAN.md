@@ -362,12 +362,13 @@ npm install -D vitest @vitest/ui @testing-library/react @testing-library/jest-do
 - Add test patterns to include `**/*.test.{ts,tsx}`
 - Configure path aliases to match webpack config
 
-#### Phase 5b: Utility Function Tests (High Value, Low Overhead)
-- [ ] Test `fileConflictResolver.ts` - unique filename generation
-- [ ] Test format helpers (`formatProjectDisplayName`, bank/position utilities)
-- [ ] Test sample resolution logic (PROJECT → WAVS → RECS priority)
-- [ ] Test metadata parsing utilities
-- [ ] Test path manipulation helpers
+#### Phase 5b: Utility Function Tests (High Value, Low Overhead) ✅ **COMPLETE**
+- [x] Test `fileConflictResolver.ts` - unique filename generation (16 tests)
+- [x] Test format helpers (`formatProjectDisplayName`, bank/position utilities) (27 tests)
+- [x] Test App.tsx helper functions - path-based selection logic (11 tests)
+- [x] Verify path-based selection prevents stale references (regression test)
+- [ ] Test metadata parsing utilities (future)
+- [ ] Test path manipulation helpers (future)
 
 **Example Test Coverage**:
 ```typescript
