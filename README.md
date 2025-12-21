@@ -8,62 +8,22 @@ A cross-platform desktop application for managing audio samples on SD cards for 
 
 ## Features
 
-### Currently Implemented
+### Currently Implemented ✅
 
-- **Browse SD Card Structure** - Navigate your Multigrain SD card with an intuitive file tree
-  - Projects (01-48)
-  - Global WAV samples
-  - Recordings
-  - Presets per project
+- **Browse & Navigate** - Intuitive file tree for Projects (01-48), WAVS, and RECS folders with validation
+- **Audio Preview** - Waveform visualization with play/pause/stop controls and auto-play toggle
+- **Sample Management** - Import with auto-conversion (48kHz/16-bit/stereo), rename, delete operations
+- **Project Management** - Create new projects, custom naming with factory presets, delete with confirmation
+- **Preset Viewer** - Inspect all 8 sample references per preset with intelligent location resolution (PROJECT → WAVS → RECS)
+- **Metadata Editing** - Add custom descriptions to projects and samples, view technical details (sample rate, bit depth, duration)
+- **Project Overview** - Quick statistics dashboard showing total projects, samples, recordings, and per-project counts
 
-- **Audio Preview** - Listen to samples before working with them
-  - Waveform visualization
-  - Play/pause/stop controls
-  - Real-time playback progress
-  - Auto-play toggle with preference saving
+### Coming Soon 🚧
 
-- **Sample Information** - View detailed metadata
-  - Sample rate, bit depth, channels
-  - File size and duration
-  - Full file path
-
-- **Custom Project Names** - Rename projects with human-readable names
-  - Editable directly in the UI
-  - Stored in `.project-metadata.json` files
-  - Original folder names preserved
-  - Factory project names button for quick setup
-
-- **Sample Descriptions** - Add notes to your samples
-  - Editable text descriptions
-  - Stored in `.metadata.txt` files alongside samples
-
-- **Preset Viewer** - Inspect preset contents and sample references
-  - View all 8 sample references in any preset
-  - Intelligent location resolution (PROJECT → WAVS → RECS)
-  - Color-coded badges showing where samples are stored
-  - Click samples to navigate and listen instantly
-  - Autosave preset display when selecting projects
-
-- **Project Overview** - Quick statistics dashboard
-  - Total projects, samples, and recordings
-  - Per-project sample and preset counts
-  - Independent scroll areas for tree and content
-
-### Coming Soon
-
-- **Import Samples** - Add new audio files with automatic conversion
-  - Auto-convert to 48kHz, 16-bit, stereo WAV
-  - Trim files longer than 32 seconds
-  - Format validation
-
-- **File Operations** - Manage your sample library
-  - Move/copy samples between folders
-  - Rename samples
-  - Delete samples with confirmation
-
-- **Export Project Overview** - Print-ready documentation
-  - Text/markdown export of SD card structure
-  - Storage usage statistics vs. limits
+- **Preset Custom Naming** - User-defined names for presets (similar to project naming)
+- **Reference Sheet Export** - Generate printable PDF documentation of projects and sample usage
+- **Enhanced File Operations** - Move/copy samples between folders, batch operations
+- **Search & Filtering** - Find samples by name, description, or location
 
 ## Requirements
 
@@ -163,40 +123,65 @@ npm run package
 
 ## Development
 
-### Project Structure
+### Prerequisites
 
-```
-src/
-├── main/                   # Electron main process
-│   ├── index.ts           # Main entry point
-│   ├── preload.ts         # Preload script for IPC
-│   ├── ipc/               # IPC handlers
-│   │   ├── index.ts       # File system operations
-│   │   ├── audio.ts       # Audio metadata handling
-│   │   ├── projectMetadata.ts  # Project naming + batch updates
-│   │   └── preset.ts      # Preset sample extraction
-│   └── utils/
-│       └── multigrain.ts  # Folder structure validation + autosave
-├── renderer/              # React UI
-│   ├── App.tsx           # Main application component
-│   ├── components/
-│   │   ├── FileTree.tsx  # File browser with project selection
-│   │   ├── AudioPlayer.tsx  # Audio preview component
-│   │   └── PresetViewer.tsx # Preset sample viewer
-│   ├── hooks/
-│   │   └── useMultigrain.ts  # State management
-│   └── index.html
-└── shared/
-    ├── types.ts          # Shared TypeScript types
-    └── constants.ts      # Factory names + specs
+```bash
+# Clone and install
+git clone <repository-url>
+cd multigrain-ui
+npm install
 ```
 
 ### Available Scripts
 
+**Development:**
 - `npm start` - Start development server with hot reload
 - `npm run package` - Package app for current platform
 - `npm run make` - Create distributable installers
-- `npm run lint` - Run linter
+
+**Code Quality:**
+- `npm run type-check` - Run TypeScript type checking
+- `npm run lint` - Check code style (zero warnings enforced)
+- `npm run lint:fix` - Auto-fix linting issues
+- `npm run format` - Format code with Prettier
+- `npm run format:check` - Check code formatting
+
+**Testing:**
+- `npm test` - Run test suite (111 tests)
+- `npm run test:ui` - Run tests with UI
+- `npm run test:coverage` - Generate coverage report
+
+### Development Workflow
+
+1. **Before committing**, ensure all checks pass:
+   ```bash
+   npm run type-check  # Must pass with 0 errors
+   npm run lint        # Must pass with 0 warnings
+   npm test            # All 111 tests must pass
+   ```
+
+2. **CI/CD** - GitHub Actions automatically runs these checks on every push/PR to `main`
+
+3. **Code Standards:**
+   - TypeScript strict mode enabled
+   - ESLint with React and TypeScript rules
+   - Prettier for consistent formatting
+   - Test coverage for new features
+
+### Project Structure
+
+```
+src/
+├── main/              # Electron main process
+│   ├── ipc/          # IPC handlers (file ops, audio, presets, imports)
+│   └── utils/        # Multigrain validation, file operations
+├── renderer/         # React UI
+│   ├── components/   # FileTree, AudioWaveform, SampleInfo, PresetViewer
+│   └── hooks/        # useMultigrain state management
+└── shared/
+    ├── types.ts      # TypeScript definitions
+    └── constants.ts  # Multigrain specs, factory names
+```
 
 ### Adding New Features
 
@@ -204,7 +189,8 @@ src/
 2. Expose handlers via `electronAPI` in `src/main/preload.ts`
 3. Add TypeScript types to `src/shared/types.ts`
 4. Create React components in `src/renderer/components/`
-5. Update `App.tsx` or create custom hooks as needed
+5. Write tests for new functionality (see existing `*.test.ts` files)
+6. Ensure all quality checks pass before committing
 
 ## Multigrain Specifications
 
@@ -241,7 +227,14 @@ Project
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit issues or pull requests.
+Contributions are welcome! Please follow the development workflow:
+
+1. Fork the repository and create a feature branch
+2. Make your changes following the code standards
+3. Ensure all quality checks pass: `npm run type-check && npm run lint && npm test`
+4. Submit a pull request with a clear description
+
+All PRs must pass CI checks (type checking, linting, and all 111 tests) before merging.
 
 ## License
 
