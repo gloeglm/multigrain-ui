@@ -229,15 +229,13 @@ npm install fluent-ffmpeg @types/fluent-ffmpeg @ffmpeg-installer/ffmpeg
 6. `src/renderer/components/PresetViewer.tsx` - Updated autosave display formatting
 7. `src/main/index.ts` - Added window state persistence with electron-store
 
-#### Phase 4b: Move/Copy/Rename/Delete 🚧 **IN PROGRESS**
+#### Phase 4b: Delete Operations ✅ **COMPLETE**
 - [x] Delete projects with confirmation dialog
 - [x] Delete samples with confirmation dialog
 - [x] Smart navigation after deletion (to parent project or overview)
 - [x] Security validation (only allow deleting ProjectXX folders and .wav files)
-- [ ] Move/copy samples between folders
-- [ ] Rename samples
 
-**Status**: Delete functionality complete. Move/copy/rename operations pending.
+**Status**: Delete functionality complete.
 
 **Completed Features**:
 - Confirmation dialogs with danger variant styling
@@ -245,6 +243,23 @@ npm install fluent-ffmpeg @types/fluent-ffmpeg @ffmpeg-installer/ffmpeg
 - Auto-navigation after deletion to prevent showing deleted items
 - IPC handlers with security checks in `fileOperations.ts`
 - Context menu integration for projects and samples
+
+**Files Created**:
+1. `src/main/ipc/fileOperations.ts` - Delete operations with security validation
+2. `src/renderer/components/ConfirmDialog.tsx` - Reusable confirmation dialog
+
+**Files Modified**:
+1. `src/main/ipc/index.ts` - Registered file operations handlers
+2. `src/main/preload.ts` - Exposed delete APIs
+3. `src/renderer/components/FileTree.tsx` - Added delete context menus and navigation
+
+#### Phase 4c: Rename Operations (Future)
+- [ ] Rename samples with conflict detection
+- [ ] Rename projects (already supported via metadata, this would rename the actual folder)
+- [ ] Preview rename operations before committing
+- [ ] Batch rename capabilities
+
+**Status**: Not started. Essential for workflow but can be deferred.
 
 #### Phase 4d: Preset Custom Naming (Future)
 - [ ] Allow users to give custom names to presets
@@ -408,6 +423,13 @@ GitHub Actions will build installers and create a draft release for review.
 
 Optional enhancements that improve user experience but are not essential for core functionality. Users can work around these limitations manually.
 
+- [ ] **Move/Copy samples between folders**
+  - Move samples between Projects, Wavs, and Recs folders
+  - Copy samples to create duplicates
+  - Drag-and-drop to move samples
+  - Conflict detection and resolution
+  - Update preset references when moving samples (advanced)
+  - **Rationale**: Users can achieve the same result by deleting samples and re-importing them to the desired location.
 - [ ] **Sample ordering & smart numbering**
   - Auto-detect existing numbering scheme in target folder (e.g., 01_, 001_, etc.)
   - Continue numbering sequence for newly imported files
@@ -469,14 +491,17 @@ Optional enhancements that improve user experience but are not essential for cor
 - ✅ **Automatic filename conflict resolution**
 - ✅ **Storage limit enforcement**
 - ✅ **Project creation with bank/position selection UI**
+- ✅ **Delete operations for projects and samples**
+- ✅ **Smart navigation after deletion**
+- ✅ **Confirmation dialogs with comprehensive warnings**
 
 ### What's Next (Priority Order)
-1. **Phase 4b**: Complete move/copy/rename operations (delete is done)
+1. **Phase 4c**: Rename operations for samples
 2. **Phase 4d**: Preset custom naming
 3. **Phase 6**: Reference sheet export (printable PDF documentation)
 4. **Phase 7**: Testing, polish, and documentation
 5. **Phase 8**: CI/CD and distribution
-6. **Phase 9**: Nice to have features (optional enhancements including sample ordering)
+6. **Phase 9**: Nice to have features (move/copy, sample ordering, advanced features)
 
 ---
 
@@ -553,13 +578,24 @@ Configuration:
 └── package.json                   ✅ Added FFmpeg dependencies
 ```
 
-### Files for Phase 4b: Move/Copy/Rename/Delete (Future)
+### Files for Phase 4b: Delete Operations ✅ **COMPLETE**
 ```
 src/
 ├── main/
 │   └── ipc/
-│       └── fileOperations.ts      ❌ Copy/move/rename/delete operations
+│       └── fileOperations.ts      ✅ Delete operations with security validation
 └── renderer/
     └── components/
-        └── FileOperations.tsx     ❌ Context menu for file ops
+        └── ConfirmDialog.tsx      ✅ Reusable confirmation dialog
+```
+
+### Files for Phase 4c: Rename Operations (Future)
+```
+src/
+├── main/
+│   └── ipc/
+│       └── fileRename.ts          ❌ Rename operations with conflict detection
+└── renderer/
+    └── components/
+        └── RenameDialog.tsx       ❌ Rename UI dialog
 ```
