@@ -263,10 +263,9 @@ it easier to maintain organized sample banks without manual renaming.
 - [x] Multigrain node always expanded, clickable to show overview
 - [x] Projects folder clickable to show overview
 - [x] Unified selection architecture with type-safe state management
-- [ ] Export compact overview (text/markdown) for reference/printing
 - [ ] Show detailed storage limits tracking (e.g., "48/128 samples in project")
 
-**Status**: Overview dashboard functional with basic stats. Clean navigation and selection architecture implemented. Export feature and limit enforcement pending.
+**Status**: Overview dashboard functional with basic stats. Clean navigation and selection architecture implemented. Limit enforcement pending. Export moved to Phase 6.
 
 **Architecture Improvements**:
 - **Unified Selection State**: Single `TreeSelection` type replaces multiple callback props
@@ -275,7 +274,67 @@ it easier to maintain organized sample banks without manual renaming.
 - **Cleaner Interface**: FileTree now has 2 props (`selection`, `onSelectionChange`) instead of 5 callbacks
 - **Better Maintainability**: Easy to add new selection types (folders, categories, etc.)
 
-### Phase 6: Polish & Testing ❌ **NOT STARTED**
+### Phase 6: Reference Sheet Export ❌ **NOT STARTED**
+
+Generate printable PDF reference sheets to help users remember which projects are which and which samples are used where.
+
+**Two Types of Reference Sheets**:
+
+1. **Overview Sheet** - General SD card overview
+   - [ ] List all projects with bank/position mapping (e.g., "X / 1 - Project Name")
+   - [ ] Show custom names if set
+   - [ ] Display sample/preset counts per project
+   - [ ] Compact, space-saving layout optimized for single page
+
+2. **Project Sheets** - Detailed per-project reference
+   - [ ] List available samples in the project
+   - [ ] Show which presets use which samples (including Autosave)
+   - [ ] Include user descriptions for samples
+   - [ ] Display sample location badges (PROJECT/WAVS/RECS)
+   - [ ] Exclude technical details (sample rate, bit depth, file sizes)
+
+**Implementation Approach**:
+- **Technology**: PDFKit for native Node.js PDF generation (~200KB, cross-platform)
+- **Architecture**: Main process generation with direct file system access
+- **UI Integration**: Context menu triggers on Multigrain root, Projects folder, and individual projects
+- **Save Options**: Native file/folder dialogs for single or batch export
+- **Data Aggregation**: Reuse existing sample resolution logic from PresetViewer
+- **Layout**: Print-optimized with automatic pagination and smart page breaks
+
+**Key Features**:
+- [ ] Install PDFKit dependency (`pdfkit`, `@types/pdfkit`)
+- [ ] Create data aggregation utilities (overview data, project data with preset-to-sample mapping)
+- [ ] Build PDF generator with compact layouts (overview table, samples list, presets with 8 sample slots)
+- [ ] Add IPC handlers for three export types (overview, single project, batch all projects)
+- [ ] Create React hook for export operations with loading states
+- [ ] Add context menu items: "Export Overview Sheet", "Export Project Sheet", "Export All Project Sheets"
+- [ ] Implement file name sanitization for special characters
+- [ ] Build reverse mapping: sample → presets that use it (for "Used by" lists)
+- [ ] Test cross-platform PDF generation (Windows, macOS, Linux)
+
+**Files to Create**:
+1. `src/main/ipc/pdfExport.ts` - IPC handlers for PDF export operations
+2. `src/main/utils/pdfGenerator.ts` - Core PDF generation logic using PDFKit
+3. `src/main/utils/pdfLayouts.ts` - Layout constants (page dimensions, fonts, colors)
+4. `src/main/utils/exportDataAggregator.ts` - Data preparation and sample resolution
+5. `src/renderer/hooks/usePdfExport.ts` - React hook for export UI integration
+
+**Files to Modify**:
+1. `src/main/ipc/index.ts` - Register PDF export handlers
+2. `src/main/preload.ts` - Expose PDF export API to renderer
+3. `src/shared/types.ts` - Add `OverviewData` and `ProjectExportData` interfaces
+4. `src/renderer/components/FileTree.tsx` - Add context menu items for export
+5. `package.json` - Add pdfkit dependency
+
+**Status**: Full implementation plan documented in `REFERENCE_SHEETS_PLAN.md`. Ready for implementation when prioritized.
+
+**Design Decisions**:
+- PDFKit over Puppeteer (smaller, no Chromium dependency)
+- Main process over renderer (better file system access, no IPC overhead for large data)
+- Context menus as primary trigger (consistent with existing UI patterns)
+- Batch export to folder (more efficient than individual file dialogs)
+
+### Phase 7: Polish & Testing ❌ **NOT STARTED**
 - [ ] Enhanced error handling for invalid files/formats
 - [ ] Cross-platform testing (Windows, macOS, Linux)
 - [ ] UI/UX refinements and accessibility improvements
@@ -295,7 +354,7 @@ it easier to maintain organized sample banks without manual renaming.
 - Panel buttons should complement, not replace, context menu functionality
 - Examples: "Create New Project" on overview, "Import"/"Rename" when project selected
 
-### Phase 7: Distribution & Deployment ❌ **NOT STARTED**
+### Phase 8: Distribution & Deployment ❌ **NOT STARTED**
 - [ ] GitHub Actions CI/CD workflow for automated builds
 - [ ] Multi-platform builds (Windows, macOS, Linux) on native runners
 - [ ] Publish to GitHub Releases with draft review
@@ -332,7 +391,7 @@ GitHub Actions will build installers and create a draft release for review.
 
 ---
 
-## Current Progress: ~87% Complete
+## Current Progress: ~80% Complete
 
 ### What's Working
 - ✅ Complete browsing and navigation of Multigrain SD cards
@@ -356,8 +415,10 @@ GitHub Actions will build installers and create a draft release for review.
 ### What's Next (Priority Order)
 1. **Phase 4b**: Move/copy/rename/delete operations
 2. **Phase 4c**: Sample ordering & smart numbering on import
-3. **Phase 5**: Complete overview with export functionality
-4. **Phase 6**: Testing, polish, and documentation
+3. **Phase 5**: Complete overview with storage limit tracking
+4. **Phase 6**: Reference sheet export (printable PDF documentation)
+5. **Phase 7**: Testing, polish, and documentation
+6. **Phase 8**: CI/CD and distribution
 
 ---
 
