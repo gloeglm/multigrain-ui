@@ -17,6 +17,40 @@ const App: React.FC = () => {
     return saved ? JSON.parse(saved) : true;
   });
 
+  // Helper function to find sample by path in current structure
+  const findSampleByPath = (path: string) => {
+    if (!structure) return null;
+    // Check in all projects
+    for (const project of structure.projects) {
+      const sample = project.samples.find(s => s.path === path);
+      if (sample) return sample;
+    }
+    // Check in global wavs
+    const globalSample = structure.globalWavs.find(s => s.path === path);
+    if (globalSample) return globalSample;
+    // Check in recordings
+    const recording = structure.recordings.find(s => s.path === path);
+    if (recording) return recording;
+    return null;
+  };
+
+  // Helper function to find preset by path
+  const findPresetByPath = (path: string) => {
+    if (!structure) return null;
+    for (const project of structure.projects) {
+      const preset = project.presets.find(p => p.path === path);
+      if (preset) return preset;
+      if (project.autosave?.path === path) return project.autosave;
+    }
+    return null;
+  };
+
+  // Helper function to find project by path
+  const findProjectByPath = (path: string) => {
+    if (!structure) return null;
+    return structure.projects.find(p => p.path === path) || null;
+  };
+
   // Save auto-play preference when it changes
   React.useEffect(() => {
     localStorage.setItem('multigrain-autoplay', JSON.stringify(autoPlay));
@@ -130,6 +164,10 @@ const App: React.FC = () => {
                   onSelectionChange={setSelection}
                   onProjectNameChange={reloadStructure}
                   onImportComplete={reloadStructure}
+                  onSampleRenamed={(newPath) => {
+                    setSelection({ type: 'sample', samplePath: newPath });
+                    reloadStructure();
+                  }}
                 />
               </div>
             </>
@@ -146,21 +184,50 @@ const App: React.FC = () => {
 
         {/* Main panel - Preview/Details */}
         <section className="flex-1 p-6 overflow-y-auto bg-white">
-          {selection.type === 'sample' ? (
-            <div className="max-w-3xl mx-auto">
-              <AudioPlayer key={selection.sample.path} sample={selection.sample} autoPlay={autoPlay} />
-            </div>
-          ) : selection.type === 'preset' && structure ? (
-            <div className="max-w-3xl mx-auto">
-              <PresetViewer
-                key={selection.preset.path}
-                preset={selection.preset}
-                structure={structure}
-                onNavigateToSample={(sample) => setSelection({ type: 'sample', sample })}
-                selectedProject={selection.project}
-              />
-            </div>
-          ) : structure ? (
+          {selection.type === 'sample' ? (() => {
+            const sample = findSampleByPath(selection.samplePath);
+            if (!sample) {
+              return (
+                <div className="flex items-center justify-center h-full text-label-gray">
+                  <p>Sample not found</p>
+                </div>
+              );
+            }
+            return (
+              <div className="max-w-3xl mx-auto">
+                <AudioPlayer
+                  key={selection.samplePath}
+                  sample={sample}
+                  autoPlay={autoPlay}
+                  onRenameComplete={(newPath) => {
+                    setSelection({ type: 'sample', samplePath: newPath });
+                    reloadStructure();
+                  }}
+                />
+              </div>
+            );
+          })() : selection.type === 'preset' && structure ? (() => {
+            const preset = findPresetByPath(selection.presetPath);
+            const project = selection.projectPath ? findProjectByPath(selection.projectPath) : undefined;
+            if (!preset) {
+              return (
+                <div className="flex items-center justify-center h-full text-label-gray">
+                  <p>Preset not found</p>
+                </div>
+              );
+            }
+            return (
+              <div className="max-w-3xl mx-auto">
+                <PresetViewer
+                  key={selection.presetPath}
+                  preset={preset}
+                  structure={structure}
+                  onNavigateToSample={(sample) => setSelection({ type: 'sample', samplePath: sample.path })}
+                  selectedProject={project}
+                />
+              </div>
+            );
+          })() : structure ? (
             <div className="max-w-2xl">
               <h2 className="text-lg font-medium mb-4 text-label-blue">Overview</h2>
               <div className="grid grid-cols-3 gap-4 mb-6">

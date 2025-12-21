@@ -57,11 +57,12 @@ export interface ValidationResult {
 }
 
 // Tree selection types - unified selection state for file tree and right panel
+// Stores paths instead of object references to avoid stale data after reloads
 export type TreeSelection =
   | { type: 'overview' }
-  | { type: 'sample'; sample: WavFile }
-  | { type: 'preset'; preset: Preset; project?: Project }
-  | { type: 'project'; project: Project };
+  | { type: 'sample'; samplePath: string }
+  | { type: 'preset'; presetPath: string; projectPath?: string }
+  | { type: 'project'; projectPath: string };
 
 // Import types
 export * from './types/import';

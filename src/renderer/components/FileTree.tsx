@@ -17,6 +17,7 @@ interface FileTreeContextValue {
   // Sample rename
   sampleToRename: WavFile | null;
   setSampleToRename: (sample: WavFile | null) => void;
+  onSampleRenamed?: (newPath: string) => void;
 
   // Callbacks
   onImportComplete?: () => void;
@@ -42,6 +43,7 @@ interface FileTreeProps {
   onSelectionChange: (selection: TreeSelection) => void;
   onProjectNameChange?: () => void;
   onImportComplete?: () => void;
+  onSampleRenamed?: (newPath: string) => void;
 }
 
 interface TreeNodeProps {
@@ -121,7 +123,8 @@ const SampleNode: React.FC<SampleNodeProps> = ({ sample }) => {
     handleSampleContextMenu,
     sampleToRename,
     setSampleToRename,
-    onImportComplete
+    onImportComplete,
+    onSampleRenamed
   } = useFileTreeContext();
 
   const [isEditing, setIsEditing] = useState(false);
@@ -129,7 +132,7 @@ const SampleNode: React.FC<SampleNodeProps> = ({ sample }) => {
   const [isSaving, setIsSaving] = useState(false);
   const sizeKB = Math.round(sample.size / 1024);
 
-  const isSelected = selection.type === 'sample' && selection.sample.path === sample.path;
+  const isSelected = selection.type === 'sample' && selection.samplePath === sample.path;
   const triggerRename = sampleToRename?.path === sample.path;
 
   // Trigger edit mode from parent
@@ -146,9 +149,10 @@ const SampleNode: React.FC<SampleNodeProps> = ({ sample }) => {
     setIsSaving(true);
     try {
       const result = await window.electronAPI.renameSample(sample.path, newName);
-      if (result.success) {
+      if (result.success && result.newPath) {
         setIsEditing(false);
         setSampleToRename(null);
+        onSampleRenamed?.(result.newPath);
         onImportComplete?.();
       } else {
         alert(`Failed to rename sample: ${result.error}`);
@@ -297,9 +301,9 @@ const ProjectNode: React.FC<ProjectNodeProps> = ({ project, triggerRename, onCan
     onCancelRename?.(); // Clear trigger state in parent
   };
 
-  const selectedProject = selection.type === 'project' ? selection.project : (selection.type === 'preset' && selection.project ? selection.project : null);
-  const selectedPreset = selection.type === 'preset' ? selection.preset : null;
-  const isSelected = selectedProject?.path === project.path;
+  const selectedProjectPath = selection.type === 'project' ? selection.projectPath : (selection.type === 'preset' ? selection.projectPath : null);
+  const selectedPresetPath = selection.type === 'preset' ? selection.presetPath : null;
+  const isSelected = selectedProjectPath === project.path;
 
   return (
     <div className="select-none">
@@ -390,7 +394,7 @@ const ProjectNode: React.FC<ProjectNodeProps> = ({ project, triggerRename, onCan
                   key={preset.path}
                   preset={preset}
                   onSelect={onSelectPreset}
-                  isSelected={selectedPreset?.path === preset.path}
+                  isSelected={selectedPresetPath === preset.path}
                 />
               ))}
             </TreeNode>
@@ -408,7 +412,7 @@ const ProjectNode: React.FC<ProjectNodeProps> = ({ project, triggerRename, onCan
   );
 };
 
-export const FileTree: React.FC<FileTreeProps> = ({ structure, selection, onSelectionChange, onProjectNameChange, onImportComplete }) => {
+export const FileTree: React.FC<FileTreeProps> = ({ structure, selection, onSelectionChange, onProjectNameChange, onImportComplete, onSampleRenamed }) => {
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [importTarget, setImportTarget] = useState<string>('');
   const [createProjectDialogOpen, setCreateProjectDialogOpen] = useState(false);
@@ -423,19 +427,19 @@ export const FileTree: React.FC<FileTreeProps> = ({ structure, selection, onSele
   } | null>(null);
 
   const handleSelectSample = (sample: WavFile) => {
-    onSelectionChange({ type: 'sample', sample });
+    onSelectionChange({ type: 'sample', samplePath: sample.path });
   };
 
   const handleSelectPreset = (preset: Preset, project?: Project) => {
-    onSelectionChange({ type: 'preset', preset, project });
+    onSelectionChange({ type: 'preset', presetPath: preset.path, projectPath: project?.path });
   };
 
   const handleSelectProject = (project: Project) => {
     // When selecting a project, show its autosave if available
     if (project.autosave) {
-      onSelectionChange({ type: 'preset', preset: project.autosave, project });
+      onSelectionChange({ type: 'preset', presetPath: project.autosave.path, projectPath: project.path });
     } else {
-      onSelectionChange({ type: 'project', project });
+      onSelectionChange({ type: 'project', projectPath: project.path });
     }
   };
 
@@ -587,9 +591,9 @@ export const FileTree: React.FC<FileTreeProps> = ({ structure, selection, onSele
         if (parentProject) {
           // Navigate to the parent project
           if (parentProject.autosave) {
-            onSelectionChange({ type: 'preset', preset: parentProject.autosave, project: parentProject });
+            onSelectionChange({ type: 'preset', presetPath: parentProject.autosave.path, projectPath: parentProject.path });
           } else {
-            onSelectionChange({ type: 'project', project: parentProject });
+            onSelectionChange({ type: 'project', projectPath: parentProject.path });
           }
         } else {
           // Sample was in Wavs or Recs folder, navigate to overview
@@ -622,6 +626,7 @@ export const FileTree: React.FC<FileTreeProps> = ({ structure, selection, onSele
     onSelectProject: handleSelectProject,
     sampleToRename,
     setSampleToRename,
+    onSampleRenamed,
     onImportComplete,
     onProjectNameChange,
     handleSampleContextMenu,

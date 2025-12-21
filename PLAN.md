@@ -259,24 +259,30 @@ npm install fluent-ffmpeg @types/fluent-ffmpeg @ffmpeg-installer/ffmpeg
 - [x] Invalid character validation
 - [x] Auto .wav extension handling
 - [x] Context menu integration
+- [x] Inline rename in AudioPlayer detail view
+- [x] Bidirectional synchronization (rename from tree or AudioPlayer)
 - [ ] Rename projects (already supported via metadata, this would rename the actual folder)
 - [ ] Batch rename capabilities
 
-**Status**: Sample renaming complete. Project folder renaming and batch operations deferred.
+**Status**: Sample renaming complete with bidirectional sync. Project folder renaming and batch operations deferred.
 
 **Completed Features**:
-- Inline editing with save/cancel buttons
+- Inline editing with save/cancel buttons in both FileTree and AudioPlayer
 - Enter/Escape keyboard shortcuts
 - Automatic .wav extension handling (adds if missing)
 - Invalid character validation (< > : " | ? *)
 - File conflict detection and prevention
 - IPC handler with security validation
-- Reloads file tree after successful rename
+- Bidirectional synchronization - rename works from either location
+- Both FileTree and AudioPlayer stay in sync after rename
 
 **Files Modified**:
 1. `src/main/ipc/fileOperations.ts` - Added renameSample IPC handler
 2. `src/main/preload.ts` - Exposed renameSample API
 3. `src/renderer/components/FileTree.tsx` - Added rename UI and state management
+4. `src/renderer/components/AudioPlayer.tsx` - Added inline rename UI
+5. `src/renderer/App.tsx` - Path-based selection and helper functions
+6. `src/shared/types.ts` - Updated TreeSelection to store paths
 
 **Architecture Improvements**:
 - Refactored to use React Context to eliminate prop drilling
@@ -284,6 +290,18 @@ npm install fluent-ffmpeg @types/fluent-ffmpeg @ffmpeg-installer/ffmpeg
 - Reduced SampleNode props from 7 to 1
 - Created FileTreeContext for shared state management
 - More maintainable and follows React best practices
+- **Fixed stale object references**: Changed TreeSelection to store paths instead of object references
+  - Selection now stores `samplePath`, `presetPath`, `projectPath` as strings
+  - App.tsx derives fresh objects from current structure using helper functions
+  - Ensures AudioPlayer and FileTree always render with current data after reloads
+  - Eliminates timing issues and guarantees synchronization after mutations
+
+**Architecture Note - Future Consideration**:
+If synchronization issues persist or state management becomes more complex, consider migrating to **optimistic updates pattern**:
+- Immediately update structure state in memory after file operations (faster UI)
+- No need to reload from disk after every mutation
+- Trade-off: More complex state management, risk of divergence from disk if operations fail
+- Current reload-based approach is simpler and always in sync with file system
 
 #### Phase 4d: Preset Custom Naming (Future)
 - [ ] Allow users to give custom names to presets

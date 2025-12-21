@@ -5,9 +5,10 @@ import { WavFile } from '../../shared/types';
 interface AudioPlayerProps {
   sample: WavFile;
   autoPlay?: boolean;
+  onRenameComplete?: (newPath: string) => void;
 }
 
-export const AudioPlayer: React.FC<AudioPlayerProps> = ({ sample, autoPlay = false }) => {
+export const AudioPlayer: React.FC<AudioPlayerProps> = ({ sample, autoPlay = false, onRenameComplete }) => {
   const waveformRef = useRef<HTMLDivElement>(null);
   const wavesurferRef = useRef<WaveSurfer | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -18,6 +19,9 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ sample, autoPlay = fal
   const [description, setDescription] = useState<string>('');
   const [isEditingDescription, setIsEditingDescription] = useState(false);
   const [isSavingDescription, setIsSavingDescription] = useState(false);
+  const [newName, setNewName] = useState<string>('');
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [isSavingName, setIsSavingName] = useState(false);
   const [metadata, setMetadata] = useState<{
     sampleRate: number;
     bitDepth: number;
@@ -90,6 +94,13 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ sample, autoPlay = fal
     };
   }, [sample.path]);
 
+  // Reset editing state when sample changes
+  useEffect(() => {
+    setIsEditingName(false);
+    setNewName('');
+    setIsEditingDescription(false);
+  }, [sample.path]);
+
   // Load metadata when sample changes
   useEffect(() => {
     const loadMetadata = async () => {
@@ -147,6 +158,37 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ sample, autoPlay = fal
     }
   };
 
+  const handleStartRename = () => {
+    // Strip .wav extension for editing
+    const nameWithoutExt = sample.name.replace(/\.wav$/i, '');
+    setNewName(nameWithoutExt);
+    setIsEditingName(true);
+  };
+
+  const handleSaveName = async () => {
+    setIsSavingName(true);
+    try {
+      const result = await window.electronAPI.renameSample(sample.path, newName);
+      if (result.success && result.newPath) {
+        setIsEditingName(false);
+        setIsSavingName(false);
+        onRenameComplete?.(result.newPath);
+      } else {
+        alert(`Failed to rename sample: ${result.error}`);
+        setIsSavingName(false);
+      }
+    } catch (error) {
+      console.error('Error renaming sample:', error);
+      alert('Failed to rename sample');
+      setIsSavingName(false);
+    }
+  };
+
+  const handleCancelRename = () => {
+    setNewName('');
+    setIsEditingName(false);
+  };
+
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
@@ -157,7 +199,48 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ sample, autoPlay = fal
     <div className="space-y-4">
       {/* Sample Info */}
       <div className="bg-white rounded border-2 border-panel-dark p-4">
-        <h3 className="text-lg font-medium text-label-black mb-3">{sample.name}</h3>
+        <div className="mb-3">
+          {isEditingName ? (
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                placeholder="Sample name"
+                className="flex-1 px-3 py-1.5 text-lg font-medium border-2 border-panel-dark rounded focus:border-label-blue focus:outline-none"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleSaveName();
+                  if (e.key === 'Escape') handleCancelRename();
+                }}
+              />
+              <button
+                onClick={handleSaveName}
+                disabled={isSavingName}
+                className="px-3 py-1.5 bg-label-blue hover:bg-button-dark disabled:bg-button-gray text-white rounded transition-colors"
+              >
+                {isSavingName ? 'Saving...' : 'Save'}
+              </button>
+              <button
+                onClick={handleCancelRename}
+                disabled={isSavingName}
+                className="px-3 py-1.5 bg-button-gray hover:bg-button-dark disabled:bg-panel text-white rounded transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-medium text-label-black">{sample.name}</h3>
+              <button
+                onClick={handleStartRename}
+                className="text-xs px-3 py-1 bg-button-dark hover:bg-knob-ring text-white rounded transition-colors"
+              >
+                Rename
+              </button>
+            </div>
+          )}
+        </div>
         <div className="grid grid-cols-2 gap-2 text-sm">
           <div>
             <span className="text-label-gray">Size:</span>
