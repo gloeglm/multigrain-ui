@@ -73,13 +73,17 @@ export function useMultigrain(): UseMultigrainReturn {
   useEffect(() => {
     const lastPath = localStorage.getItem(STORAGE_KEY);
     if (lastPath) {
+      console.log('Loading last used path:', lastPath);
       // Automatically load the last path
-      loadPath(lastPath).catch(() => {
+      loadPath(lastPath).catch((err) => {
+        console.error('Failed to load last path:', err);
         // If loading fails, clear the stored path
         localStorage.removeItem(STORAGE_KEY);
       });
+    } else {
+      console.log('No last path found in localStorage');
     }
-  }, [loadPath]);
+  }, []); // Empty deps - only run once on mount
 
   return {
     structure,

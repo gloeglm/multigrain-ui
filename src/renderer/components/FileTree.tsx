@@ -440,7 +440,8 @@ export const FileTree: React.FC<FileTreeProps> = ({ structure, selection, onSele
     try {
       const result = await window.electronAPI.deleteProject(project.path);
       if (result.success) {
-        alert(`Project "${formatProjectDisplayName(project.index, project.name, project.customName)}" has been deleted.`);
+        // Navigate to overview after deleting project
+        onSelectionChange({ type: 'overview' });
         onImportComplete?.(); // Reload structure
       } else {
         alert(`Failed to delete project: ${result.error}`);
@@ -457,7 +458,25 @@ export const FileTree: React.FC<FileTreeProps> = ({ structure, selection, onSele
     try {
       const result = await window.electronAPI.deleteSample(sample.path);
       if (result.success) {
-        alert(`Sample "${sample.name}" has been deleted.`);
+        // Determine where to navigate after deletion
+        // Check if this sample is in a project, Wavs, or Recs folder
+        const samplePath = sample.path;
+        const parentProject = structure.projects.find(p =>
+          p.samples.some(s => s.path === samplePath)
+        );
+
+        if (parentProject) {
+          // Navigate to the parent project
+          if (parentProject.autosave) {
+            onSelectionChange({ type: 'preset', preset: parentProject.autosave, project: parentProject });
+          } else {
+            onSelectionChange({ type: 'project', project: parentProject });
+          }
+        } else {
+          // Sample was in Wavs or Recs folder, navigate to overview
+          onSelectionChange({ type: 'overview' });
+        }
+
         onImportComplete?.(); // Reload structure
       } else {
         alert(`Failed to delete sample: ${result.error}`);
