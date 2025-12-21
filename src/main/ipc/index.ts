@@ -6,6 +6,7 @@ import { registerProjectMetadataHandlers } from './projectMetadata';
 import { setupPresetHandlers } from './preset';
 import { registerAudioImportHandlers } from './audioImport';
 import { registerProjectOperationsHandlers } from './projectOperations';
+import { registerFileOperationsHandlers } from './fileOperations';
 
 export function registerAllHandlers(): void {
   registerFileSystemHandlers();
@@ -16,4 +17,5 @@ export function registerAllHandlers(): void {
   setupPresetHandlers();
   registerAudioImportHandlers();
   registerProjectOperationsHandlers();
+  registerFileOperationsHandlers();
 }

@@ -3,6 +3,7 @@ import { MultigainStructure, Project, WavFile, Preset, TreeSelection } from '../
 import { ImportDialog } from './ImportDialog';
 import { CreateProjectDialog } from './CreateProjectDialog';
 import { ContextMenu, ContextMenuItem } from './ContextMenu';
+import { ConfirmDialog } from './ConfirmDialog';
 import { formatProjectDisplayName } from '../../shared/constants';
 
 interface FileTreeProps {
@@ -83,9 +84,10 @@ interface SampleNodeProps {
   sample: WavFile;
   onSelect?: (sample: WavFile) => void;
   isSelected?: boolean;
+  onContextMenu?: (e: React.MouseEvent, sample: WavFile) => void;
 }
 
-const SampleNode: React.FC<SampleNodeProps> = ({ sample, onSelect, isSelected }) => {
+const SampleNode: React.FC<SampleNodeProps> = ({ sample, onSelect, isSelected, onContextMenu }) => {
   const sizeKB = Math.round(sample.size / 1024);
 
   return (
@@ -94,6 +96,11 @@ const SampleNode: React.FC<SampleNodeProps> = ({ sample, onSelect, isSelected })
         isSelected ? 'bg-button-red bg-opacity-20 border-l-2 border-button-red' : ''
       }`}
       onClick={() => onSelect?.(sample)}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        onContextMenu?.(e, sample);
+      }}
     >
       <span className="text-label-blue">♪</span>
       <span className="flex-1 truncate text-sm text-label-black">{sample.name}</span>
@@ -278,6 +285,7 @@ const ProjectNode: React.FC<{
                   sample={sample}
                   onSelect={onSelectSample}
                   isSelected={selectedSample?.path === sample.path}
+                  onContextMenu={handleSampleContextMenu}
                 />
               ))}
             </TreeNode>
@@ -296,6 +304,10 @@ export const FileTree: React.FC<FileTreeProps> = ({ structure, selection, onSele
   const [projectToRename, setProjectToRename] = useState<Project | null>(null);
   const [wavsExpanded, setWavsExpanded] = useState(false);
   const [projectsFolderExpanded, setProjectsFolderExpanded] = useState(true);
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    type: 'project' | 'sample';
+    item: Project | WavFile;
+  } | null>(null);
 
   const handleSelectSample = (sample: WavFile) => {
     onSelectionChange({ type: 'sample', sample });
@@ -347,6 +359,13 @@ export const FileTree: React.FC<FileTreeProps> = ({ structure, selection, onSele
           setProjectToRename(project);
         },
       },
+      {
+        label: 'Delete Project',
+        icon: '🗑️',
+        onClick: () => {
+          setDeleteConfirm({ type: 'project', item: project });
+        },
+      },
     ];
 
     setContextMenu({
@@ -396,6 +415,58 @@ export const FileTree: React.FC<FileTreeProps> = ({ structure, selection, onSele
 
   const handleShowOverview = () => {
     onSelectionChange({ type: 'overview' });
+  };
+
+  const handleSampleContextMenu = (e: React.MouseEvent, sample: WavFile) => {
+    const items: ContextMenuItem[] = [
+      {
+        label: 'Delete Sample',
+        icon: '🗑️',
+        onClick: () => {
+          setDeleteConfirm({ type: 'sample', item: sample });
+        },
+      },
+    ];
+
+    setContextMenu({
+      x: e.clientX,
+      y: e.clientY,
+      items,
+    });
+  };
+
+  const handleDeleteProject = async (project: Project) => {
+    try {
+      const result = await window.electronAPI.deleteProject(project.path);
+      if (result.success) {
+        alert(`Project "${formatProjectDisplayName(project.index, project.name, project.customName)}" has been deleted.`);
+        onImportComplete?.(); // Reload structure
+      } else {
+        alert(`Failed to delete project: ${result.error}`);
+      }
+    } catch (error) {
+      console.error('Error deleting project:', error);
+      alert('Failed to delete project');
+    } finally {
+      setDeleteConfirm(null);
+    }
+  };
+
+  const handleDeleteSample = async (sample: WavFile) => {
+    try {
+      const result = await window.electronAPI.deleteSample(sample.path);
+      if (result.success) {
+        alert(`Sample "${sample.name}" has been deleted.`);
+        onImportComplete?.(); // Reload structure
+      } else {
+        alert(`Failed to delete sample: ${result.error}`);
+      }
+    } catch (error) {
+      console.error('Error deleting sample:', error);
+      alert('Failed to delete sample');
+    } finally {
+      setDeleteConfirm(null);
+    }
   };
 
   // Pass existing projects to CreateProjectDialog
@@ -492,6 +563,7 @@ export const FileTree: React.FC<FileTreeProps> = ({ structure, selection, onSele
                   sample={sample}
                   onSelect={handleSelectSample}
                   isSelected={selection.type === 'sample' && selection.sample.path === sample.path}
+                  onContextMenu={handleSampleContextMenu}
                 />
               ))}
             </div>
@@ -513,6 +585,7 @@ export const FileTree: React.FC<FileTreeProps> = ({ structure, selection, onSele
                 sample={sample}
                 onSelect={handleSelectSample}
                 isSelected={selection.type === 'sample' && selection.sample.path === sample.path}
+                onContextMenu={handleSampleContextMenu}
               />
             ))
           )}
@@ -542,6 +615,34 @@ export const FileTree: React.FC<FileTreeProps> = ({ structure, selection, onSele
           y={contextMenu.y}
           items={contextMenu.items}
           onClose={() => setContextMenu(null)}
+        />
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      {deleteConfirm && (
+        <ConfirmDialog
+          isOpen={true}
+          title={deleteConfirm.type === 'project' ? 'Delete Project' : 'Delete Sample'}
+          message={
+            deleteConfirm.type === 'project'
+              ? `Are you sure you want to delete project "${formatProjectDisplayName(
+                  (deleteConfirm.item as Project).index,
+                  (deleteConfirm.item as Project).name,
+                  (deleteConfirm.item as Project).customName
+                )}"?\n\nThis will permanently delete the project folder and all its contents including:\n- All presets (up to 48)\n- All samples in the project folder\n- All metadata\n\nThis action cannot be undone.`
+              : `Are you sure you want to delete sample "${(deleteConfirm.item as WavFile).name}"?\n\nThis action cannot be undone.`
+          }
+          confirmLabel={deleteConfirm.type === 'project' ? 'Delete Project' : 'Delete Sample'}
+          cancelLabel="Cancel"
+          confirmVariant="danger"
+          onConfirm={() => {
+            if (deleteConfirm.type === 'project') {
+              handleDeleteProject(deleteConfirm.item as Project);
+            } else {
+              handleDeleteSample(deleteConfirm.item as WavFile);
+            }
+          }}
+          onCancel={() => setDeleteConfirm(null)}
         />
       )}
     </div>

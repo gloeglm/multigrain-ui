@@ -57,6 +57,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.on('import:progress', handler);
     return () => ipcRenderer.removeListener('import:progress', handler);
   },
+
+  // File operations (delete)
+  deleteProject: (projectPath: string) =>
+    ipcRenderer.invoke('files:deleteProject', projectPath),
+  deleteSample: (samplePath: string) =>
+    ipcRenderer.invoke('files:deleteSample', samplePath),
+  deleteSamples: (samplePaths: string[]) =>
+    ipcRenderer.invoke('files:deleteSamples', samplePaths),
 });
 
 export type ElectronAPI = {
@@ -126,6 +134,20 @@ export type ElectronAPI = {
   }>;
   executeImport: (files: string[], targetPath: string) => Promise<import('../shared/types/import').ImportResult>;
   onImportProgress: (callback: (progress: import('../shared/types/import').ImportProgress) => void) => () => void;
+  deleteProject: (projectPath: string) => Promise<{
+    success: boolean;
+    error?: string;
+  }>;
+  deleteSample: (samplePath: string) => Promise<{
+    success: boolean;
+    error?: string;
+  }>;
+  deleteSamples: (samplePaths: string[]) => Promise<{
+    success: boolean;
+    count?: number;
+    total?: number;
+    results?: Array<{ path: string; success: boolean; error?: string }>;
+  }>;
 };
 
 declare global {
