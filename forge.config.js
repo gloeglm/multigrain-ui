@@ -23,11 +23,19 @@ module.exports = {
     },
     {
       name: '@electron-forge/maker-deb',
-      config: {},
+      config: {
+        options: {
+          bin: 'multigrain-sample-manager',
+        },
+      },
     },
     {
       name: '@electron-forge/maker-rpm',
-      config: {},
+      config: {
+        options: {
+          bin: 'multigrain-sample-manager',
+        },
+      },
     },
   ],
   plugins: [
