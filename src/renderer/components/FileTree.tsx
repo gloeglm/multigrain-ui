@@ -216,6 +216,7 @@ const SampleNode: React.FC<SampleNodeProps> = ({ sample }) => {
 
   return (
     <div
+      data-testid={`sample-node-${sample.path}`}
       className={`flex items-center gap-2 py-1 px-2 rounded cursor-pointer hover:bg-panel-dark ml-6 ${
         isSelected ? 'bg-button-red bg-opacity-20 border-l-2 border-button-red' : ''
       }`}
@@ -308,6 +309,7 @@ const ProjectNode: React.FC<ProjectNodeProps> = ({ project, triggerRename, onCan
   return (
     <div className="select-none">
       <div
+        data-testid={`project-node-${project.path}`}
         className={`flex items-center gap-2 py-1 px-2 rounded hover:bg-panel-dark cursor-pointer ${
           isSelected ? 'bg-label-blue bg-opacity-10 border-l-2 border-label-blue' : ''
         }`}
