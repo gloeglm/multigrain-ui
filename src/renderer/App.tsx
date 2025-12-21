@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useMultigrain } from './hooks/useMultigrain';
 import { FileTree } from './components/FileTree';
-import { AudioPlayer } from './components/AudioPlayer';
+import { SampleView } from './components/SampleView';
 import { PresetViewer } from './components/PresetViewer';
 import { ConfirmDialog } from './components/ConfirmDialog';
 import { TreeSelection } from '../shared/types';
@@ -195,7 +195,7 @@ const App: React.FC = () => {
             }
             return (
               <div className="max-w-3xl mx-auto">
-                <AudioPlayer
+                <SampleView
                   key={selection.samplePath}
                   sample={sample}
                   autoPlay={autoPlay}
