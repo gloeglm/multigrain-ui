@@ -11,7 +11,12 @@ export function registerAudioHandlers(): void {
       // Try to get description from various metadata fields
       // music-metadata returns comments as objects with {text, language, descriptor}
       const commentObj = metadata.common.comment?.[0];
-      const commentText = typeof commentObj === 'string' ? commentObj : commentObj?.text || '';
+      let commentText = '';
+      if (typeof commentObj === 'string') {
+        commentText = commentObj;
+      } else if (commentObj && typeof commentObj === 'object' && 'text' in commentObj) {
+        commentText = String((commentObj as { text?: string }).text || '');
+      }
 
       const riffComment = metadata.native?.['RIFF']?.find((tag) => tag.id === 'ICMT')?.value;
       const description = commentText || riffComment || '';

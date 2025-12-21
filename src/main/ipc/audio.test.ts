@@ -98,7 +98,11 @@ describe('Audio IPC Handlers', () => {
 
       // Verify the INFO chunk contains the new description
       const infoChunk = chunks[2];
-      const listType = modifiedBuffer.toString('ascii', infoChunk.position + 8, infoChunk.position + 12);
+      const listType = modifiedBuffer.toString(
+        'ascii',
+        infoChunk.position + 8,
+        infoChunk.position + 12
+      );
       expect(listType).toBe('INFO');
     });
 

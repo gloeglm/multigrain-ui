@@ -151,7 +151,8 @@ export async function convertAudioFile(
         .audioChannels(AUDIO_SPECS.CHANNELS) // Stereo
         .format('wav') // WAV format
         .outputOptions([
-          '-map_metadata', '-1', // Strip all metadata
+          '-map_metadata',
+          '-1', // Strip all metadata
           '-bitexact', // Don't add encoder info
         ]);
 

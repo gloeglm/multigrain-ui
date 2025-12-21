@@ -49,7 +49,9 @@ function analyzeWavFile(filePath) {
         while (infoPos < infoEnd - 8) {
           const tagId = buffer.toString('ascii', infoPos, infoPos + 4);
           const tagSize = buffer.readUInt32LE(infoPos + 4);
-          const tagData = buffer.toString('utf8', infoPos + 8, infoPos + 8 + tagSize).replace(/\0/g, '');
+          const tagData = buffer
+            .toString('utf8', infoPos + 8, infoPos + 8 + tagSize)
+            .replace(/\0/g, '');
 
           console.log(`      ${tagId}: "${tagData}" (${tagSize} bytes)`);
 
@@ -62,7 +64,7 @@ function analyzeWavFile(filePath) {
   }
 
   // Check fmt chunk details
-  const fmtChunk = chunks.find(c => c.id === 'fmt ');
+  const fmtChunk = chunks.find((c) => c.id === 'fmt ');
   if (fmtChunk) {
     const pos = fmtChunk.position + 8;
     const audioFormat = buffer.readUInt16LE(pos);
@@ -86,10 +88,10 @@ function analyzeWavFile(filePath) {
 const files = [
   'D:\\Multigrain\\Project32\\JMK_IVP_108_indian_female_adlib__harmonies_bollywood_dry_G.wav',
   'D:\\Multigrain\\Project25\\01_GRAINIFY.wav',
-  'D:\\Multigrain\\Project25\\02_GRAINIFY.wav'
+  'D:\\Multigrain\\Project25\\02_GRAINIFY.wav',
 ];
 
-files.forEach(file => {
+files.forEach((file) => {
   try {
     analyzeWavFile(file);
   } catch (error) {

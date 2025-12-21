@@ -38,6 +38,7 @@ export function useMultigrain(): UseMultigrainReturn {
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load structure');
+      setStructure(null); // Clear structure on error
     } finally {
       setIsLoading(false);
     }
@@ -77,8 +78,7 @@ export function useMultigrain(): UseMultigrainReturn {
       // Automatically load the last path
       loadPath(lastPath).catch((err) => {
         console.error('Failed to load last path:', err);
-        // If loading fails, clear the stored path
-        localStorage.removeItem(STORAGE_KEY);
+        // Don't clear the stored path - let the user see the error and manually select a new path
       });
     } else {
       console.log('No last path found in localStorage');

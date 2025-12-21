@@ -29,7 +29,9 @@ describe('App Integration Tests', () => {
 
     // Mock alert
     global.alert = vi.fn();
+  });
 
+  const setupWithStructure = () => {
     // Set localStorage to trigger auto-load
     localStorage.setItem('multigrain-last-path', '/test/Multigrain');
 
@@ -59,6 +61,9 @@ describe('App Integration Tests', () => {
       }),
     });
 
+    // Mock readFile for audio loading (return empty buffer to avoid audio errors)
+    vi.mocked(window.electronAPI.readFile).mockResolvedValue(Buffer.from([]));
+
     // Mock readAudioMetadata
     vi.mocked(window.electronAPI.readAudioMetadata).mockResolvedValue({
       description: 'Test description',
@@ -76,9 +81,13 @@ describe('App Integration Tests', () => {
       newName: 'renamed.wav',
       newPath: '/test/Multigrain/Project01/renamed.wav',
     });
-  });
+  };
 
   describe('Rename Synchronization', () => {
+    beforeEach(() => {
+      setupWithStructure();
+    });
+
     it('keeps FileTree and SampleInfo in sync when renaming from SampleInfo', async () => {
       const user = userEvent.setup();
       render(<App />);
@@ -285,6 +294,143 @@ describe('App Integration Tests', () => {
 
       // sample-name should not be visible (still in edit mode)
       expect(screen.queryByTestId('sample-name')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('Welcome Screen and Header Visibility', () => {
+    it('should show welcome screen without header when no SD card is selected', async () => {
+      // Don't set localStorage, don't mock validation
+      render(<App />);
+
+      // Should show welcome screen
+      await waitFor(() => {
+        expect(screen.getByText('Welcome to Multigrain Sample Manager')).toBeInTheDocument();
+      });
+
+      // Should show "Select Your SD Card" button in welcome screen
+      expect(screen.getByRole('button', { name: /select your sd card/i })).toBeInTheDocument();
+
+      // Header should NOT be present (check for header-specific elements)
+      expect(screen.queryByText('Auto-play')).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /load factory names/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /change location/i })).not.toBeInTheDocument();
+
+      // Should not show file tree
+      expect(
+        screen.queryByTestId('project-node-/test/Multigrain/Project01')
+      ).not.toBeInTheDocument();
+    });
+
+    it('should show welcome screen with error when previous path is not accessible', async () => {
+      // Set localStorage with a path
+      localStorage.setItem('multigrain-last-path', '/Volumes/NO_NAME');
+
+      // Mock validation to fail
+      vi.mocked(window.electronAPI.validateMultigrain).mockRejectedValue(
+        new Error('Cannot access the selected path')
+      );
+
+      render(<App />);
+
+      // Should show welcome screen with error
+      await waitFor(() => {
+        expect(screen.getByText('Welcome to Multigrain Sample Manager')).toBeInTheDocument();
+        expect(screen.getByText(/⚠️ Previous location not accessible:/)).toBeInTheDocument();
+        expect(screen.getByText('/Volumes/NO_NAME')).toBeInTheDocument();
+      });
+
+      // Header should NOT be present
+      expect(screen.queryByText('Auto-play')).not.toBeInTheDocument();
+    });
+
+    it('should show header and tree view after SD card is loaded', async () => {
+      setupWithStructure();
+      render(<App />);
+
+      // Wait for structure to load
+      await waitFor(() => {
+        expect(screen.getByTestId('project-node-/test/Multigrain/Project01')).toBeInTheDocument();
+      });
+
+      // Header SHOULD be present
+      expect(screen.getByText('Multigrain Sample Manager')).toBeInTheDocument();
+      expect(screen.getByText('Auto-play')).toBeInTheDocument();
+      expect(screen.getByText('Load Factory Names')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /change location/i })).toBeInTheDocument();
+
+      // Welcome screen should NOT be visible
+      expect(
+        screen.queryByText(
+          'Manage and organize your Intellijel Multigrain sample library with ease'
+        )
+      ).not.toBeInTheDocument();
+      expect(screen.queryByText(/🚀/)).not.toBeInTheDocument();
+    });
+
+    it('should show welcome screen when clicking Select SD Card button', async () => {
+      const user = userEvent.setup();
+
+      // Mock selectDirectory to return a path
+      vi.mocked(window.electronAPI.selectDirectory).mockResolvedValue('/test/NewCard');
+
+      // Mock validation for the new path
+      vi.mocked(window.electronAPI.validateMultigrain).mockResolvedValue({
+        isValid: true,
+        errors: [],
+        structure: createMockStructure({
+          rootPath: '/test/NewCard',
+          projects: [
+            createMockProject({
+              name: 'Project01',
+              path: '/test/NewCard/Project01',
+              index: 1,
+            }),
+          ],
+        }),
+      });
+
+      render(<App />);
+
+      // Wait for welcome screen
+      await waitFor(() => {
+        expect(screen.getByText('Welcome to Multigrain Sample Manager')).toBeInTheDocument();
+      });
+
+      // Click Select SD Card button
+      const selectButton = screen.getByRole('button', { name: /select your sd card/i });
+      await user.click(selectButton);
+
+      // Should show header and tree after selection
+      await waitFor(() => {
+        expect(screen.getByText('Multigrain Sample Manager')).toBeInTheDocument();
+        expect(screen.getByText('Auto-play')).toBeInTheDocument();
+        expect(screen.getByTestId('project-node-/test/NewCard/Project01')).toBeInTheDocument();
+      });
+
+      // Welcome screen should be gone
+      expect(
+        screen.queryByText(
+          'Manage and organize your Intellijel Multigrain sample library with ease'
+        )
+      ).not.toBeInTheDocument();
+    });
+
+    it('should hide welcome screen when structure loads automatically', async () => {
+      setupWithStructure();
+      render(<App />);
+
+      // Initially might show welcome screen briefly, but should transition to tree view
+      await waitFor(() => {
+        expect(screen.getByTestId('project-node-/test/Multigrain/Project01')).toBeInTheDocument();
+      });
+
+      // Welcome screen should not be visible
+      expect(
+        screen.queryByRole('button', { name: /select your sd card/i })
+      ).not.toBeInTheDocument();
+
+      // Header should be visible
+      expect(screen.getByText('Multigrain Sample Manager')).toBeInTheDocument();
     });
   });
 });

@@ -4,6 +4,7 @@ import { FileTree } from './components/FileTree';
 import { SampleView } from './components/SampleView';
 import { PresetViewer } from './components/PresetViewer';
 import { ConfirmDialog } from './components/ConfirmDialog';
+import { WelcomeScreen } from './components/WelcomeScreen';
 import { TreeSelection } from '../shared/types';
 import { FACTORY_PROJECT_NAMES, formatProjectDisplayName } from '../shared/constants';
 
@@ -93,36 +94,36 @@ const App: React.FC = () => {
 
   return (
     <div className="h-screen bg-white text-label-black flex flex-col overflow-hidden">
-      {/* Header */}
-      <header className="flex-shrink-0 bg-panel-light border-b-2 border-panel-dark px-6 py-4 flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-label-black">Multigrain Sample Manager</h1>
-        <div className="flex items-center gap-4">
-          {/* Auto-play toggle */}
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={autoPlay}
-              onChange={(e) => setAutoPlay(e.target.checked)}
-              className="sr-only"
-            />
-            <div
-              className={`flex items-center gap-2 px-3 py-2 rounded text-sm font-medium transition-all ${
-                autoPlay
-                  ? 'bg-label-blue text-white shadow-sm'
-                  : 'bg-white border-2 border-panel-dark text-label-gray hover:bg-panel-light'
-              }`}
-              title={
-                autoPlay
-                  ? 'Auto-play enabled - Click to disable'
-                  : 'Auto-play disabled - Click to enable'
-              }
-            >
-              <span className="text-base">{autoPlay ? '▶' : '⏸'}</span>
-              <span>Auto-play</span>
-            </div>
-          </label>
+      {/* Header - only show when structure is loaded */}
+      {structure && (
+        <header className="flex-shrink-0 bg-panel-light border-b-2 border-panel-dark px-6 py-4 flex items-center justify-between">
+          <h1 className="text-xl font-semibold text-label-black">Multigrain Sample Manager</h1>
+          <div className="flex items-center gap-4">
+            {/* Auto-play toggle */}
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={autoPlay}
+                onChange={(e) => setAutoPlay(e.target.checked)}
+                className="sr-only"
+              />
+              <div
+                className={`flex items-center gap-2 px-3 py-2 rounded text-sm font-medium transition-all ${
+                  autoPlay
+                    ? 'bg-label-blue text-white shadow-sm'
+                    : 'bg-white border-2 border-panel-dark text-label-gray hover:bg-panel-light'
+                }`}
+                title={
+                  autoPlay
+                    ? 'Auto-play enabled - Click to disable'
+                    : 'Auto-play disabled - Click to enable'
+                }
+              >
+                <span className="text-base">{autoPlay ? '▶' : '⏸'}</span>
+                <span>Auto-play</span>
+              </div>
+            </label>
 
-          {structure && (
             <button
               onClick={handleLoadFactoryNamesClick}
               className="bg-label-blue hover:bg-button-dark text-white px-4 py-2 rounded transition-colors text-sm font-medium"
@@ -130,44 +131,44 @@ const App: React.FC = () => {
             >
               Load Factory Names
             </button>
-          )}
 
-          {/* Dev mode only: Reset button */}
-          {process.env.NODE_ENV === 'development' && (
+            {/* Dev mode only: Reset button */}
+            {process.env.NODE_ENV === 'development' && (
+              <button
+                onClick={() => {
+                  localStorage.clear();
+                  window.location.reload();
+                }}
+                className="bg-button-red hover:bg-opacity-80 text-white px-4 py-2 rounded transition-colors text-sm font-medium"
+                title="Clear stored location and reload (dev only)"
+              >
+                🔄 Reset
+              </button>
+            )}
+
             <button
-              onClick={() => {
-                localStorage.clear();
-                window.location.reload();
-              }}
-              className="bg-button-red hover:bg-opacity-80 text-white px-4 py-2 rounded transition-colors text-sm font-medium"
-              title="Clear stored location and reload (dev only)"
+              onClick={selectAndValidate}
+              disabled={isLoading}
+              className="bg-button-dark hover:bg-knob-ring disabled:bg-button-gray disabled:cursor-not-allowed text-white px-4 py-2 rounded transition-colors text-sm font-medium"
             >
-              🔄 Reset
+              {isLoading ? 'Loading...' : 'Change Location'}
             </button>
-          )}
-
-          <button
-            onClick={selectAndValidate}
-            disabled={isLoading}
-            className="bg-button-dark hover:bg-knob-ring disabled:bg-button-gray disabled:cursor-not-allowed text-white px-4 py-2 rounded transition-colors text-sm font-medium"
-          >
-            {isLoading ? 'Loading...' : structure ? 'Change Location' : 'Select SD Card'}
-          </button>
-        </div>
-      </header>
+          </div>
+        </header>
+      )}
 
       {/* Main content */}
       <main className="flex-1 flex overflow-hidden">
-        {/* Sidebar - File Tree */}
-        <aside className="w-[480px] bg-panel-light border-r-2 border-panel-dark flex flex-col">
-          {error && (
-            <div className="p-4 bg-button-red bg-opacity-20 border-b border-button-red text-button-red text-sm flex-shrink-0">
-              {error}
-            </div>
-          )}
+        {structure ? (
+          <>
+            {/* Sidebar - File Tree */}
+            <aside className="w-[480px] bg-panel-light border-r-2 border-panel-dark flex flex-col">
+              {error && (
+                <div className="p-4 bg-button-red bg-opacity-20 border-b border-button-red text-button-red text-sm flex-shrink-0">
+                  {error}
+                </div>
+              )}
 
-          {structure ? (
-            <>
               {/* Fixed path display */}
               <div
                 className="flex-shrink-0 text-xs text-label-gray px-4 py-2 border-b border-panel-dark truncate"
@@ -189,144 +190,138 @@ const App: React.FC = () => {
                   }}
                 />
               </div>
-            </>
-          ) : (
-            <div className="flex-1 flex items-center justify-center p-6 text-center text-label-gray">
-              <div>
-                <div className="text-4xl mb-4">💾</div>
-                <p className="mb-2 text-label-black">No SD card selected</p>
-                <p className="text-xs">
-                  Click &quot;Select SD Card&quot; to browse your Multigrain samples
-                </p>
-              </div>
-            </div>
-          )}
-        </aside>
+            </aside>
 
-        {/* Main panel - Preview/Details */}
-        <section className="flex-1 p-6 overflow-y-auto bg-white">
-          {selection.type === 'sample' ? (
-            (() => {
-              const sample = findSampleByPath(selection.samplePath);
-              if (!sample) {
-                return (
-                  <div className="flex items-center justify-center h-full text-label-gray">
-                    <p>Sample not found</p>
+            {/* Main panel - Preview/Details */}
+            <section className="flex-1 p-6 overflow-y-auto bg-white">
+              {selection.type === 'sample' ? (
+                (() => {
+                  const sample = findSampleByPath(selection.samplePath);
+                  if (!sample) {
+                    return (
+                      <div className="flex items-center justify-center h-full text-label-gray">
+                        <p>Sample not found</p>
+                      </div>
+                    );
+                  }
+                  return (
+                    <div className="max-w-3xl mx-auto">
+                      <SampleView
+                        key={selection.samplePath}
+                        sample={sample}
+                        autoPlay={autoPlay}
+                        onRenameComplete={(newPath) => {
+                          setSelection({ type: 'sample', samplePath: newPath });
+                          reloadStructure();
+                        }}
+                      />
+                    </div>
+                  );
+                })()
+              ) : selection.type === 'preset' && structure ? (
+                (() => {
+                  const preset = findPresetByPath(selection.presetPath);
+                  const project = selection.projectPath
+                    ? findProjectByPath(selection.projectPath)
+                    : undefined;
+                  if (!preset) {
+                    return (
+                      <div className="flex items-center justify-center h-full text-label-gray">
+                        <p>Preset not found</p>
+                      </div>
+                    );
+                  }
+                  return (
+                    <div className="max-w-3xl mx-auto">
+                      <PresetViewer
+                        key={selection.presetPath}
+                        preset={preset}
+                        structure={structure}
+                        onNavigateToSample={(sample) =>
+                          setSelection({ type: 'sample', samplePath: sample.path })
+                        }
+                        selectedProject={project}
+                      />
+                    </div>
+                  );
+                })()
+              ) : (
+                <div className="max-w-2xl">
+                  <h2 className="text-lg font-medium mb-4 text-label-blue">Overview</h2>
+                  <div className="grid grid-cols-3 gap-4 mb-6">
+                    <div className="bg-white rounded p-4 border-2 border-panel-dark">
+                      <div className="text-2xl font-bold text-label-blue">
+                        {structure.projects.length}
+                      </div>
+                      <div className="text-sm text-label-gray">Projects</div>
+                    </div>
+                    <div className="bg-white rounded p-4 border-2 border-panel-dark">
+                      <div className="text-2xl font-bold text-label-blue">
+                        {structure.globalWavs.length}
+                      </div>
+                      <div className="text-sm text-label-gray">Global Samples</div>
+                    </div>
+                    <div className="bg-white rounded p-4 border-2 border-panel-dark">
+                      <div className="text-2xl font-bold text-label-blue">
+                        {structure.recordings.length}
+                      </div>
+                      <div className="text-sm text-label-gray">Recordings</div>
+                    </div>
                   </div>
-                );
-              }
-              return (
-                <div className="max-w-3xl mx-auto">
-                  <SampleView
-                    key={selection.samplePath}
-                    sample={sample}
-                    autoPlay={autoPlay}
-                    onRenameComplete={(newPath) => {
-                      setSelection({ type: 'sample', samplePath: newPath });
-                      reloadStructure();
-                    }}
-                  />
-                </div>
-              );
-            })()
-          ) : selection.type === 'preset' && structure ? (
-            (() => {
-              const preset = findPresetByPath(selection.presetPath);
-              const project = selection.projectPath
-                ? findProjectByPath(selection.projectPath)
-                : undefined;
-              if (!preset) {
-                return (
-                  <div className="flex items-center justify-center h-full text-label-gray">
-                    <p>Preset not found</p>
-                  </div>
-                );
-              }
-              return (
-                <div className="max-w-3xl mx-auto">
-                  <PresetViewer
-                    key={selection.presetPath}
-                    preset={preset}
-                    structure={structure}
-                    onNavigateToSample={(sample) =>
-                      setSelection({ type: 'sample', samplePath: sample.path })
-                    }
-                    selectedProject={project}
-                  />
-                </div>
-              );
-            })()
-          ) : structure ? (
-            <div className="max-w-2xl">
-              <h2 className="text-lg font-medium mb-4 text-label-blue">Overview</h2>
-              <div className="grid grid-cols-3 gap-4 mb-6">
-                <div className="bg-white rounded p-4 border-2 border-panel-dark">
-                  <div className="text-2xl font-bold text-label-blue">
-                    {structure.projects.length}
-                  </div>
-                  <div className="text-sm text-label-gray">Projects</div>
-                </div>
-                <div className="bg-white rounded p-4 border-2 border-panel-dark">
-                  <div className="text-2xl font-bold text-label-blue">
-                    {structure.globalWavs.length}
-                  </div>
-                  <div className="text-sm text-label-gray">Global Samples</div>
-                </div>
-                <div className="bg-white rounded p-4 border-2 border-panel-dark">
-                  <div className="text-2xl font-bold text-label-blue">
-                    {structure.recordings.length}
-                  </div>
-                  <div className="text-sm text-label-gray">Recordings</div>
-                </div>
-              </div>
 
-              <h3 className="text-md font-medium mb-3 text-label-blue">Projects Summary</h3>
-              <div className="bg-white rounded border-2 border-panel-dark overflow-hidden">
-                <table className="w-full text-sm">
-                  <thead className="bg-panel">
-                    <tr className="border-b-2 border-panel-dark">
-                      <th className="text-left px-4 py-3 text-label-black font-medium">Project</th>
-                      <th className="text-right px-4 py-3 text-label-black font-medium">Samples</th>
-                      <th className="text-right px-4 py-3 text-label-black font-medium">Presets</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {structure.projects.map((project) => (
-                      <tr
-                        key={project.path}
-                        className="border-b border-panel-dark last:border-0 hover:bg-panel-light"
-                      >
-                        <td className="px-4 py-2 text-label-black">
-                          {formatProjectDisplayName(
-                            project.index,
-                            project.name,
-                            project.customName
-                          )}
-                        </td>
-                        <td className="text-right px-4 py-2 text-label-gray">
-                          {project.samples.length}
-                        </td>
-                        <td className="text-right px-4 py-2 text-label-gray">
-                          {project.presets.length}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          ) : (
-            <div className="flex items-center justify-center h-full text-label-gray">
-              <div className="text-center">
-                <div className="text-6xl mb-4">🎛️</div>
-                <h2 className="text-xl mb-2 text-label-black">
-                  Welcome to Multigrain Sample Manager
-                </h2>
-                <p className="text-sm">Select your SD card location to get started</p>
-              </div>
-            </div>
-          )}
-        </section>
+                  <h3 className="text-md font-medium mb-3 text-label-blue">Projects Summary</h3>
+                  <div className="bg-white rounded border-2 border-panel-dark overflow-hidden">
+                    <table className="w-full text-sm">
+                      <thead className="bg-panel">
+                        <tr className="border-b-2 border-panel-dark">
+                          <th className="text-left px-4 py-3 text-label-black font-medium">
+                            Project
+                          </th>
+                          <th className="text-right px-4 py-3 text-label-black font-medium">
+                            Samples
+                          </th>
+                          <th className="text-right px-4 py-3 text-label-black font-medium">
+                            Presets
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {structure.projects.map((project) => (
+                          <tr
+                            key={project.path}
+                            className="border-b border-panel-dark last:border-0 hover:bg-panel-light"
+                          >
+                            <td className="px-4 py-2 text-label-black">
+                              {formatProjectDisplayName(
+                                project.index,
+                                project.name,
+                                project.customName
+                              )}
+                            </td>
+                            <td className="text-right px-4 py-2 text-label-gray">
+                              {project.samples.length}
+                            </td>
+                            <td className="text-right px-4 py-2 text-label-gray">
+                              {project.presets.length}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </section>
+          </>
+        ) : (
+          <WelcomeScreen
+            onSelectCard={selectAndValidate}
+            error={error && localStorage.getItem('multigrain-last-path') ? error : undefined}
+            previousPath={
+              error ? localStorage.getItem('multigrain-last-path') || undefined : undefined
+            }
+          />
+        )}
       </main>
 
       {/* Status bar */}

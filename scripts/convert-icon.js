@@ -1,5 +1,4 @@
 const sharp = require('sharp');
-const fs = require('fs');
 const path = require('path');
 
 const svgPath = path.join(__dirname, '../assets/icons/icon.svg');
@@ -14,7 +13,7 @@ sharp(svgPath)
     console.log('✓ SVG converted to PNG successfully');
     console.log(`  Output: ${pngPath}`);
   })
-  .catch(err => {
+  .catch((err) => {
     console.error('Error converting SVG to PNG:', err);
     process.exit(1);
   });

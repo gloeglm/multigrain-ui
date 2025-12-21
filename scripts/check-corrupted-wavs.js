@@ -32,8 +32,8 @@ function checkWAVChunkOrder(filePath) {
     }
 
     // Find positions of data and INFO/LIST chunks
-    const dataIndex = chunks.findIndex(c => c.id === 'data');
-    const infoIndex = chunks.findIndex(c => c.id === 'LIST');
+    const dataIndex = chunks.findIndex((c) => c.id === 'data');
+    const infoIndex = chunks.findIndex((c) => c.id === 'LIST');
 
     if (dataIndex === -1) {
       return { valid: false, error: 'No data chunk found' };
@@ -44,13 +44,13 @@ function checkWAVChunkOrder(filePath) {
       return {
         valid: false,
         error: 'INFO chunk before data chunk (incompatible with Multigrain)',
-        chunkOrder: chunks.map(c => c.id).join(' -> '),
+        chunkOrder: chunks.map((c) => c.id).join(' -> '),
       };
     }
 
     return {
       valid: true,
-      chunkOrder: chunks.map(c => c.id).join(' -> '),
+      chunkOrder: chunks.map((c) => c.id).join(' -> '),
     };
   } catch (error) {
     return { valid: false, error: error.message };
@@ -129,7 +129,9 @@ function main() {
 
   if (problematicFiles.length > 0) {
     console.log(`⚠️  PROBLEMATIC FILES (${problematicFiles.length}):`);
-    console.log('These files have INFO chunks BEFORE data chunks and may not work on Multigrain:\n');
+    console.log(
+      'These files have INFO chunks BEFORE data chunks and may not work on Multigrain:\n'
+    );
 
     for (const file of problematicFiles) {
       console.log(`  ❌ ${file.path}`);

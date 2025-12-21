@@ -56,9 +56,10 @@ const createWindow = (): void => {
   }
 
   // Determine icon path based on platform
-  const iconPath = process.platform === 'win32'
-    ? path.join(process.cwd(), 'assets/icons/icons/icon.ico')
-    : path.join(process.cwd(), 'assets/icons/icons/icon.png');
+  const iconPath =
+    process.platform === 'win32'
+      ? path.join(process.cwd(), 'assets/icons/icons/icon.ico')
+      : path.join(process.cwd(), 'assets/icons/icons/icon.png');
 
   const mainWindow = new BrowserWindow({
     ...bounds,
