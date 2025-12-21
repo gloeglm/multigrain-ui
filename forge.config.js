@@ -78,7 +78,7 @@ module.exports = {
           owner: 'gloeglm',
           name: 'multigrain-ui'
         },
-        prerelease: false,
+        prerelease: true,
         draft: true
       }
     }
