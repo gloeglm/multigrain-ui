@@ -1,10 +1,40 @@
-import React, { useState } from 'react';
+import React, { useState, createContext, useContext } from 'react';
 import { MultigainStructure, Project, WavFile, Preset, TreeSelection } from '../../shared/types';
 import { ImportDialog } from './ImportDialog';
 import { CreateProjectDialog } from './CreateProjectDialog';
 import { ContextMenu, ContextMenuItem } from './ContextMenu';
 import { ConfirmDialog } from './ConfirmDialog';
 import { formatProjectDisplayName } from '../../shared/constants';
+
+// Context for sharing state between FileTree components
+interface FileTreeContextValue {
+  // Selection
+  selection: TreeSelection;
+  onSelectSample: (sample: WavFile) => void;
+  onSelectPreset: (preset: Preset) => void;
+  onSelectProject: (project: Project) => void;
+
+  // Sample rename
+  sampleToRename: WavFile | null;
+  setSampleToRename: (sample: WavFile | null) => void;
+
+  // Callbacks
+  onImportComplete?: () => void;
+  onProjectNameChange?: () => void;
+
+  // Context menus
+  handleSampleContextMenu: (e: React.MouseEvent, sample: WavFile) => void;
+}
+
+const FileTreeContext = createContext<FileTreeContextValue | null>(null);
+
+const useFileTreeContext = () => {
+  const context = useContext(FileTreeContext);
+  if (!context) {
+    throw new Error('useFileTreeContext must be used within FileTreeContext.Provider');
+  }
+  return context;
+};
 
 interface FileTreeProps {
   structure: MultigainStructure;
@@ -82,27 +112,25 @@ const TreeNode: React.FC<TreeNodeProps> = ({
 
 interface SampleNodeProps {
   sample: WavFile;
-  onSelect?: (sample: WavFile) => void;
-  isSelected?: boolean;
-  onContextMenu?: (e: React.MouseEvent, sample: WavFile) => void;
-  triggerRename?: boolean;
-  onCancelRename?: () => void;
-  onRenameComplete?: () => void;
 }
 
-const SampleNode: React.FC<SampleNodeProps> = ({
-  sample,
-  onSelect,
-  isSelected,
-  onContextMenu,
-  triggerRename,
-  onCancelRename,
-  onRenameComplete
-}) => {
+const SampleNode: React.FC<SampleNodeProps> = ({ sample }) => {
+  const {
+    selection,
+    onSelectSample,
+    handleSampleContextMenu,
+    sampleToRename,
+    setSampleToRename,
+    onImportComplete
+  } = useFileTreeContext();
+
   const [isEditing, setIsEditing] = useState(false);
   const [newName, setNewName] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const sizeKB = Math.round(sample.size / 1024);
+
+  const isSelected = selection.type === 'sample' && selection.sample.path === sample.path;
+  const triggerRename = sampleToRename?.path === sample.path;
 
   // Trigger edit mode from parent
   React.useEffect(() => {
@@ -120,8 +148,8 @@ const SampleNode: React.FC<SampleNodeProps> = ({
       const result = await window.electronAPI.renameSample(sample.path, newName);
       if (result.success) {
         setIsEditing(false);
-        onCancelRename?.();
-        onRenameComplete?.();
+        setSampleToRename(null);
+        onImportComplete?.();
       } else {
         alert(`Failed to rename sample: ${result.error}`);
       }
@@ -136,7 +164,7 @@ const SampleNode: React.FC<SampleNodeProps> = ({
   const handleCancel = () => {
     setNewName('');
     setIsEditing(false);
-    onCancelRename?.();
+    setSampleToRename(null);
   };
 
   if (isEditing) {
@@ -187,11 +215,11 @@ const SampleNode: React.FC<SampleNodeProps> = ({
       className={`flex items-center gap-2 py-1 px-2 rounded cursor-pointer hover:bg-panel-dark ml-6 ${
         isSelected ? 'bg-button-red bg-opacity-20 border-l-2 border-button-red' : ''
       }`}
-      onClick={() => onSelect?.(sample)}
+      onClick={() => onSelectSample(sample)}
       onContextMenu={(e) => {
         e.preventDefault();
         e.stopPropagation();
-        onContextMenu?.(e, sample);
+        handleSampleContextMenu(e, sample);
       }}
     >
       <span className="text-label-blue">♪</span>
@@ -221,20 +249,15 @@ const PresetNode: React.FC<PresetNodeProps> = ({ preset, onSelect, isSelected })
   );
 };
 
-const ProjectNode: React.FC<{
+interface ProjectNodeProps {
   project: Project;
-  onSelectSample?: (sample: WavFile) => void;
-  onSelectPreset?: (preset: Preset) => void;
-  onSelectProject?: (project: Project) => void;
-  selectedSample?: WavFile | null;
-  selectedPreset?: Preset | null;
-  selectedProject?: Project | null;
-  onProjectNameChange?: () => void;
-  onContextMenu?: (e: React.MouseEvent, project: Project) => void;
-  onSampleContextMenu?: (e: React.MouseEvent, sample: WavFile) => void;
-  triggerRename?: boolean;
-  onCancelRename?: () => void;
-}> = ({ project, onSelectSample, onSelectPreset, onSelectProject, selectedSample, selectedPreset, selectedProject, onProjectNameChange, onContextMenu, onSampleContextMenu, triggerRename, onCancelRename }) => {
+  triggerRename: boolean;
+  onCancelRename: () => void;
+  onContextMenu: (e: React.MouseEvent, project: Project) => void;
+}
+
+const ProjectNode: React.FC<ProjectNodeProps> = ({ project, triggerRename, onCancelRename, onContextMenu }) => {
+  const { selection, onSelectPreset, onSelectProject, onProjectNameChange } = useFileTreeContext();
   const [isOpen, setIsOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [customName, setCustomName] = useState(project.customName || '');
@@ -274,6 +297,8 @@ const ProjectNode: React.FC<{
     onCancelRename?.(); // Clear trigger state in parent
   };
 
+  const selectedProject = selection.type === 'project' ? selection.project : (selection.type === 'preset' && selection.project ? selection.project : null);
+  const selectedPreset = selection.type === 'preset' ? selection.preset : null;
   const isSelected = selectedProject?.path === project.path;
 
   return (
@@ -373,16 +398,7 @@ const ProjectNode: React.FC<{
           {project.samples.length > 0 && (
             <TreeNode label="Samples" icon="🎵" count={project.samples.length} defaultOpen>
               {project.samples.map((sample) => (
-                <SampleNode
-                  key={sample.path}
-                  sample={sample}
-                  onSelect={onSelectSample}
-                  isSelected={selectedSample?.path === sample.path}
-                  onContextMenu={onSampleContextMenu}
-                  triggerRename={sampleToRename?.path === sample.path}
-                  onCancelRename={() => setSampleToRename(null)}
-                  onRenameComplete={onImportComplete}
-                />
+                <SampleNode key={sample.path} sample={sample} />
               ))}
             </TreeNode>
           )}
@@ -598,8 +614,22 @@ export const FileTree: React.FC<FileTreeProps> = ({ structure, selection, onSele
   // Check what's currently selected for visual feedback
   const isOverviewSelected = selection.type === 'overview';
 
+  // Context value to share with child components
+  const contextValue: FileTreeContextValue = {
+    selection,
+    onSelectSample: handleSelectSample,
+    onSelectPreset: handleSelectPreset,
+    onSelectProject: handleSelectProject,
+    sampleToRename,
+    setSampleToRename,
+    onImportComplete,
+    onProjectNameChange,
+    handleSampleContextMenu,
+  };
+
   return (
-    <div className="text-sm">
+    <FileTreeContext.Provider value={contextValue}>
+      <div className="text-sm">
       <TreeNode
         label="Multigrain"
         icon="💾"
@@ -640,17 +670,9 @@ export const FileTree: React.FC<FileTreeProps> = ({ structure, selection, onSele
               <ProjectNode
                 key={project.path}
                 project={project}
-                onSelectSample={handleSelectSample}
-                onSelectPreset={handleSelectPreset}
-                onSelectProject={handleSelectProject}
-                selectedSample={selection.type === 'sample' ? selection.sample : null}
-                selectedPreset={selection.type === 'preset' ? selection.preset : null}
-                selectedProject={selection.type === 'project' || (selection.type === 'preset' && selection.project) ? (selection.type === 'project' ? selection.project : selection.project) : null}
-                onProjectNameChange={onProjectNameChange}
-                onContextMenu={handleProjectContextMenu}
-                onSampleContextMenu={handleSampleContextMenu}
                 triggerRename={projectToRename?.path === project.path}
                 onCancelRename={() => setProjectToRename(null)}
+                onContextMenu={handleProjectContextMenu}
               />
             ))}
             </div>
@@ -682,16 +704,7 @@ export const FileTree: React.FC<FileTreeProps> = ({ structure, selection, onSele
           {wavsExpanded && (
             <div className="ml-4 border-l border-panel-dark pl-2">
               {structure.globalWavs.map((sample) => (
-                <SampleNode
-                  key={sample.path}
-                  sample={sample}
-                  onSelect={handleSelectSample}
-                  isSelected={selection.type === 'sample' && selection.sample.path === sample.path}
-                  onContextMenu={handleSampleContextMenu}
-                  triggerRename={sampleToRename?.path === sample.path}
-                  onCancelRename={() => setSampleToRename(null)}
-                  onRenameComplete={onImportComplete}
-                />
+                <SampleNode key={sample.path} sample={sample} />
               ))}
             </div>
           )}
@@ -707,16 +720,7 @@ export const FileTree: React.FC<FileTreeProps> = ({ structure, selection, onSele
             <div className="text-label-gray text-xs ml-6 py-1">No recordings</div>
           ) : (
             structure.recordings.map((sample) => (
-              <SampleNode
-                key={sample.path}
-                sample={sample}
-                onSelect={handleSelectSample}
-                isSelected={selection.type === 'sample' && selection.sample.path === sample.path}
-                onContextMenu={handleSampleContextMenu}
-                triggerRename={sampleToRename?.path === sample.path}
-                onCancelRename={() => setSampleToRename(null)}
-                onRenameComplete={onImportComplete}
-              />
+              <SampleNode key={sample.path} sample={sample} />
             ))
           )}
         </TreeNode>
@@ -775,6 +779,7 @@ export const FileTree: React.FC<FileTreeProps> = ({ structure, selection, onSele
           onCancel={() => setDeleteConfirm(null)}
         />
       )}
-    </div>
+      </div>
+    </FileTreeContext.Provider>
   );
 };

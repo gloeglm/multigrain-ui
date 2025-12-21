@@ -253,13 +253,30 @@ npm install fluent-ffmpeg @types/fluent-ffmpeg @ffmpeg-installer/ffmpeg
 2. `src/main/preload.ts` - Exposed delete APIs
 3. `src/renderer/components/FileTree.tsx` - Added delete context menus and navigation
 
-#### Phase 4c: Rename Operations (Future)
-- [ ] Rename samples with conflict detection
+#### Phase 4c: Rename Operations ✅ **COMPLETE**
+- [x] Rename samples with conflict detection
+- [x] Inline editing UI matching project rename pattern
+- [x] Invalid character validation
+- [x] Auto .wav extension handling
+- [x] Context menu integration
 - [ ] Rename projects (already supported via metadata, this would rename the actual folder)
-- [ ] Preview rename operations before committing
 - [ ] Batch rename capabilities
 
-**Status**: Not started. Essential for workflow but can be deferred.
+**Status**: Sample renaming complete. Project folder renaming and batch operations deferred.
+
+**Completed Features**:
+- Inline editing with save/cancel buttons
+- Enter/Escape keyboard shortcuts
+- Automatic .wav extension handling (adds if missing)
+- Invalid character validation (< > : " | ? *)
+- File conflict detection and prevention
+- IPC handler with security validation
+- Reloads file tree after successful rename
+
+**Files Modified**:
+1. `src/main/ipc/fileOperations.ts` - Added renameSample IPC handler
+2. `src/main/preload.ts` - Exposed renameSample API
+3. `src/renderer/components/FileTree.tsx` - Added rename UI and state management
 
 #### Phase 4d: Preset Custom Naming (Future)
 - [ ] Allow users to give custom names to presets
@@ -503,14 +520,15 @@ Optional enhancements that improve user experience but are not essential for cor
 - ✅ **Delete operations for projects and samples**
 - ✅ **Smart navigation after deletion**
 - ✅ **Confirmation dialogs with comprehensive warnings**
+- ✅ **Sample renaming with inline editing**
+- ✅ **Filename validation and conflict detection**
 
 ### What's Next (Priority Order)
-1. **Phase 4c**: Rename operations for samples
-2. **Phase 4d**: Preset custom naming
-3. **Phase 6**: Reference sheet export (printable PDF documentation)
-4. **Phase 7**: Testing, polish, and documentation
-5. **Phase 8**: CI/CD and distribution
-6. **Phase 9**: Nice to have features (move/copy, sample ordering, advanced features)
+1. **Phase 4d**: Preset custom naming
+2. **Phase 6**: Reference sheet export (printable PDF documentation)
+3. **Phase 7**: Testing, polish, and documentation
+4. **Phase 8**: CI/CD and distribution
+5. **Phase 9**: Nice to have features (move/copy, sample ordering, advanced features)
 
 ---
 
@@ -598,13 +616,15 @@ src/
         └── ConfirmDialog.tsx      ✅ Reusable confirmation dialog
 ```
 
-### Files for Phase 4c: Rename Operations (Future)
+### Files for Phase 4c: Rename Operations ✅ **COMPLETE**
 ```
 src/
 ├── main/
 │   └── ipc/
-│       └── fileRename.ts          ❌ Rename operations with conflict detection
+│       └── fileOperations.ts      ✅ Added renameSample handler (existing file)
 └── renderer/
     └── components/
-        └── RenameDialog.tsx       ❌ Rename UI dialog
+        └── FileTree.tsx           ✅ Added inline rename UI (existing file)
 ```
+
+**Note**: Rename functionality was integrated into existing files rather than creating new modules.
