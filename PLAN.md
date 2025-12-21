@@ -257,6 +257,42 @@ npm install fluent-ffmpeg @types/fluent-ffmpeg @ffmpeg-installer/ffmpeg
 numeric prefixes are essential for controlling playback order. This feature makes
 it easier to maintain organized sample banks without manual renaming.
 
+#### Phase 4d: Preset Custom Naming (Future)
+- [ ] Allow users to give custom names to presets
+- [ ] Store custom names in `.preset-metadata.json` files within project folders
+- [ ] Display custom names in PresetViewer (e.g., "Preset01 - My Bass Patch")
+- [ ] Add "Rename Preset" option to context menu
+- [ ] Inline editing in file tree (similar to project naming)
+- [ ] Show custom names in preset lists and navigation
+- [ ] Include custom preset names in reference sheet exports
+
+**Status**: Not started. Will follow same pattern as project custom naming.
+
+**Implementation Approach**:
+- Reuse metadata storage pattern from `projectMetadata.ts`
+- Create `presetMetadata.ts` IPC handler
+- Store metadata at `ProjectXX/.preset-metadata.json`
+- JSON format: `{ "Preset01.mgp": "My Custom Name", "Preset02.mgp": "Another Name" }`
+- Update `Preset` interface to include `customName?: string`
+- Add inline editing in FileTree's PresetNode component
+- Display format: "Preset01 - My Custom Name" (or just preset name if no custom name)
+
+**Files to Create**:
+1. `src/main/ipc/presetMetadata.ts` - Read/write preset metadata
+
+**Files to Modify**:
+1. `src/shared/types.ts` - Add `customName` to `Preset` interface
+2. `src/main/ipc/index.ts` - Register preset metadata handlers
+3. `src/main/preload.ts` - Expose preset metadata API
+4. `src/main/utils/multigrain.ts` - Load preset metadata during structure scan
+5. `src/renderer/components/FileTree.tsx` - Add preset renaming UI
+6. `src/renderer/components/PresetViewer.tsx` - Display custom names
+
+**User Benefits**:
+- Remember what each preset does (e.g., "Kick Drums", "Ambient Textures")
+- Better organization and workflow
+- Custom names included in printed reference sheets
+
 ### Phase 5: Project Overview ✅ **COMPLETE**
 - [x] Interactive tree view of SD card structure in-app
 - [x] Show storage usage statistics (basic counts)
@@ -436,10 +472,11 @@ Optional enhancements that improve user experience but are not essential for cor
 ### What's Next (Priority Order)
 1. **Phase 4b**: Move/copy/rename/delete operations
 2. **Phase 4c**: Sample ordering & smart numbering on import
-3. **Phase 6**: Reference sheet export (printable PDF documentation)
-4. **Phase 7**: Testing, polish, and documentation
-5. **Phase 8**: CI/CD and distribution
-6. **Phase 9**: Nice to have features (optional enhancements)
+3. **Phase 4d**: Preset custom naming
+4. **Phase 6**: Reference sheet export (printable PDF documentation)
+5. **Phase 7**: Testing, polish, and documentation
+6. **Phase 8**: CI/CD and distribution
+7. **Phase 9**: Nice to have features (optional enhancements)
 
 ---
 

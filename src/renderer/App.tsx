@@ -3,12 +3,14 @@ import { useMultigrain } from './hooks/useMultigrain';
 import { FileTree } from './components/FileTree';
 import { AudioPlayer } from './components/AudioPlayer';
 import { PresetViewer } from './components/PresetViewer';
+import { ConfirmDialog } from './components/ConfirmDialog';
 import { TreeSelection } from '../shared/types';
 import { FACTORY_PROJECT_NAMES, formatProjectDisplayName } from '../shared/constants';
 
 const App: React.FC = () => {
   const { structure, isLoading, error, selectAndValidate, reloadStructure } = useMultigrain();
   const [selection, setSelection] = useState<TreeSelection>({ type: 'overview' });
+  const [showFactoryNamesConfirm, setShowFactoryNamesConfirm] = useState(false);
   const [autoPlay, setAutoPlay] = useState<boolean>(() => {
     // Load auto-play preference from localStorage, default to true
     const saved = localStorage.getItem('multigrain-autoplay');
@@ -20,12 +22,14 @@ const App: React.FC = () => {
     localStorage.setItem('multigrain-autoplay', JSON.stringify(autoPlay));
   }, [autoPlay]);
 
-  const handleLoadFactoryNames = async () => {
-    if (!structure) return;
+  const handleLoadFactoryNamesClick = () => {
+    setShowFactoryNamesConfirm(true);
+  };
 
-    if (!confirm('Load factory project names? This will overwrite any custom names you have set.')) {
-      return;
-    }
+  const handleLoadFactoryNamesConfirm = async () => {
+    setShowFactoryNamesConfirm(false);
+
+    if (!structure) return;
 
     const updates = structure.projects
       .filter((project) => FACTORY_PROJECT_NAMES[project.index])
@@ -84,7 +88,7 @@ const App: React.FC = () => {
 
           {structure && (
             <button
-              onClick={handleLoadFactoryNames}
+              onClick={handleLoadFactoryNamesClick}
               className="bg-label-blue hover:bg-button-dark text-white px-4 py-2 rounded transition-colors text-sm font-medium"
               title="Load factory project names from Intellijel"
             >
@@ -231,6 +235,17 @@ const App: React.FC = () => {
           {structure?.hasSettings ? '✓ Settings.mgs found' : ''}
         </span>
       </footer>
+
+      {/* Factory Names Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={showFactoryNamesConfirm}
+        title="Load Factory Project Names"
+        message={`This feature is intended for SD cards with the original factory project structure. It will overwrite any custom names you have set.\n\nNote: This may not work correctly if you have already modified the project structure (deleted, moved, or renumbered projects).\n\nDo you want to continue?`}
+        confirmLabel="Load Factory Names"
+        cancelLabel="Cancel"
+        onConfirm={handleLoadFactoryNamesConfirm}
+        onCancel={() => setShowFactoryNamesConfirm(false)}
+      />
     </div>
   );
 };
