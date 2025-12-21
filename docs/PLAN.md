@@ -190,7 +190,13 @@ Generate printable PDF reference sheets to help users remember which projects ar
 
 ### Phase 8: Polish & User Experience ❌ **NOT STARTED**
 
-#### Phase 8a: Keyboard Navigation
+#### Phase 8a: Tree Navigation Controls
+- [ ] **Collapse All button** in tree view header
+  - Add button next to file tree title/path display
+  - Collapse all expanded projects and folders
+  - Maintain current selection after collapse
+  - Visual feedback (button state/icon)
+  - Consider adding "Expand All" as complementary feature
 - [ ] Arrow key navigation (up/down) through file tree items
 - [ ] Build flattened navigation list respecting expansion states
 - [ ] Add keyboard event handler at FileTree root
