@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { MultigainStructure, Project, WavFile, Preset } from '../../shared/types';
 import { ImportDialog } from './ImportDialog';
+import { CreateProjectDialog } from './CreateProjectDialog';
 
 interface FileTreeProps {
   structure: MultigainStructure;
@@ -45,8 +46,14 @@ const TreeNode: React.FC<TreeNodeProps> = ({
         }}
       >
         {hasChildren ? (
-          <span className="text-label-gray w-4 text-center">
-            {isOpen ? '▼' : '▶'}
+          <span className="w-4 flex items-center justify-center">
+            <span
+              className={`border-solid border-label-gray transition-transform ${
+                isOpen
+                  ? 'border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[6px]'
+                  : 'border-t-[5px] border-t-transparent border-b-[5px] border-b-transparent border-l-[6px]'
+              }`}
+            />
           </span>
         ) : (
           <span className="w-4" />
@@ -166,8 +173,14 @@ const ProjectNode: React.FC<{
           }
         }}
       >
-        <span className="text-label-gray w-4 text-center">
-          {isOpen ? '▼' : '▶'}
+        <span className="w-4 flex items-center justify-center">
+          <span
+            className={`border-solid border-label-gray transition-transform ${
+              isOpen
+                ? 'border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[6px]'
+                : 'border-t-[5px] border-t-transparent border-b-[5px] border-b-transparent border-l-[6px]'
+            }`}
+          />
         </span>
         <span>📁</span>
         {isEditing ? (
@@ -273,6 +286,7 @@ export const FileTree: React.FC<FileTreeProps> = ({ structure, onSelectSample, o
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [importTarget, setImportTarget] = useState<string>('');
+  const [createProjectDialogOpen, setCreateProjectDialogOpen] = useState(false);
 
   const handleSelectSample = (sample: WavFile) => {
     setSelectedSample(sample);
@@ -305,36 +319,71 @@ export const FileTree: React.FC<FileTreeProps> = ({ structure, onSelectSample, o
     onImportComplete?.();
   };
 
+  const handleCreateProject = async (projectNumber: number, customName?: string) => {
+    const result = await window.electronAPI.createProject(structure.rootPath, projectNumber, customName);
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to create project');
+    }
+    // Reload structure after successful creation
+    onImportComplete?.();
+  };
+
+  // Calculate existing project numbers for CreateProjectDialog
+  const existingProjectNumbers = structure.projects.map(project => {
+    // Extract project number from name (e.g., "Project01" -> 1)
+    const match = project.name.match(/Project(\d+)/);
+    return match ? parseInt(match[1], 10) : 0;
+  }).filter(num => num > 0);
+
   return (
     <div className="text-sm">
       <TreeNode label="Multigrain" icon="💾" defaultOpen>
         {/* Projects */}
-        <TreeNode
-          label="Projects"
-          icon="📂"
-          count={structure.projects.length}
-          defaultOpen
-        >
-          {structure.projects.map((project) => (
-            <ProjectNode
-              key={project.path}
-              project={project}
-              onSelectSample={handleSelectSample}
-              onSelectPreset={handleSelectPreset}
-              onSelectProject={handleSelectProject}
-              selectedSample={selectedSample}
-              selectedPreset={selectedPreset}
-              selectedProject={selectedProject}
-              onProjectNameChange={onProjectNameChange}
-              onImportClick={handleImportClick}
-            />
-          ))}
-        </TreeNode>
+        <div className="select-none">
+          <div className="flex items-center gap-2 py-1 px-2 rounded cursor-pointer hover:bg-panel-dark group">
+            <span className="w-4 flex items-center justify-center">
+              <span className="border-solid border-label-gray border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[6px]" />
+            </span>
+            <span>📂</span>
+            <span className="flex-1 truncate text-label-black">Projects</span>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setCreateProjectDialogOpen(true);
+              }}
+              className="opacity-0 group-hover:opacity-100 text-xs px-2 py-0.5 bg-label-blue hover:bg-knob-ring text-white rounded transition-opacity flex-shrink-0"
+              title="Create new project"
+            >
+              +
+            </button>
+            <span className="text-xs text-label-gray bg-panel-dark px-1.5 py-0.5 rounded flex-shrink-0">
+              {structure.projects.length}
+            </span>
+          </div>
+          <div className="ml-4 border-l border-panel-dark pl-2">
+            {structure.projects.map((project) => (
+              <ProjectNode
+                key={project.path}
+                project={project}
+                onSelectSample={handleSelectSample}
+                onSelectPreset={handleSelectPreset}
+                onSelectProject={handleSelectProject}
+                selectedSample={selectedSample}
+                selectedPreset={selectedPreset}
+                selectedProject={selectedProject}
+                onProjectNameChange={onProjectNameChange}
+                onImportClick={handleImportClick}
+              />
+            ))}
+          </div>
+        </div>
 
         {/* Global Wavs */}
         <div className="select-none">
           <div className="flex items-center gap-2 py-1 px-2 rounded cursor-pointer hover:bg-panel-dark group">
-            <span className="text-label-gray w-4 text-center">▶</span>
+            <span className="w-4 flex items-center justify-center">
+              <span className="border-solid border-label-gray border-t-[5px] border-t-transparent border-b-[5px] border-b-transparent border-l-[6px]" />
+            </span>
             <span>🎶</span>
             <span className="flex-1 truncate text-label-black">Wavs</span>
             <button
@@ -392,6 +441,14 @@ export const FileTree: React.FC<FileTreeProps> = ({ structure, onSelectSample, o
         targetPath={importTarget}
         onClose={() => setImportDialogOpen(false)}
         onImportComplete={handleImportComplete}
+      />
+
+      {/* Create Project Dialog */}
+      <CreateProjectDialog
+        isOpen={createProjectDialogOpen}
+        existingProjects={existingProjectNumbers}
+        onClose={() => setCreateProjectDialogOpen(false)}
+        onCreateProject={handleCreateProject}
       />
     </div>
   );

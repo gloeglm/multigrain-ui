@@ -38,6 +38,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   batchWriteProjectMetadata: (updates: Array<{ projectPath: string; customName: string }>) =>
     ipcRenderer.invoke('project:batchWriteMetadata', updates),
 
+  // Project operations
+  createProject: (rootPath: string, projectNumber: number, customName?: string) =>
+    ipcRenderer.invoke('project:create', rootPath, projectNumber, customName),
+
   // Preset operations
   readPresetSamples: (filePath: string) =>
     ipcRenderer.invoke('preset:readSamples', filePath),
@@ -97,6 +101,12 @@ export type ElectronAPI = {
   ) => Promise<{
     success: boolean;
     count?: number;
+    error?: string;
+  }>;
+  createProject: (rootPath: string, projectNumber: number, customName?: string) => Promise<{
+    success: boolean;
+    projectPath?: string;
+    projectName?: string;
     error?: string;
   }>;
   readPresetSamples: (filePath: string) => Promise<{

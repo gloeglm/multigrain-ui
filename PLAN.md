@@ -186,6 +186,33 @@ npm install fluent-ffmpeg @types/fluent-ffmpeg @ffmpeg-installer/ffmpeg
 - [ ] Import to project with 127 samples → verify allows 1 more
 - [ ] Import to project with 128 samples → verify blocks with limit error
 
+#### Phase 4a.5: Project Creation ✅ **COMPLETE**
+- [x] UI dialog for creating new projects with bank/position selection
+- [x] Bank selection using Multigrain manual nomenclature (X, Y, Z, XX, YY, ZZ)
+- [x] Position selection grid (1-8) showing existing projects as disabled
+- [x] Project number calculation: (Bank - 1) × 8 + Position
+- [x] Optional custom project naming on creation
+- [x] Validation to prevent creating duplicate projects
+- [x] Automatic .project-metadata.json creation for custom names
+- [x] Auto-refresh file tree after project creation
+
+**Status**: ✅ Implementation complete. Users can create new projects via UI dialog.
+
+**Implementation Details**:
+- **Bank naming**: Uses manual labels (X, Y, Z, XX, YY, ZZ) instead of numbers
+- **UI/UX**: Visual grid showing all 48 possible project slots with existing ones disabled
+- **Folder creation**: Creates ProjectXX folder with optional metadata file
+- **Integration**: "+" button appears on hover over Projects section in file tree
+
+**Files Created**:
+1. `src/renderer/components/CreateProjectDialog.tsx` - Project creation UI dialog
+2. `src/main/ipc/projectOperations.ts` - IPC handler for project creation
+
+**Files Modified**:
+1. `src/main/ipc/index.ts` - Registered project operations handlers
+2. `src/main/preload.ts` - Exposed createProject API to renderer
+3. `src/renderer/components/FileTree.tsx` - Integrated create dialog with "+" button
+
 #### Phase 4b: Move/Copy/Rename/Delete (Future)
 - [ ] Move/copy samples between folders
 - [ ] Rename samples
@@ -233,7 +260,7 @@ it easier to maintain organized sample banks without manual renaming.
 
 ---
 
-## Current Progress: ~85% Complete
+## Current Progress: ~87% Complete
 
 ### What's Working
 - ✅ Complete browsing and navigation of Multigrain SD cards
@@ -252,6 +279,7 @@ it easier to maintain organized sample banks without manual renaming.
 - ✅ **Auto-trimming files >32 seconds**
 - ✅ **Automatic filename conflict resolution**
 - ✅ **Storage limit enforcement**
+- ✅ **Project creation with bank/position selection UI**
 
 ### What's Next (Priority Order)
 1. **Phase 4b**: Move/copy/rename/delete operations
