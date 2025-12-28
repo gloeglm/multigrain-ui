@@ -1,7 +1,7 @@
 {
   "name": "multigrain-ui",
   "productName": "Multigrain Sample Manager",
-  "version": "0.1.0-beta.1",
+  "version": "0.1.0-beta.2",
   "description": "Desktop application for managing audio samples on Multigrain Eurorack module SD cards",
   "main": ".webpack/main",
   "scripts": {
