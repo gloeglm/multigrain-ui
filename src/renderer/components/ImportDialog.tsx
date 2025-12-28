@@ -24,6 +24,19 @@ export function ImportDialog({ isOpen, targetPath, onClose, onImportComplete }: 
   const [result, setResult] = useState<ImportResult | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
+  // Reset state when dialog opens
+  useEffect(() => {
+    if (isOpen) {
+      setStage('selecting');
+      setSelectedFiles([]);
+      setAnalyses([]);
+      setStorageInfo(null);
+      setProgress(null);
+      setResult(null);
+      setIsProcessing(false);
+    }
+  }, [isOpen]);
+
   // Handle file selection
   useEffect(() => {
     if (isOpen && stage === 'selecting') {

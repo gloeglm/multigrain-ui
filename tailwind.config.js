@@ -26,6 +26,9 @@ module.exports = {
           gray: '#757575',    // Gray secondary text (lighter)
         },
         jack: '#2a2a2a',      // Jack socket black
+        // Status colors for ErrorDialog
+        'status-warning': '#f59e0b',   // Amber-500 for warnings
+        'status-success': '#10b981',   // Emerald-500 for success
       },
     },
   },

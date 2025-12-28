@@ -5,10 +5,12 @@
 
 import { useState } from 'react';
 import { MultigainStructure, Project } from '@shared/types';
+import { useErrorDialog } from '../contexts/ErrorDialogContext';
 
 export function usePdfExport() {
   const [isExporting, setIsExporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { showError, showSuccess, showWarning } = useErrorDialog();
 
   /**
    * Export overview sheet for all projects
@@ -31,7 +33,7 @@ export function usePdfExport() {
       const fullError = err instanceof Error ? err.stack || err.message : String(err);
       console.error('❌ Export failed:', fullError);
       setError(errorMessage);
-      alert(`Export failed: ${errorMessage}\n\nCheck the console for full error details.`);
+      showError('Export failed.', 'Export Failed', fullError);
     } finally {
       setIsExporting(false);
     }
@@ -58,7 +60,7 @@ export function usePdfExport() {
       const fullError = err instanceof Error ? err.stack || err.message : String(err);
       console.error('❌ Export failed:', fullError);
       setError(errorMessage);
-      alert(`Export failed: ${errorMessage}\n\nCheck the console for full error details.`);
+      showError('Export failed.', 'Export Failed', fullError);
     } finally {
       setIsExporting(false);
     }
@@ -100,14 +102,13 @@ export function usePdfExport() {
 
         if (failedCount > 0 && result.failed) {
           console.error('❌ Failed exports:', result.failed);
-          message += `\n\nFailed exports (${failedCount}):`;
-          result.failed.forEach((f) => {
-            message += `\n- ${f.project}: ${f.error || 'Unknown error'}`;
-          });
-          message += '\n\nCheck the console for full error details.';
+          const failedDetails = result.failed
+            .map((f) => `${f.project}: ${f.error || 'Unknown error'}`)
+            .join('\n');
+          showWarning(message, 'Partial Success', failedDetails);
+        } else {
+          showSuccess(message, 'Export Complete');
         }
-
-        alert(message);
       } else {
         throw new Error(result.error || 'Failed to export project sheets');
       }
@@ -116,7 +117,7 @@ export function usePdfExport() {
       const fullError = err instanceof Error ? err.stack || err.message : String(err);
       console.error('❌ Batch export failed:', fullError);
       setError(errorMessage);
-      alert(`Batch export failed: ${errorMessage}\n\nCheck the console for full error details.`);
+      showError('Batch export failed.', 'Export Failed', fullError);
     } finally {
       setIsExporting(false);
     }

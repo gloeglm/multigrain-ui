@@ -6,6 +6,7 @@ import { ContextMenu, ContextMenuItem } from './ContextMenu';
 import { ConfirmDialog } from './ConfirmDialog';
 import { formatProjectDisplayName } from '../../shared/constants';
 import { usePdfExport } from '../hooks/usePdfExport';
+import { useErrorDialog } from '../contexts/ErrorDialogContext';
 
 // Context for sharing state between FileTree components
 interface FileTreeContextValue {
@@ -130,6 +131,7 @@ const SampleNode: React.FC<SampleNodeProps> = ({ sample }) => {
     onImportComplete,
     onSampleRenamed,
   } = useFileTreeContext();
+  const { showError } = useErrorDialog();
 
   const [isEditing, setIsEditing] = useState(false);
   const [newName, setNewName] = useState('');
@@ -159,11 +161,15 @@ const SampleNode: React.FC<SampleNodeProps> = ({ sample }) => {
         onSampleRenamed?.(result.newPath);
         onImportComplete?.();
       } else {
-        alert(`Failed to rename sample: ${result.error}`);
+        showError('Failed to rename sample.', 'Rename Failed', result.error);
       }
     } catch (error) {
       console.error('Error renaming sample:', error);
-      alert('Failed to rename sample');
+      showError(
+        'Failed to rename sample.',
+        'Rename Failed',
+        error instanceof Error ? error.message : String(error)
+      );
     } finally {
       setIsSaving(false);
     }
@@ -272,6 +278,7 @@ const ProjectNode: React.FC<ProjectNodeProps> = ({
   onContextMenu,
 }) => {
   const { selection, onSelectPreset, onSelectProject, onProjectNameChange } = useFileTreeContext();
+  const { showError } = useErrorDialog();
   const [isOpen, setIsOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [customName, setCustomName] = useState(project.customName || '');
@@ -295,11 +302,15 @@ const ProjectNode: React.FC<ProjectNodeProps> = ({
         onCancelRename?.(); // Clear trigger state in parent
         onProjectNameChange?.();
       } else {
-        alert(`Failed to save project name: ${result.error}`);
+        showError('Failed to save project name.', 'Save Failed', result.error);
       }
     } catch (error) {
       console.error('Error saving project name:', error);
-      alert('Failed to save project name');
+      showError(
+        'Failed to save project name.',
+        'Save Failed',
+        error instanceof Error ? error.message : String(error)
+      );
     } finally {
       setIsSaving(false);
     }
@@ -453,6 +464,7 @@ export const FileTree: React.FC<FileTreeProps> = ({
 
   // PDF export hook
   const pdfExport = usePdfExport();
+  const { showError } = useErrorDialog();
 
   const handleSelectSample = (sample: WavFile) => {
     onSelectionChange({ type: 'sample', samplePath: sample.path });
@@ -632,11 +644,15 @@ export const FileTree: React.FC<FileTreeProps> = ({
         onSelectionChange({ type: 'overview' });
         onImportComplete?.(); // Reload structure
       } else {
-        alert(`Failed to delete project: ${result.error}`);
+        showError('Failed to delete project.', 'Delete Failed', result.error);
       }
     } catch (error) {
       console.error('Error deleting project:', error);
-      alert('Failed to delete project');
+      showError(
+        'Failed to delete project.',
+        'Delete Failed',
+        error instanceof Error ? error.message : String(error)
+      );
     } finally {
       setDeleteConfirm(null);
     }
@@ -671,11 +687,15 @@ export const FileTree: React.FC<FileTreeProps> = ({
 
         onImportComplete?.(); // Reload structure
       } else {
-        alert(`Failed to delete sample: ${result.error}`);
+        showError('Failed to delete sample.', 'Delete Failed', result.error);
       }
     } catch (error) {
       console.error('Error deleting sample:', error);
-      alert('Failed to delete sample');
+      showError(
+        'Failed to delete sample.',
+        'Delete Failed',
+        error instanceof Error ? error.message : String(error)
+      );
     } finally {
       setDeleteConfirm(null);
     }

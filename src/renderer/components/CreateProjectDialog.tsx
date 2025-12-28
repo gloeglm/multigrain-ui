@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Project } from '../../shared/types';
 import { formatProjectDisplayName } from '../../shared/constants';
+import { useErrorDialog } from '../contexts/ErrorDialogContext';
 
 interface CreateProjectDialogProps {
   isOpen: boolean;
@@ -17,6 +18,8 @@ export function CreateProjectDialog({
   onClose,
   onCreateProject,
 }: CreateProjectDialogProps) {
+  const { showError } = useErrorDialog();
+
   // Find first available slot
   const findFirstAvailableSlot = (): { bank: number; position: number } => {
     for (let bank = 1; bank <= 6; bank++) {
@@ -90,8 +93,10 @@ export function CreateProjectDialog({
       setCustomName('');
     } catch (error) {
       console.error('Failed to create project:', error);
-      alert(
-        `Failed to create project: ${error instanceof Error ? error.message : 'Unknown error'}`
+      showError(
+        'Failed to create project.',
+        'Creation Failed',
+        error instanceof Error ? error.message : String(error)
       );
     } finally {
       setIsCreating(false);

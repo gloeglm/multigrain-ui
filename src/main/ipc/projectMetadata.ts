@@ -47,7 +47,20 @@ export function registerProjectMetadataHandlers(): void {
         const metadata: ProjectMetadata = {
           customName: customName.trim(),
         };
+
+        // Check if file exists and delete it first to avoid permission issues
+        // (Windows can't modify files from other computers, but can delete them)
+        try {
+          await fs.access(metadataPath);
+          // File exists - delete it first
+          await fs.unlink(metadataPath);
+        } catch {
+          // File doesn't exist, that's fine
+        }
+
+        // Now create a fresh file with current user's permissions
         await fs.writeFile(metadataPath, JSON.stringify(metadata, null, 2), 'utf-8');
+
         return { success: true };
       } catch (error) {
         console.error('Error writing project metadata:', error);
@@ -83,7 +96,18 @@ export function registerProjectMetadataHandlers(): void {
               const metadata: ProjectMetadata = {
                 customName: customName.trim(),
               };
+
+              // Delete existing file first to avoid permission issues
+              try {
+                await fs.access(metadataPath);
+                await fs.unlink(metadataPath);
+              } catch {
+                // File doesn't exist, that's fine
+              }
+
+              // Create fresh file with current user's permissions
               await fs.writeFile(metadataPath, JSON.stringify(metadata, null, 2), 'utf-8');
+
               return { projectPath, success: true };
             } catch (error) {
               return {

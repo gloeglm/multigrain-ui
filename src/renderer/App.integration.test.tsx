@@ -26,9 +26,6 @@ describe('App Integration Tests', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
-
-    // Mock alert
-    global.alert = vi.fn();
   });
 
   const setupWithStructure = () => {
@@ -283,9 +280,10 @@ describe('App Integration Tests', () => {
       await user.type(input, 'existing');
       await user.click(screen.getByText('Save'));
 
-      // Should show error alert
+      // Should show error dialog
       await waitFor(() => {
-        expect(global.alert).toHaveBeenCalledWith('Failed to rename sample: File already exists');
+        expect(screen.getByText('Rename Failed')).toBeInTheDocument();
+        expect(screen.getByText('Failed to rename sample.')).toBeInTheDocument();
       });
 
       // Should stay in edit mode (failed save doesn't exit edit mode)

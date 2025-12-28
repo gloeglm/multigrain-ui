@@ -7,8 +7,9 @@ import { ConfirmDialog } from './components/ConfirmDialog';
 import { WelcomeScreen } from './components/WelcomeScreen';
 import { TreeSelection } from '../shared/types';
 import { FACTORY_PROJECT_NAMES, formatProjectDisplayName } from '../shared/constants';
+import { ErrorDialogProvider, useErrorDialog } from './contexts/ErrorDialogContext';
 
-const App: React.FC = () => {
+const AppContent: React.FC = () => {
   const { structure, isLoading, error, selectAndValidate, reloadStructure } = useMultigrain();
   const [selection, setSelection] = useState<TreeSelection>({ type: 'overview' });
   const [showFactoryNamesConfirm, setShowFactoryNamesConfirm] = useState(false);
@@ -17,6 +18,7 @@ const App: React.FC = () => {
     const saved = localStorage.getItem('multigrain-autoplay');
     return saved ? JSON.parse(saved) : true;
   });
+  const { showError, showWarning, showSuccess } = useErrorDialog();
 
   // Helper function to find sample by path in current structure
   const findSampleByPath = (path: string) => {
@@ -74,21 +76,25 @@ const App: React.FC = () => {
       }));
 
     if (updates.length === 0) {
-      alert('No factory projects found on this SD card.');
+      showWarning('No factory projects found on this SD card.');
       return;
     }
 
     try {
       const result = await window.electronAPI.batchWriteProjectMetadata(updates);
       if (result.success) {
-        alert(`Successfully loaded ${result.count} factory project names.`);
+        showSuccess(`Successfully loaded ${result.count} factory project names.`);
         reloadStructure();
       } else {
-        alert(`Failed to load factory names: ${result.error}`);
+        showError('Failed to load factory names.', 'Load Failed', result.error);
       }
     } catch (error) {
       console.error('Error loading factory names:', error);
-      alert('Failed to load factory names');
+      showError(
+        'Failed to load factory names.',
+        'Load Failed',
+        error instanceof Error ? error.message : String(error)
+      );
     }
   };
 
@@ -347,6 +353,14 @@ const App: React.FC = () => {
         onCancel={() => setShowFactoryNamesConfirm(false)}
       />
     </div>
+  );
+};
+
+const App: React.FC = () => {
+  return (
+    <ErrorDialogProvider>
+      <AppContent />
+    </ErrorDialogProvider>
   );
 };
 

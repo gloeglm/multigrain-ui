@@ -3,9 +3,12 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { SampleInfo } from './SampleInfo';
 import { createMockSample } from '../../test/helpers';
+import { ErrorDialogProvider } from '../contexts/ErrorDialogContext';
 
-// Mock alert/confirm globals
-global.alert = vi.fn();
+// Helper to render with ErrorDialogProvider
+const renderWithProvider = (component: React.ReactElement) => {
+  return render(<ErrorDialogProvider>{component}</ErrorDialogProvider>);
+};
 
 describe('SampleInfo Component', () => {
   const mockOnRenameComplete = vi.fn();
@@ -44,7 +47,7 @@ describe('SampleInfo Component', () => {
 
   describe('Basic Rendering', () => {
     it('renders sample name', async () => {
-      render(<SampleInfo sample={defaultSample} />);
+      renderWithProvider(<SampleInfo sample={defaultSample} />);
       expect(screen.getByTestId('sample-name')).toHaveTextContent('test-sample.wav');
 
       // Wait for async metadata loading to complete
@@ -54,7 +57,7 @@ describe('SampleInfo Component', () => {
     });
 
     it('shows rename button', async () => {
-      render(<SampleInfo sample={defaultSample} />);
+      renderWithProvider(<SampleInfo sample={defaultSample} />);
       expect(screen.getByTestId('rename-sample-button')).toBeInTheDocument();
 
       // Wait for async metadata loading to complete
@@ -64,7 +67,7 @@ describe('SampleInfo Component', () => {
     });
 
     it('shows edit description button', async () => {
-      render(<SampleInfo sample={defaultSample} />);
+      renderWithProvider(<SampleInfo sample={defaultSample} />);
       expect(screen.getByTestId('edit-description-button')).toBeInTheDocument();
 
       // Wait for async metadata loading to complete
@@ -76,7 +79,7 @@ describe('SampleInfo Component', () => {
 
   describe('Description Loading', () => {
     it('loads and displays description', async () => {
-      render(<SampleInfo sample={defaultSample} />);
+      renderWithProvider(<SampleInfo sample={defaultSample} />);
 
       await waitFor(() => {
         expect(window.electronAPI.readAudioMetadata).toHaveBeenCalledWith(defaultSample.path);
@@ -98,7 +101,7 @@ describe('SampleInfo Component', () => {
         channels: 2,
       });
 
-      render(<SampleInfo sample={defaultSample} />);
+      renderWithProvider(<SampleInfo sample={defaultSample} />);
 
       await waitFor(() => {
         expect(screen.getByText(/No description/i)).toBeInTheDocument();
@@ -109,7 +112,7 @@ describe('SampleInfo Component', () => {
   describe('Sample Rename', () => {
     it('enters edit mode when rename button clicked', async () => {
       const user = userEvent.setup();
-      render(<SampleInfo sample={defaultSample} />);
+      renderWithProvider(<SampleInfo sample={defaultSample} />);
 
       await user.click(screen.getByTestId('rename-sample-button'));
 
@@ -121,7 +124,7 @@ describe('SampleInfo Component', () => {
 
     it('strips .wav extension when entering edit mode', async () => {
       const user = userEvent.setup();
-      render(<SampleInfo sample={defaultSample} />);
+      renderWithProvider(<SampleInfo sample={defaultSample} />);
 
       await user.click(screen.getByTestId('rename-sample-button'));
 
@@ -131,7 +134,7 @@ describe('SampleInfo Component', () => {
 
     it('allows editing the filename', async () => {
       const user = userEvent.setup();
-      render(<SampleInfo sample={defaultSample} />);
+      renderWithProvider(<SampleInfo sample={defaultSample} />);
 
       await user.click(screen.getByTestId('rename-sample-button'));
       const input = screen.getByRole('textbox');
@@ -144,7 +147,9 @@ describe('SampleInfo Component', () => {
 
     it('saves renamed file when save button clicked', async () => {
       const user = userEvent.setup();
-      render(<SampleInfo sample={defaultSample} onRenameComplete={mockOnRenameComplete} />);
+      renderWithProvider(
+        <SampleInfo sample={defaultSample} onRenameComplete={mockOnRenameComplete} />
+      );
 
       await user.click(screen.getByTestId('rename-sample-button'));
       const input = screen.getByRole('textbox');
@@ -165,7 +170,9 @@ describe('SampleInfo Component', () => {
 
     it('saves on Enter key press', async () => {
       const user = userEvent.setup();
-      render(<SampleInfo sample={defaultSample} onRenameComplete={mockOnRenameComplete} />);
+      renderWithProvider(
+        <SampleInfo sample={defaultSample} onRenameComplete={mockOnRenameComplete} />
+      );
 
       await user.click(screen.getByTestId('rename-sample-button'));
       const input = screen.getByRole('textbox');
@@ -184,7 +191,7 @@ describe('SampleInfo Component', () => {
 
     it('cancels edit mode when cancel button clicked', async () => {
       const user = userEvent.setup();
-      render(<SampleInfo sample={defaultSample} />);
+      renderWithProvider(<SampleInfo sample={defaultSample} />);
 
       await user.click(screen.getByTestId('rename-sample-button'));
       await user.clear(screen.getByRole('textbox'));
@@ -200,7 +207,7 @@ describe('SampleInfo Component', () => {
 
     it('cancels on Escape key press', async () => {
       const user = userEvent.setup();
-      render(<SampleInfo sample={defaultSample} />);
+      renderWithProvider(<SampleInfo sample={defaultSample} />);
 
       await user.click(screen.getByTestId('rename-sample-button'));
       await user.clear(screen.getByRole('textbox'));
@@ -218,7 +225,7 @@ describe('SampleInfo Component', () => {
         error: 'File already exists',
       });
 
-      render(<SampleInfo sample={defaultSample} />);
+      renderWithProvider(<SampleInfo sample={defaultSample} />);
 
       await user.click(screen.getByTestId('rename-sample-button'));
       await user.clear(screen.getByRole('textbox'));
@@ -226,7 +233,8 @@ describe('SampleInfo Component', () => {
       await user.click(screen.getByText('Save'));
 
       await waitFor(() => {
-        expect(global.alert).toHaveBeenCalledWith('Failed to rename sample: File already exists');
+        expect(screen.getByText('Rename Failed')).toBeInTheDocument();
+        expect(screen.getByText('Failed to rename sample.')).toBeInTheDocument();
       });
     });
 
@@ -247,7 +255,7 @@ describe('SampleInfo Component', () => {
           )
       );
 
-      render(<SampleInfo sample={defaultSample} />);
+      renderWithProvider(<SampleInfo sample={defaultSample} />);
 
       await user.click(screen.getByTestId('rename-sample-button'));
       await user.clear(screen.getByRole('textbox'));
@@ -259,7 +267,7 @@ describe('SampleInfo Component', () => {
 
     it('prevents empty filename submission', async () => {
       const user = userEvent.setup();
-      render(<SampleInfo sample={defaultSample} />);
+      renderWithProvider(<SampleInfo sample={defaultSample} />);
 
       await user.click(screen.getByTestId('rename-sample-button'));
       const input = screen.getByRole('textbox');
@@ -273,7 +281,7 @@ describe('SampleInfo Component', () => {
 
   describe('Description Editing', () => {
     it('shows edit button for description', async () => {
-      render(<SampleInfo sample={defaultSample} />);
+      renderWithProvider(<SampleInfo sample={defaultSample} />);
 
       await waitFor(() => {
         expect(screen.getByText('Description')).toBeInTheDocument();
@@ -284,7 +292,7 @@ describe('SampleInfo Component', () => {
 
     it('enters edit mode for description', async () => {
       const user = userEvent.setup();
-      render(<SampleInfo sample={defaultSample} />);
+      renderWithProvider(<SampleInfo sample={defaultSample} />);
 
       await waitFor(() => {
         expect(screen.getByTestId('description-text')).toHaveTextContent('Test description');
@@ -297,7 +305,7 @@ describe('SampleInfo Component', () => {
 
     it('allows editing description', async () => {
       const user = userEvent.setup();
-      render(<SampleInfo sample={defaultSample} />);
+      renderWithProvider(<SampleInfo sample={defaultSample} />);
 
       await waitFor(() => {
         expect(screen.getByTestId('description-text')).toHaveTextContent('Test description');
@@ -314,7 +322,7 @@ describe('SampleInfo Component', () => {
 
     it('saves description when save clicked', async () => {
       const user = userEvent.setup();
-      render(<SampleInfo sample={defaultSample} />);
+      renderWithProvider(<SampleInfo sample={defaultSample} />);
 
       await waitFor(() => {
         expect(screen.getByTestId('description-text')).toHaveTextContent('Test description');
@@ -343,7 +351,7 @@ describe('SampleInfo Component', () => {
         error: 'Write failed',
       });
 
-      render(<SampleInfo sample={defaultSample} />);
+      renderWithProvider(<SampleInfo sample={defaultSample} />);
 
       await waitFor(() => {
         expect(screen.getByTestId('description-text')).toHaveTextContent('Test description');
@@ -358,14 +366,15 @@ describe('SampleInfo Component', () => {
       await user.click(screen.getByTestId('save-description-button'));
 
       await waitFor(() => {
-        expect(global.alert).toHaveBeenCalledWith('Failed to save description: Write failed');
+        expect(screen.getByText('Save Failed')).toBeInTheDocument();
+        expect(screen.getByText('Failed to save description.')).toBeInTheDocument();
       });
     });
   });
 
   describe('Component Updates', () => {
     it('updates display when sample prop changes', async () => {
-      const { rerender } = render(<SampleInfo sample={defaultSample} />);
+      const { rerender } = renderWithProvider(<SampleInfo sample={defaultSample} />);
 
       expect(screen.getByText('test-sample.wav')).toBeInTheDocument();
 
@@ -379,7 +388,11 @@ describe('SampleInfo Component', () => {
         path: '/test/Project01/different-sample.wav',
       });
 
-      rerender(<SampleInfo sample={newSample} />);
+      rerender(
+        <ErrorDialogProvider>
+          <SampleInfo sample={newSample} />
+        </ErrorDialogProvider>
+      );
 
       expect(screen.getByText('different-sample.wav')).toBeInTheDocument();
       expect(screen.queryByText('test-sample.wav')).not.toBeInTheDocument();
@@ -392,7 +405,7 @@ describe('SampleInfo Component', () => {
 
     it('resets edit mode when sample changes', async () => {
       const user = userEvent.setup();
-      const { rerender } = render(<SampleInfo sample={defaultSample} />);
+      const { rerender } = renderWithProvider(<SampleInfo sample={defaultSample} />);
 
       // Wait for initial metadata load
       await waitFor(() => {
@@ -408,7 +421,11 @@ describe('SampleInfo Component', () => {
         name: 'different-sample.wav',
         path: '/test/Project01/different-sample.wav',
       });
-      rerender(<SampleInfo sample={newSample} />);
+      rerender(
+        <ErrorDialogProvider>
+          <SampleInfo sample={newSample} />
+        </ErrorDialogProvider>
+      );
 
       // Edit mode should be reset
       expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
@@ -421,7 +438,7 @@ describe('SampleInfo Component', () => {
     });
 
     it('reloads metadata when sample changes', async () => {
-      const { rerender } = render(<SampleInfo sample={defaultSample} />);
+      const { rerender } = renderWithProvider(<SampleInfo sample={defaultSample} />);
 
       await waitFor(() => {
         expect(window.electronAPI.readAudioMetadata).toHaveBeenCalledWith(defaultSample.path);
@@ -432,7 +449,11 @@ describe('SampleInfo Component', () => {
         path: '/test/Project02/different-sample.wav',
       });
 
-      rerender(<SampleInfo sample={newSample} />);
+      rerender(
+        <ErrorDialogProvider>
+          <SampleInfo sample={newSample} />
+        </ErrorDialogProvider>
+      );
 
       await waitFor(() => {
         expect(window.electronAPI.readAudioMetadata).toHaveBeenCalledWith(newSample.path);

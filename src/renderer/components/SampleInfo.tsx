@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { WavFile } from '../../shared/types';
+import { useErrorDialog } from '../contexts/ErrorDialogContext';
 
 interface SampleInfoProps {
   sample: WavFile;
@@ -13,6 +14,7 @@ export const SampleInfo: React.FC<SampleInfoProps> = ({ sample, onRenameComplete
   const [newName, setNewName] = useState<string>('');
   const [isEditingName, setIsEditingName] = useState(false);
   const [isSavingName, setIsSavingName] = useState(false);
+  const { showError } = useErrorDialog();
 
   // Reset editing state when sample changes
   useEffect(() => {
@@ -41,12 +43,16 @@ export const SampleInfo: React.FC<SampleInfoProps> = ({ sample, onRenameComplete
       const result = await window.electronAPI.writeAudioMetadata(sample.path, description);
       if (!result.success) {
         console.error('Failed to save description:', result.error);
-        alert(`Failed to save description: ${result.error}`);
+        showError('Failed to save description.', 'Save Failed', result.error);
       }
       setIsEditingDescription(false);
     } catch (error) {
       console.error('Error saving description:', error);
-      alert('Failed to save description');
+      showError(
+        'Failed to save description.',
+        'Save Failed',
+        error instanceof Error ? error.message : String(error)
+      );
     } finally {
       setIsSavingDescription(false);
     }
@@ -70,12 +76,16 @@ export const SampleInfo: React.FC<SampleInfoProps> = ({ sample, onRenameComplete
         setIsSavingName(false);
         onRenameComplete?.(result.newPath);
       } else {
-        alert(`Failed to rename sample: ${result.error}`);
+        showError('Failed to rename sample.', 'Rename Failed', result.error);
         setIsSavingName(false);
       }
     } catch (error) {
       console.error('Error renaming sample:', error);
-      alert('Failed to rename sample');
+      showError(
+        'Failed to rename sample.',
+        'Rename Failed',
+        error instanceof Error ? error.message : String(error)
+      );
       setIsSavingName(false);
     }
   };
