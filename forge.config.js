@@ -32,12 +32,12 @@ module.exports = {
           },
         },
         icon: './assets/icons/icons/icon.icns',
-        contents: [
+        contents: (opts) => [
           {
             x: 180,
             y: 170,
             type: 'file',
-            path: undefined, // Will be set by Electron Forge to the app path
+            path: opts.appPath,
           },
           {
             x: 480,
