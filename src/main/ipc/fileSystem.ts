@@ -14,6 +14,25 @@ export function registerFileSystemHandlers(): void {
     return result.filePaths[0];
   });
 
+  // Save file dialog
+  ipcMain.handle(
+    'dialog:showSaveDialog',
+    async (
+      _event,
+      options: {
+        title?: string;
+        defaultPath?: string;
+        filters?: Array<{ name: string; extensions: string[] }>;
+      }
+    ) => {
+      const result = await dialog.showSaveDialog(options);
+      return {
+        canceled: result.canceled,
+        filePath: result.filePath,
+      };
+    }
+  );
+
   // Read directory contents
   ipcMain.handle('fs:readDirectory', async (_event, dirPath: string) => {
     const entries = await fs.readdir(dirPath, { withFileTypes: true });

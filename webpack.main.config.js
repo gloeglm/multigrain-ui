@@ -1,4 +1,5 @@
 const path = require('path');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 module.exports = {
   entry: './src/main/index.ts',
@@ -15,4 +16,14 @@ module.exports = {
   externals: {
     '@ffmpeg-installer/ffmpeg': 'commonjs2 @ffmpeg-installer/ffmpeg',
   },
+  plugins: [
+    new CopyWebpackPlugin({
+      patterns: [
+        {
+          from: path.resolve(__dirname, 'node_modules/pdfkit/js/data'),
+          to: path.resolve(__dirname, '.webpack/main/data'),
+        },
+      ],
+    }),
+  ],
 };

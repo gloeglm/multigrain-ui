@@ -64,5 +64,43 @@ export type TreeSelection =
   | { type: 'preset'; presetPath: string; projectPath?: string }
   | { type: 'project'; projectPath: string };
 
+// PDF Export types
+export interface OverviewData {
+  rootPath: string;
+  totalProjects: number;
+  projects: Array<{
+    index: number;
+    bankPosition: string; // "X / 1"
+    name: string;
+    customName?: string;
+    sampleCount: number;
+    presetCount: number;
+  }>;
+}
+
+export interface ProjectExportData {
+  project: {
+    index: number;
+    bankPosition: string;
+    name: string;
+    customName?: string;
+  };
+  samples: Array<{
+    name: string;
+    description?: string;
+    usedByPresets: string[]; // Preset names referencing this sample
+  }>;
+  presets: Array<{
+    name: string;
+    index: number;
+    isAutosave: boolean;
+    samples: Array<{
+      slotNumber: number; // 1-8
+      name: string;
+      location: 'PROJECT' | 'WAVS' | 'RECS' | 'NOT_FOUND';
+    }>;
+  }>;
+}
+
 // Import types
 export * from './types/import';

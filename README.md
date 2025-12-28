@@ -51,6 +51,7 @@ A cross-platform desktop application for managing audio samples on SD cards for 
 1. Download the latest release for your platform from the [Releases](../../releases) page
 2. Install the application:
    - **macOS**: Open the `.dmg` and drag to Applications
+     - ⚠️ **Important**: macOS will block the unsigned app. See [MACOS_INSTALL.md](MACOS_INSTALL.md) for bypass instructions
    - **Windows**: Run the `.exe` installer
    - **Linux**: Install the `.deb` or `.rpm` package
 

@@ -7,6 +7,7 @@ import { setupPresetHandlers } from './preset';
 import { registerAudioImportHandlers } from './audioImport';
 import { registerProjectOperationsHandlers } from './projectOperations';
 import { registerFileOperationsHandlers } from './fileOperations';
+import { registerPdfExportHandlers } from './pdfExport';
 
 export function registerAllHandlers(): void {
   registerFileSystemHandlers();
@@ -18,4 +19,5 @@ export function registerAllHandlers(): void {
   registerAudioImportHandlers();
   registerProjectOperationsHandlers();
   registerFileOperationsHandlers();
+  registerPdfExportHandlers();
 }

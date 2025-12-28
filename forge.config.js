@@ -19,8 +19,41 @@ module.exports = {
       },
     },
     {
-      name: '@electron-forge/maker-zip',
-      platforms: ['darwin'],
+      name: '@electron-forge/maker-dmg',
+      config: {
+        name: 'Multigrain Sample Manager',
+        format: 'ULFO',
+        additionalDMGOptions: {
+          window: {
+            size: {
+              width: 660,
+              height: 400,
+            },
+          },
+        },
+        icon: './assets/icons/icons/icon.icns',
+        contents: [
+          {
+            x: 180,
+            y: 170,
+            type: 'file',
+            path: undefined, // Will be set by Electron Forge to the app path
+          },
+          {
+            x: 480,
+            y: 170,
+            type: 'link',
+            path: '/Applications',
+          },
+          {
+            x: 330,
+            y: 340,
+            type: 'file',
+            path: './MACOS_INSTALL.md',
+            name: 'INSTALLATION INSTRUCTIONS.md',
+          },
+        ],
+      },
     },
     {
       name: '@electron-forge/maker-deb',

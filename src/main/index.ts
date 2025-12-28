@@ -85,7 +85,7 @@ const createWindow = (): void => {
   mainWindow.on('resize', saveBounds);
   mainWindow.on('move', saveBounds);
 
-  // Set CSP to allow blob URLs for audio playback
+  // Set CSP to allow blob URLs for audio playback and PDF preview
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
     callback({
       responseHeaders: {
@@ -95,7 +95,8 @@ const createWindow = (): void => {
             "script-src 'self' 'unsafe-eval'; " +
             "style-src 'self' 'unsafe-inline'; " +
             "connect-src 'self' ws://localhost:* blob:; " +
-            "media-src 'self' blob: data:",
+            "media-src 'self' blob: data:; " +
+            "object-src 'self' blob: file:",
         ],
       },
     });
@@ -110,8 +111,60 @@ const createWindow = (): void => {
 };
 
 app.whenReady().then(() => {
-  // Remove the default menu
-  Menu.setApplicationMenu(null);
+  // Set up menu based on environment
+  if (process.env.NODE_ENV === 'development') {
+    // Development menu with reload and devtools
+    const template: Electron.MenuItemConstructorOptions[] = [
+      {
+        label: 'File',
+        submenu: [
+          {
+            label: 'Quit',
+            accelerator: process.platform === 'darwin' ? 'Cmd+Q' : 'Alt+F4',
+            click: () => app.quit(),
+          },
+        ],
+      },
+      {
+        label: 'View',
+        submenu: [
+          {
+            label: 'Reload',
+            accelerator: 'CmdOrCtrl+R',
+            click: (_, focusedWindow) => {
+              if (focusedWindow && focusedWindow instanceof BrowserWindow) {
+                focusedWindow.reload();
+              }
+            },
+          },
+          {
+            label: 'Force Reload',
+            accelerator: 'CmdOrCtrl+Shift+R',
+            click: (_, focusedWindow) => {
+              if (focusedWindow && focusedWindow instanceof BrowserWindow) {
+                focusedWindow.webContents.reloadIgnoringCache();
+              }
+            },
+          },
+          {
+            label: 'Toggle DevTools',
+            accelerator: process.platform === 'darwin' ? 'Alt+Cmd+I' : 'Ctrl+Shift+I',
+            click: (_, focusedWindow) => {
+              if (focusedWindow && focusedWindow instanceof BrowserWindow) {
+                focusedWindow.webContents.toggleDevTools();
+              }
+            },
+          },
+        ],
+      },
+    ];
+
+    const menu = Menu.buildFromTemplate(template);
+    Menu.setApplicationMenu(menu);
+  } else {
+    // Remove the default menu in production
+    Menu.setApplicationMenu(null);
+  }
 
   registerAllHandlers();
   createWindow();

@@ -5,6 +5,11 @@ import { contextBridge, ipcRenderer } from 'electron';
 contextBridge.exposeInMainWorld('electronAPI', {
   // File system operations
   selectDirectory: () => ipcRenderer.invoke('dialog:selectDirectory'),
+  showSaveDialog: (options: {
+    title?: string;
+    defaultPath?: string;
+    filters?: Array<{ name: string; extensions: string[] }>;
+  }) => ipcRenderer.invoke('dialog:showSaveDialog', options),
   readDirectory: (path: string) => ipcRenderer.invoke('fs:readDirectory', path),
   readFile: (path: string) => ipcRenderer.invoke('fs:readFile', path),
   writeFile: (path: string, data: Buffer) => ipcRenderer.invoke('fs:writeFile', path, data),
@@ -66,10 +71,28 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // File operations (rename)
   renameSample: (samplePath: string, newName: string) =>
     ipcRenderer.invoke('files:renameSample', samplePath, newName),
+
+  // PDF export operations
+  exportOverviewPdf: (structure: import('../shared/types').MultigainStructure) =>
+    ipcRenderer.invoke('pdf:exportOverview', structure),
+  exportProjectPdf: (
+    project: import('../shared/types').Project,
+    structure: import('../shared/types').MultigainStructure
+  ) => ipcRenderer.invoke('pdf:exportProject', project, structure),
+  exportAllProjectsPdf: (structure: import('../shared/types').MultigainStructure) =>
+    ipcRenderer.invoke('pdf:exportAllProjects', structure),
 });
 
 export type ElectronAPI = {
   selectDirectory: () => Promise<string | null>;
+  showSaveDialog: (options: {
+    title?: string;
+    defaultPath?: string;
+    filters?: Array<{ name: string; extensions: string[] }>;
+  }) => Promise<{
+    canceled: boolean;
+    filePath?: string;
+  }>;
   readDirectory: (path: string) => Promise<string[]>;
   readFile: (path: string) => Promise<Buffer>;
   writeFile: (path: string, data: Buffer) => Promise<void>;
@@ -174,6 +197,30 @@ export type ElectronAPI = {
     success: boolean;
     newPath?: string;
     newName?: string;
+    error?: string;
+  }>;
+  exportOverviewPdf: (structure: import('../shared/types').MultigainStructure) => Promise<{
+    success: boolean;
+    tempFilePath?: string;
+    suggestedFilename?: string;
+    error?: string;
+  }>;
+  exportProjectPdf: (
+    project: import('../shared/types').Project,
+    structure: import('../shared/types').MultigainStructure
+  ) => Promise<{
+    success: boolean;
+    tempFilePath?: string;
+    suggestedFilename?: string;
+    error?: string;
+  }>;
+  exportAllProjectsPdf: (structure: import('../shared/types').MultigainStructure) => Promise<{
+    success: boolean;
+    count?: number;
+    total?: number;
+    failed?: Array<{ project: string; success: boolean; error?: string }>;
+    outputDir?: string;
+    canceled?: boolean;
     error?: string;
   }>;
 };

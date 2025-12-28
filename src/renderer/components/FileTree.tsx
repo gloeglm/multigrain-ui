@@ -5,6 +5,7 @@ import { CreateProjectDialog } from './CreateProjectDialog';
 import { ContextMenu, ContextMenuItem } from './ContextMenu';
 import { ConfirmDialog } from './ConfirmDialog';
 import { formatProjectDisplayName } from '../../shared/constants';
+import { usePdfExport } from '../hooks/usePdfExport';
 
 // Context for sharing state between FileTree components
 interface FileTreeContextValue {
@@ -55,6 +56,7 @@ interface TreeNodeProps {
   onClick?: () => void;
   isSelected?: boolean;
   alwaysOpen?: boolean;
+  onContextMenu?: (e: React.MouseEvent) => void;
 }
 
 const TreeNode: React.FC<TreeNodeProps> = ({
@@ -66,6 +68,7 @@ const TreeNode: React.FC<TreeNodeProps> = ({
   onClick,
   isSelected,
   alwaysOpen = false,
+  onContextMenu,
 }) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const hasChildren = React.Children.count(children) > 0;
@@ -81,6 +84,7 @@ const TreeNode: React.FC<TreeNodeProps> = ({
           if (hasChildren && !alwaysOpen) setIsOpen(!isOpen);
           onClick?.();
         }}
+        onContextMenu={onContextMenu}
       >
         {hasChildren ? (
           <span className="w-4 flex items-center justify-center">
@@ -447,6 +451,9 @@ export const FileTree: React.FC<FileTreeProps> = ({
     item: Project | WavFile;
   } | null>(null);
 
+  // PDF export hook
+  const pdfExport = usePdfExport();
+
   const handleSelectSample = (sample: WavFile) => {
     onSelectionChange({ type: 'sample', samplePath: sample.path });
   };
@@ -499,6 +506,11 @@ export const FileTree: React.FC<FileTreeProps> = ({
         onClick: () => handleImportClick(project.path),
       },
       {
+        label: 'Export Project Sheet',
+        icon: '📄',
+        onClick: () => pdfExport.exportProject(project, structure),
+      },
+      {
         label: 'Rename Project',
         icon: '✎',
         onClick: () => {
@@ -521,6 +533,25 @@ export const FileTree: React.FC<FileTreeProps> = ({
     });
   };
 
+  const handleMultigrainRootContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const items: ContextMenuItem[] = [
+      {
+        label: 'Export Overview Sheet',
+        icon: '📄',
+        onClick: () => pdfExport.exportOverview(structure),
+      },
+    ];
+
+    setContextMenu({
+      x: e.clientX,
+      y: e.clientY,
+      items,
+    });
+  };
+
   const handleProjectsFolderContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -530,6 +561,11 @@ export const FileTree: React.FC<FileTreeProps> = ({
         label: 'Create New Project',
         icon: '➕',
         onClick: () => setCreateProjectDialogOpen(true),
+      },
+      {
+        label: 'Export All Project Sheets',
+        icon: '📑',
+        onClick: () => pdfExport.exportAllProjects(structure),
       },
     ];
 
@@ -668,7 +704,13 @@ export const FileTree: React.FC<FileTreeProps> = ({
   return (
     <FileTreeContext.Provider value={contextValue}>
       <div className="text-sm">
-        <TreeNode label="Multigrain" icon="💾" alwaysOpen onClick={handleShowOverview}>
+        <TreeNode
+          label="Multigrain"
+          icon="💾"
+          alwaysOpen
+          onClick={handleShowOverview}
+          onContextMenu={handleMultigrainRootContextMenu}
+        >
           {/* Projects */}
           <div className="select-none">
             <div
