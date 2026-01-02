@@ -104,7 +104,7 @@ Project
 
 Implement automated testing to catch bugs early and enable confident refactoring. Recent rename synchronization issues highlighted the need for comprehensive test coverage.
 
-**Current Status**: 150 tests passing (54 infrastructure/utility + 29 IPC handler + 11 App + 23 SampleInfo + 2 integration tests + 18 PDF export + 13 WelcomeScreen)
+**Current Status**: 168 tests passing across 12 test files (54 infrastructure/utility + 29 IPC handler + 11 App + 23 SampleInfo + 8 integration tests + 18 PDF export + 13 WelcomeScreen + 18 ImportDialog)
 
 #### Phase 5a-d: Test Infrastructure & Core Testing ✅ **COMPLETE**
 - [x] Vitest + React Testing Library setup with memfs for IPC mocking
@@ -112,6 +112,8 @@ Implement automated testing to catch bugs early and enable confident refactoring
 - [x] IPC handler tests (rename, delete operations with security validation) - 29 tests
 - [x] Component refactoring: Split AudioPlayer into AudioWaveform, SampleInfo, SampleTechnicalDetails, SampleView
 - [x] SampleInfo component tests (rename, description, validation, error handling) - 23 tests
+- [x] WelcomeScreen component tests - 13 tests
+- [x] ImportDialog component tests - 18 tests
 - [x] Implemented data-testid best practices, documented in CLAUDE.md
 - [x] Bug fixes: stop button, endless loop, UI consistency
 
@@ -120,7 +122,7 @@ Implement automated testing to catch bugs early and enable confident refactoring
 #### Phase 5e: Additional Component & Integration Tests 🚧 **IN PROGRESS**
 - [ ] AudioWaveform component tests (WaveSurfer initialization, controls, auto-play)
 - [ ] SampleTechnicalDetails component tests (metadata loading, display)
-- [x] Integration tests (rename sync between FileTree/SampleInfo verified) - 2 tests
+- [x] Integration tests (rename sync between FileTree/SampleInfo verified) - 8 tests
 - [ ] Error recovery tests (failed operations, validation)
 - [ ] Additional integration workflows (delete navigation, multi-step operations)
 
@@ -242,7 +244,7 @@ Generate printable PDF reference sheets to help users remember which projects ar
 - [x] Run on push and pull requests to main branch
 - [x] Type checking with TypeScript (tsc --noEmit)
 - [x] Code linting with ESLint (strict mode, --max-warnings 0)
-- [x] Test suite execution (111 tests)
+- [x] Test suite execution (168 tests)
 - [x] Test results artifact upload
 - [x] Status badge in README
 
@@ -250,7 +252,7 @@ Generate printable PDF reference sheets to help users remember which projects ar
 - Runs on ubuntu-latest with Node.js 20
 - Executes: `npm ci → type-check → lint → test`
 - Badge: `![Tests](https://github.com/gloeglm/multigrain-ui/actions/workflows/test.yml/badge.svg)`
-- Current: 150 tests, 0 TypeScript errors, 0 ESLint warnings
+- Current: 168 tests, 0 TypeScript errors, 0 ESLint warnings
 
 #### Phase 9b: Code Quality & Linting ✅ **COMPLETE**
 - [x] ESLint 9 with flat config (eslint.config.js)
@@ -268,16 +270,17 @@ Generate printable PDF reference sheets to help users remember which projects ar
 - Test files allow `any` types for mocking flexibility
 - React hooks exhaustive-deps disabled where intentional
 
-#### Phase 9c: Build & Release Automation ❌ **NOT STARTED**
-- [ ] Multi-platform builds (Windows, macOS, Linux) on native runners
-- [ ] Publish to GitHub Releases with draft review
-- [ ] Version tagging and release process documentation
+#### Phase 9c: Build & Release Automation ✅ **COMPLETE**
+- [x] Multi-platform builds (Windows, macOS, Linux) on native runners
+- [x] Publish to GitHub Releases with version tagging
+- [x] Release workflow (`.github/workflows/release.yml`)
+- [x] Two beta releases published (v0.1.0-beta.1, v0.1.0-beta.2)
 - [ ] Code signing setup (future)
   - [ ] macOS: Apple Developer ID signing + notarization
   - [ ] Windows: Code signing certificate
 - [ ] Auto-update mechanism (future)
 
-**Status**: Testing pipeline complete with linting and type checking. Build/release automation pending.
+**Status**: Full CI/CD pipeline operational. Multi-platform builds and GitHub Releases working. Code signing deferred to future release.
 
 **Implementation Approach**:
 - **GitHub Actions**: Trigger on version tags (`v*.*.*`)
@@ -363,7 +366,7 @@ Optional enhancements that improve user experience but are not essential for cor
 
 ---
 
-## Current Progress: ~90% Complete
+## Current Progress: ~92% Complete
 
 ### What's Working
 - ✅ Complete browsing and navigation of Multigrain SD cards
@@ -391,14 +394,17 @@ Optional enhancements that improve user experience but are not essential for cor
 - ✅ **PDF reference sheet export (overview and project sheets)**
 - ✅ **System browser PDF preview**
 - ✅ **Batch export of all project sheets**
+- ✅ **CI/CD pipeline with automated testing (168 tests)**
+- ✅ **Multi-platform release builds (Windows, macOS, Linux)**
+- ✅ **GitHub Releases integration (v0.1.0-beta.1, v0.1.0-beta.2)**
+- ✅ **Welcome screen with SD card selection**
 
 ### What's Next (Priority Order)
-1. **Phase 5: Automated Testing** ⚠️ HIGH PRIORITY - Continue expanding test coverage
+1. **Phase 5e: Additional Tests** - AudioWaveform, SampleTechnicalDetails, error recovery tests
 2. **Phase 7**: PDF layout improvements (spacing, formatting)
 3. **Phase 4d**: Preset custom naming
-4. **Phase 8**: Polish and user experience improvements
-5. **Phase 9**: CI/CD and distribution
-6. **Phase 10**: Nice to have features (move/copy, sample ordering, advanced features)
+4. **Phase 8**: Polish and user experience improvements (collapse all, keyboard nav, multi-select)
+5. **Phase 10**: Nice to have features (move/copy, sample ordering, advanced features)
 
 ---
 
@@ -425,8 +431,15 @@ src/
 │   ├── index.html            ✅ HTML entry point
 │   ├── components/
 │   │   ├── FileTree.tsx      ✅ File browser with project selection
-│   │   ├── AudioPlayer.tsx   ✅ Playback + waveform + metadata
-│   │   └── PresetViewer.tsx  ✅ Preset sample viewer with navigation
+│   │   ├── SampleView.tsx    ✅ Sample display composition component
+│   │   ├── AudioWaveform.tsx ✅ WaveSurfer.js waveform + playback
+│   │   ├── SampleInfo.tsx    ✅ Editable sample info (rename, description)
+│   │   ├── SampleTechnicalDetails.tsx ✅ Read-only metadata display
+│   │   ├── PresetViewer.tsx  ✅ Preset sample viewer with navigation
+│   │   ├── ImportDialog.tsx  ✅ Sample import with validation
+│   │   ├── WelcomeScreen.tsx ✅ Initial welcome + SD card selection
+│   │   ├── ConfirmDialog.tsx ✅ Reusable confirmation dialog
+│   │   └── CreateProjectDialog.tsx ✅ Project creation UI
 │   ├── hooks/
 │   │   ├── useMultigrain.ts  ✅ State management hook
 │   │   └── usePdfExport.ts   ✅ PDF export operations hook
@@ -449,7 +462,8 @@ Configuration Files:
 CI/CD Files:
 └── .github/
     ├── workflows/
-    │   └── test.yml          ✅ GitHub Actions test workflow
+    │   ├── test.yml          ✅ GitHub Actions test workflow
+    │   └── release.yml       ✅ Multi-platform build & release workflow
     └── CI_CD.md              ✅ CI/CD documentation
 ```
 
