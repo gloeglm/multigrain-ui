@@ -59,9 +59,7 @@ describe('WelcomeScreen', () => {
       render(<WelcomeScreen onSelectCard={mockOnSelectCard} />);
 
       expect(screen.getByText(/💡 Tip:/)).toBeInTheDocument();
-      expect(
-        screen.getByText(/enable numbering to automatically prefix/)
-      ).toBeInTheDocument();
+      expect(screen.getByText(/enable numbering to automatically prefix/)).toBeInTheDocument();
     });
 
     it('should not render error warning when no error is provided', () => {
