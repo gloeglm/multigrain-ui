@@ -36,11 +36,20 @@ export interface AudioAnalysis {
 }
 
 /**
+ * Options for automatic sample numbering during import
+ */
+export interface NumberingOptions {
+  enabled: boolean; // Whether to add number prefixes
+  scheme?: 'auto' | '01_' | '001_'; // Numbering scheme (auto = detect from existing files)
+}
+
+/**
  * Request to import files
  */
 export interface ImportRequest {
-  files: string[]; // Full paths to files to import
+  files: string[]; // Full paths to files to import (in desired order for numbering)
   targetPath: string; // Destination folder (project or Wavs folder)
+  numberingOptions?: NumberingOptions; // Optional numbering configuration
 }
 
 /**
@@ -68,6 +77,7 @@ export interface ImportResult {
   failed: number; // Number of files that failed
   trimmed: string[]; // Filenames that were auto-trimmed
   renamed: RenamedFile[]; // Files that were renamed due to conflicts
+  numbered: RenamedFile[]; // Files that received number prefixes
   errors: ImportError[]; // Errors that occurred
 }
 
@@ -89,4 +99,14 @@ export interface ConversionResult {
   success: boolean;
   outputPath?: string; // Path to converted file (if successful)
   error?: string; // Error message (if failed)
+}
+
+/**
+ * Numbering scheme info returned from validation
+ */
+export interface NumberingInfo {
+  pattern: 'none' | '1_' | '01_' | '001_'; // Detected or default pattern
+  digits: number; // Number of digits (1, 2, or 3)
+  separator: string; // Separator between number and filename (e.g., '_', ' ', ' - ')
+  nextNumber: number; // Next available number for new files
 }

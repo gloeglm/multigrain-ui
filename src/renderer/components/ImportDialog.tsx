@@ -1,5 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { AudioAnalysis, ImportProgress, ImportResult } from '@shared/types/import';
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  AudioAnalysis,
+  ImportProgress,
+  ImportResult,
+  NumberingOptions,
+  NumberingInfo,
+} from '@shared/types/import';
 
 interface ImportDialogProps {
   isOpen: boolean;
@@ -20,9 +26,31 @@ export function ImportDialog({ isOpen, targetPath, onClose, onImportComplete }: 
     availableSlots: number;
     wouldExceed: boolean;
   } | null>(null);
+  const [numberingInfo, setNumberingInfo] = useState<NumberingInfo | null>(null);
   const [progress, setProgress] = useState<ImportProgress | null>(null);
   const [result, setResult] = useState<ImportResult | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+
+  // Numbering option with localStorage persistence
+  const [numberingEnabled, setNumberingEnabled] = useState(() => {
+    return localStorage.getItem('importNumberingEnabled') === 'true';
+  });
+
+  // File order for drag-and-drop reordering (indices into analyses array)
+  const [fileOrder, setFileOrder] = useState<number[]>([]);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+
+  // Persist numbering option to localStorage
+  useEffect(() => {
+    localStorage.setItem('importNumberingEnabled', String(numberingEnabled));
+  }, [numberingEnabled]);
+
+  // Initialize file order when analyses change
+  useEffect(() => {
+    if (analyses.length > 0) {
+      setFileOrder(analyses.map((_, i) => i));
+    }
+  }, [analyses]);
 
   // Reset state when dialog opens
   useEffect(() => {
@@ -31,9 +59,12 @@ export function ImportDialog({ isOpen, targetPath, onClose, onImportComplete }: 
       setSelectedFiles([]);
       setAnalyses([]);
       setStorageInfo(null);
+      setNumberingInfo(null);
       setProgress(null);
       setResult(null);
       setIsProcessing(false);
+      setFileOrder([]);
+      setDraggedIndex(null);
     }
   }, [isOpen]);
 
@@ -70,6 +101,7 @@ export function ImportDialog({ isOpen, targetPath, onClose, onImportComplete }: 
       const validationResult = await window.electronAPI.validateImportFiles(files, targetPath);
       setAnalyses(validationResult.analyses);
       setStorageInfo(validationResult.storageInfo);
+      setNumberingInfo(validationResult.numberingInfo);
     } catch (error) {
       console.error('Failed to select/validate files:', error);
       onClose();
@@ -81,7 +113,19 @@ export function ImportDialog({ isOpen, targetPath, onClose, onImportComplete }: 
     setStage('progress');
 
     try {
-      const importResult = await window.electronAPI.executeImport(selectedFiles, targetPath);
+      // Reorder files based on fileOrder (for numbering)
+      const orderedFiles = fileOrder.map((i) => selectedFiles[i]);
+
+      // Build numbering options
+      const numberingOptions: NumberingOptions | undefined = numberingEnabled
+        ? { enabled: true, scheme: 'auto' }
+        : undefined;
+
+      const importResult = await window.electronAPI.executeImport(
+        orderedFiles,
+        targetPath,
+        numberingOptions
+      );
       setResult(importResult);
       setStage('results');
     } catch (error) {
@@ -92,6 +136,7 @@ export function ImportDialog({ isOpen, targetPath, onClose, onImportComplete }: 
         failed: selectedFiles.length,
         trimmed: [],
         renamed: [],
+        numbered: [],
         errors: [
           {
             file: 'All files',
@@ -112,6 +157,35 @@ export function ImportDialog({ isOpen, targetPath, onClose, onImportComplete }: 
       onClose();
     }
   };
+
+  // Drag and drop handlers for reordering
+  const handleDragStart = useCallback((e: React.DragEvent, index: number) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  }, []);
+
+  const handleDrop = useCallback(
+    (e: React.DragEvent, dropIndex: number) => {
+      e.preventDefault();
+      if (draggedIndex === null || draggedIndex === dropIndex) return;
+
+      const newOrder = [...fileOrder];
+      const [removed] = newOrder.splice(draggedIndex, 1);
+      newOrder.splice(dropIndex, 0, removed);
+      setFileOrder(newOrder);
+      setDraggedIndex(null);
+    },
+    [draggedIndex, fileOrder]
+  );
+
+  const handleDragEnd = useCallback(() => {
+    setDraggedIndex(null);
+  }, []);
 
   if (!isOpen) return null;
 
@@ -170,40 +244,90 @@ export function ImportDialog({ isOpen, targetPath, onClose, onImportComplete }: 
                 </div>
               )}
 
+              {/* Numbering option */}
+              <div className="mb-4 p-3 bg-panel-dark rounded border border-panel-border">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={numberingEnabled}
+                    onChange={(e) => setNumberingEnabled(e.target.checked)}
+                    className="w-4 h-4 rounded border-panel-border text-label-blue focus:ring-label-blue"
+                  />
+                  <span className="text-sm font-medium text-label-black">
+                    Add number prefixes (e.g., 01_kick.wav)
+                  </span>
+                </label>
+                {numberingEnabled && (
+                  <p className="text-xs text-label-gray mt-2 ml-6">
+                    Drag files to reorder. Numbers will continue from existing samples.
+                  </p>
+                )}
+              </div>
+
               {/* File list */}
               <div className="space-y-2">
-                {analyses.map((analysis, index) => (
-                  <div key={index} className="p-3 bg-panel-dark rounded border border-panel-border">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <p className="font-medium text-label-black truncate">{analysis.filename}</p>
-                        {analysis.isValid ? (
-                          <div className="mt-1 space-y-1">
-                            {analysis.needsConversion || analysis.willBeTrimmed ? (
-                              analysis.issues.map((issue, i) => (
-                                <p key={i} className="text-xs text-knob-ring">
-                                  ⚠ {issue.message}
-                                </p>
-                              ))
-                            ) : (
-                              <p className="text-xs text-label-gray">
-                                ✓ Ready to import (no conversion needed)
-                              </p>
-                            )}
-                          </div>
-                        ) : (
-                          <div className="mt-1">
-                            {analysis.issues.map((issue, i) => (
-                              <p key={i} className="text-xs text-button-red">
-                                ✗ {issue.message}
-                              </p>
-                            ))}
+                {fileOrder.map((originalIndex, orderIndex) => {
+                  const analysis = analyses[originalIndex];
+                  if (!analysis) return null;
+
+                  return (
+                    <div
+                      key={originalIndex}
+                      draggable={numberingEnabled}
+                      onDragStart={(e) => handleDragStart(e, orderIndex)}
+                      onDragOver={handleDragOver}
+                      onDrop={(e) => handleDrop(e, orderIndex)}
+                      onDragEnd={handleDragEnd}
+                      className={`p-3 bg-panel-dark rounded border border-panel-border ${
+                        numberingEnabled ? 'cursor-move' : ''
+                      } ${draggedIndex === orderIndex ? 'opacity-50' : ''}`}
+                    >
+                      <div className="flex items-start gap-2">
+                        {/* Drag handle and number preview */}
+                        {numberingEnabled && numberingInfo && (
+                          <div className="flex items-center gap-2 text-label-gray">
+                            <span className="cursor-move">⋮⋮</span>
+                            <span className="text-xs font-mono bg-panel-light px-1 rounded">
+                              {String(numberingInfo.nextNumber + orderIndex).padStart(
+                                numberingInfo.digits,
+                                '0'
+                              )}
+                              {numberingInfo.separator}
+                            </span>
                           </div>
                         )}
+                        <div className="flex-1">
+                          <p className="font-medium text-label-black truncate">
+                            {analysis.filename}
+                          </p>
+                          {analysis.isValid ? (
+                            <div className="mt-1 space-y-1">
+                              {analysis.needsConversion || analysis.willBeTrimmed ? (
+                                analysis.issues.map((issue, i) => (
+                                  <p key={i} className="text-xs text-knob-ring">
+                                    ⚠ {issue.message}
+                                  </p>
+                                ))
+                              ) : (
+                                <p className="text-xs text-label-gray">
+                                  ✓ Ready to import (no conversion needed)
+                                </p>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="mt-1">
+                              {analysis.issues.map((issue, i) => (
+                                <p key={i} className="text-xs text-button-red">
+                                  ✗ {issue.message}
+                                </p>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               <p className="mt-4 text-sm text-label-gray">
@@ -276,7 +400,7 @@ export function ImportDialog({ isOpen, targetPath, onClose, onImportComplete }: 
                 </div>
               )}
 
-              {/* Renamed files */}
+              {/* Renamed files (conflicts) */}
               {result.renamed.length > 0 && (
                 <div className="mb-4">
                   <p className="font-semibold text-sm text-label-black mb-2">

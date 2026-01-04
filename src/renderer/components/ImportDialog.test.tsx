@@ -2,7 +2,12 @@ import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ImportDialog } from './ImportDialog';
-import type { AudioAnalysis, ImportProgress, ImportResult } from '@shared/types/import';
+import type {
+  AudioAnalysis,
+  ImportProgress,
+  ImportResult,
+  NumberingInfo,
+} from '@shared/types/import';
 
 describe('ImportDialog Component', () => {
   const mockOnClose = vi.fn();
@@ -55,13 +60,22 @@ describe('ImportDialog Component', () => {
     failed: 0,
     trimmed: [],
     renamed: [],
+    numbered: [],
     errors: [],
+  };
+
+  const mockNumberingInfo: NumberingInfo = {
+    pattern: '01_',
+    digits: 2,
+    separator: '_',
+    nextNumber: 1,
   };
 
   let mockProgressCleanup: (() => void) | undefined;
 
   beforeEach(() => {
     vi.clearAllMocks();
+    localStorage.clear();
 
     // Mock selectImportFiles - returns selected files
     vi.mocked(window.electronAPI.selectImportFiles).mockResolvedValue([
@@ -78,6 +92,7 @@ describe('ImportDialog Component', () => {
         availableSlots: 123,
         wouldExceed: false,
       },
+      numberingInfo: mockNumberingInfo,
     });
 
     // Mock executeImport - returns success result
@@ -217,6 +232,7 @@ describe('ImportDialog Component', () => {
           availableSlots: 1,
           wouldExceed: true,
         },
+        numberingInfo: mockNumberingInfo,
       });
 
       render(
@@ -292,7 +308,8 @@ describe('ImportDialog Component', () => {
 
       expect(window.electronAPI.executeImport).toHaveBeenCalledWith(
         ['/source/kick.wav', '/source/snare.wav'],
-        targetPath
+        targetPath,
+        undefined // numbering disabled by default
       );
     });
 
@@ -317,6 +334,7 @@ describe('ImportDialog Component', () => {
           availableSlots: 123,
           wouldExceed: false,
         },
+        numberingInfo: mockNumberingInfo,
       });
 
       render(
@@ -331,6 +349,146 @@ describe('ImportDialog Component', () => {
       await waitFor(() => {
         const importButton = screen.getByText('Import 0 File(s)');
         expect(importButton).toBeDisabled();
+      });
+    });
+  });
+
+  describe('Numbering Preview', () => {
+    it('shows correct preview numbers starting from nextNumber when numbering is enabled', async () => {
+      const user = userEvent.setup();
+
+      // Mock validation response with existing numbered files (nextNumber = 5)
+      vi.mocked(window.electronAPI.validateImportFiles).mockResolvedValue({
+        analyses: mockAnalyses,
+        storageInfo: {
+          currentCount: 4,
+          limit: 128,
+          availableSlots: 124,
+          wouldExceed: false,
+        },
+        numberingInfo: {
+          pattern: '01_',
+          digits: 2,
+          separator: '_',
+          nextNumber: 5, // Simulates 4 existing files (01-04)
+        },
+      });
+
+      render(
+        <ImportDialog
+          isOpen={true}
+          targetPath={targetPath}
+          onClose={mockOnClose}
+          onImportComplete={mockOnImportComplete}
+        />
+      );
+
+      // Wait for validation stage
+      await waitFor(() => {
+        expect(screen.getByText('Import 2 File(s)')).toBeInTheDocument();
+      });
+
+      // Enable numbering checkbox by clicking on it
+      const checkbox = screen.getByLabelText(/Add number prefixes/);
+      await user.click(checkbox);
+
+      // Verify preview shows 05_ and 06_ (continuing from existing 4 files)
+      await waitFor(() => {
+        expect(screen.getByText('05_')).toBeInTheDocument();
+        expect(screen.getByText('06_')).toBeInTheDocument();
+      });
+    });
+
+    it('shows correct separator style in preview', async () => {
+      const user = userEvent.setup();
+
+      // Mock validation response with space-dash-space separator
+      vi.mocked(window.electronAPI.validateImportFiles).mockResolvedValue({
+        analyses: mockAnalyses,
+        storageInfo: {
+          currentCount: 2,
+          limit: 128,
+          availableSlots: 126,
+          wouldExceed: false,
+        },
+        numberingInfo: {
+          pattern: '01_',
+          digits: 2,
+          separator: ' - ',
+          nextNumber: 3,
+        },
+      });
+
+      render(
+        <ImportDialog
+          isOpen={true}
+          targetPath={targetPath}
+          onClose={mockOnClose}
+          onImportComplete={mockOnImportComplete}
+        />
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText('Import 2 File(s)')).toBeInTheDocument();
+      });
+
+      // Enable numbering checkbox by clicking on it
+      const checkbox = screen.getByLabelText(/Add number prefixes/);
+      await user.click(checkbox);
+
+      // Verify preview shows correct separator style
+      // The preview renders as "03 - " in a span, use a function matcher for flexibility
+      await waitFor(() => {
+        const previewSpans = screen.getAllByText((content, element) => {
+          return Boolean(element?.className?.includes('font-mono') && content.startsWith('03'));
+        });
+        expect(previewSpans.length).toBeGreaterThan(0);
+        expect(previewSpans[0].textContent).toContain('03');
+        expect(previewSpans[0].textContent).toContain(' - ');
+      });
+    });
+
+    it('shows correct 3-digit prefix when detected from existing files', async () => {
+      const user = userEvent.setup();
+
+      // Mock validation response with 3-digit scheme
+      vi.mocked(window.electronAPI.validateImportFiles).mockResolvedValue({
+        analyses: mockAnalyses,
+        storageInfo: {
+          currentCount: 10,
+          limit: 128,
+          availableSlots: 118,
+          wouldExceed: false,
+        },
+        numberingInfo: {
+          pattern: '001_',
+          digits: 3,
+          separator: '_',
+          nextNumber: 11,
+        },
+      });
+
+      render(
+        <ImportDialog
+          isOpen={true}
+          targetPath={targetPath}
+          onClose={mockOnClose}
+          onImportComplete={mockOnImportComplete}
+        />
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText('Import 2 File(s)')).toBeInTheDocument();
+      });
+
+      // Enable numbering checkbox by clicking on it
+      const checkbox = screen.getByLabelText(/Add number prefixes/);
+      await user.click(checkbox);
+
+      // Verify preview shows 011_ and 012_ (3-digit format)
+      await waitFor(() => {
+        expect(screen.getByText('011_')).toBeInTheDocument();
+        expect(screen.getByText('012_')).toBeInTheDocument();
       });
     });
   });
@@ -431,6 +589,7 @@ describe('ImportDialog Component', () => {
         failed: 1,
         trimmed: [],
         renamed: [],
+        numbered: [],
         errors: [
           {
             file: 'snare.wav',
@@ -499,6 +658,7 @@ describe('ImportDialog Component', () => {
         failed: 2,
         trimmed: [],
         renamed: [],
+        numbered: [],
         errors: [
           {
             file: 'All files',
@@ -603,6 +763,7 @@ describe('ImportDialog Component', () => {
           availableSlots: 121,
           wouldExceed: false,
         },
+        numberingInfo: mockNumberingInfo,
       });
 
       // Reopen dialog

@@ -52,8 +52,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   selectImportFiles: () => ipcRenderer.invoke('import:selectFiles'),
   validateImportFiles: (files: string[], targetPath: string) =>
     ipcRenderer.invoke('import:validateFiles', { files, targetPath }),
-  executeImport: (files: string[], targetPath: string) =>
-    ipcRenderer.invoke('import:executeBatch', { files, targetPath }),
+  executeImport: (
+    files: string[],
+    targetPath: string,
+    numberingOptions?: import('../shared/types/import').NumberingOptions
+  ) => ipcRenderer.invoke('import:executeBatch', { files, targetPath, numberingOptions }),
   onImportProgress: (
     callback: (progress: import('../shared/types/import').ImportProgress) => void
   ) => {
@@ -168,10 +171,12 @@ export type ElectronAPI = {
       availableSlots: number;
       wouldExceed: boolean;
     };
+    numberingInfo: import('../shared/types/import').NumberingInfo;
   }>;
   executeImport: (
     files: string[],
-    targetPath: string
+    targetPath: string,
+    numberingOptions?: import('../shared/types/import').NumberingOptions
   ) => Promise<import('../shared/types/import').ImportResult>;
   onImportProgress: (
     callback: (progress: import('../shared/types/import').ImportProgress) => void

@@ -104,7 +104,7 @@ Project
 
 Implement automated testing to catch bugs early and enable confident refactoring. Recent rename synchronization issues highlighted the need for comprehensive test coverage.
 
-**Current Status**: 168 tests passing across 12 test files (54 infrastructure/utility + 29 IPC handler + 11 App + 23 SampleInfo + 8 integration tests + 18 PDF export + 13 WelcomeScreen + 18 ImportDialog)
+**Current Status**: 217 tests passing across 13 test files (54 infrastructure/utility + 29 IPC handler + 11 App + 23 SampleInfo + 8 integration tests + 18 PDF export + 13 WelcomeScreen + 21 ImportDialog + 46 sampleNumbering)
 
 #### Phase 5a-d: Test Infrastructure & Core Testing ✅ **COMPLETE**
 - [x] Vitest + React Testing Library setup with memfs for IPC mocking
@@ -232,6 +232,7 @@ Generate printable PDF reference sheets to help users remember which projects ar
 - [ ] UI/UX refinements and accessibility improvements
 - [ ] Performance optimization for large sample libraries
 - [ ] User documentation and help system
+- [ ] CreateProjectDialog should submit on Enter key
 - [ ] Comprehensive error messages and user guidance
 - [ ] Edge case handling (corrupted files, permissions issues)
 
@@ -244,7 +245,7 @@ Generate printable PDF reference sheets to help users remember which projects ar
 - [x] Run on push and pull requests to main branch
 - [x] Type checking with TypeScript (tsc --noEmit)
 - [x] Code linting with ESLint (strict mode, --max-warnings 0)
-- [x] Test suite execution (168 tests)
+- [x] Test suite execution (217 tests)
 - [x] Test results artifact upload
 - [x] Status badge in README
 
@@ -325,18 +326,16 @@ Optional enhancements that improve user experience but are not essential for cor
   - Conflict detection and resolution
   - Update preset references when moving samples (advanced)
   - **Rationale**: Users can achieve the same result by deleting samples and re-importing them to the desired location.
-- [ ] **Sample ordering & smart numbering**
-  - Auto-detect existing numbering scheme in target folder (e.g., 01_, 001_, etc.)
-  - Continue numbering sequence for newly imported files
-  - Option to manually prefix imported files with numbers
-  - Preview final filenames before import
-  - Drag-and-drop reordering in import dialog preview
-  - Batch renumber existing samples in file tree
-  - Visual preview of hardware order (1-128 index)
-  - Support multiple formats: 01_, 001_, 1_, etc.
-  - Option to add/remove numbering prefixes
-  - Preserve original filenames after prefix
-  - **Rationale**: Since samples are alphabetically sorted on the Multigrain module, numeric prefixes control playback order. Users can manually rename files to achieve this.
+- [x] **Sample ordering & smart numbering** ✅ **COMPLETE** → See [detailed plan](./sample-numbering-plan.md)
+  - [x] Optional number prefix during import (e.g., 01_kick.wav)
+  - [x] Auto-detect existing numbering scheme and continue sequence
+  - [x] Support for multiple separator styles (_, space, -, " - ", .)
+  - [x] Drag-and-drop reordering in import dialog when numbering enabled
+  - [x] Preview shows actual numbers that will be applied
+  - [x] Persistent preference (localStorage)
+  - [ ] Context menu action to add prefixes to existing samples (future)
+  - [ ] Layout improvements for numbering UI (pending)
+  - **Status**: Import numbering feature complete. Manual numbering action deferred.
 - [ ] **Detailed storage limits tracking** (e.g., "48/128 samples in PROJECT folder")
   - Show current vs. maximum sample counts per location
   - Visual progress bars or indicators
@@ -394,17 +393,19 @@ Optional enhancements that improve user experience but are not essential for cor
 - ✅ **PDF reference sheet export (overview and project sheets)**
 - ✅ **System browser PDF preview**
 - ✅ **Batch export of all project sheets**
-- ✅ **CI/CD pipeline with automated testing (168 tests)**
+- ✅ **Sample numbering during import with auto-detection**
+- ✅ **CI/CD pipeline with automated testing (217 tests)**
 - ✅ **Multi-platform release builds (Windows, macOS, Linux)**
 - ✅ **GitHub Releases integration (v0.1.0-beta.1, v0.1.0-beta.2)**
 - ✅ **Welcome screen with SD card selection**
 
 ### What's Next (Priority Order)
-1. **Phase 5e: Additional Tests** - AudioWaveform, SampleTechnicalDetails, error recovery tests
-2. **Phase 7**: PDF layout improvements (spacing, formatting)
-3. **Phase 4d**: Preset custom naming
-4. **Phase 8**: Polish and user experience improvements (collapse all, keyboard nav, multi-select)
-5. **Phase 10**: Nice to have features (move/copy, sample ordering, advanced features)
+1. **Sample Numbering Layout** - UI improvements for the numbering feature in ImportDialog
+2. **Phase 5e: Additional Tests** - AudioWaveform, SampleTechnicalDetails, error recovery tests
+3. **Phase 7**: PDF layout improvements (spacing, formatting)
+4. **Phase 4d**: Preset custom naming
+5. **Phase 8**: Polish and user experience improvements (collapse all, keyboard nav, multi-select)
+6. **Phase 10**: Nice to have features (move/copy, manual numbering action)
 
 ---
 
@@ -425,7 +426,8 @@ src/
 │       ├── presetParser.ts   ✅ Shared preset file parser
 │       ├── pdfGenerator.ts   ✅ PDF generation with PDFKit
 │       ├── pdfLayouts.ts     ✅ PDF layout constants
-│       └── exportDataAggregator.ts ✅ PDF data preparation
+│       ├── exportDataAggregator.ts ✅ PDF data preparation
+│       └── sampleNumbering.ts ✅ Number prefix detection & application
 ├── renderer/
 │   ├── App.tsx               ✅ Main application component + factory names
 │   ├── index.html            ✅ HTML entry point

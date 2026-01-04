@@ -10,20 +10,33 @@ import {
 } from './audioConversion';
 import { resolveConflict, sanitizeFilename } from '../utils/fileConflictResolver';
 import { STORAGE_LIMITS } from '@shared/constants';
+import {
+  detectNumberingScheme,
+  applyNumberPrefix,
+  hasNumberPrefix,
+  NumberingScheme,
+} from '../utils/sampleNumbering';
+
+/**
+ * Get WAV filenames in a directory
+ */
+async function getWavFilenames(dirPath: string): Promise<string[]> {
+  try {
+    const entries = await fs.readdir(dirPath, { withFileTypes: true });
+    return entries
+      .filter((entry) => entry.isFile() && entry.name.toLowerCase().endsWith('.wav'))
+      .map((entry) => entry.name);
+  } catch {
+    return [];
+  }
+}
 
 /**
  * Get the count of WAV files in a directory
  */
 async function getWavFileCount(dirPath: string): Promise<number> {
-  try {
-    const entries = await fs.readdir(dirPath, { withFileTypes: true });
-    const wavFiles = entries.filter(
-      (entry) => entry.isFile() && entry.name.toLowerCase().endsWith('.wav')
-    );
-    return wavFiles.length;
-  } catch {
-    return 0;
-  }
+  const filenames = await getWavFilenames(dirPath);
+  return filenames.length;
 }
 
 /**
@@ -87,6 +100,10 @@ export function registerAudioImportHandlers(): void {
       const storageLimit = getStorageLimit(targetPath);
       const availableSlots = storageLimit - currentCount;
 
+      // Detect numbering scheme from existing files
+      const existingFiles = await getWavFilenames(targetPath);
+      const numberingScheme = detectNumberingScheme(existingFiles);
+
       return {
         analyses,
         storageInfo: {
@@ -94,6 +111,12 @@ export function registerAudioImportHandlers(): void {
           limit: storageLimit,
           availableSlots,
           wouldExceed: validFilesCount > availableSlots,
+        },
+        numberingInfo: {
+          pattern: numberingScheme.pattern,
+          digits: numberingScheme.digits,
+          separator: numberingScheme.separator,
+          nextNumber: numberingScheme.nextNumber,
         },
       };
     }
@@ -103,13 +126,14 @@ export function registerAudioImportHandlers(): void {
    * Execute batch import with conversions
    */
   ipcMain.handle('import:executeBatch', async (event, request: ImportRequest) => {
-    const { files, targetPath } = request;
+    const { files, targetPath, numberingOptions } = request;
     const result: ImportResult = {
       success: true,
       imported: 0,
       failed: 0,
       trimmed: [],
       renamed: [],
+      numbered: [],
       errors: [],
     };
 
@@ -117,6 +141,30 @@ export function registerAudioImportHandlers(): void {
     const currentCount = await getWavFileCount(targetPath);
     const storageLimit = getStorageLimit(targetPath);
     let availableSlots = storageLimit - currentCount;
+
+    // Set up numbering if enabled
+    let numberingScheme: NumberingScheme | null = null;
+    let currentNumber = 0;
+
+    if (numberingOptions?.enabled) {
+      const existingFiles = await getWavFilenames(targetPath);
+
+      if (numberingOptions.scheme === 'auto' || !numberingOptions.scheme) {
+        // Auto-detect from existing files
+        numberingScheme = detectNumberingScheme(existingFiles);
+      } else {
+        // Use specified scheme but detect next number and separator from existing files
+        const detected = detectNumberingScheme(existingFiles);
+        numberingScheme = {
+          pattern: numberingOptions.scheme,
+          digits: numberingOptions.scheme === '001_' ? 3 : 2,
+          separator: detected.separator,
+          nextNumber: detected.nextNumber,
+        };
+      }
+
+      currentNumber = numberingScheme.nextNumber;
+    }
 
     for (let i = 0; i < files.length; i++) {
       const filePath = files[i];
@@ -201,15 +249,34 @@ export function registerAudioImportHandlers(): void {
 
         // Sanitize filename
         const sanitized = sanitizeFilename(filename);
-        const desiredName = sanitized.endsWith('.wav')
+        let desiredName = sanitized.endsWith('.wav')
           ? sanitized
           : `${path.basename(sanitized, path.extname(sanitized))}.wav`;
+
+        // Apply numbering prefix if enabled
+        let wasNumbered = false;
+        if (numberingScheme && !hasNumberPrefix(desiredName)) {
+          const numberedName = applyNumberPrefix(desiredName, currentNumber, numberingScheme);
+          result.numbered.push({
+            original: desiredName,
+            final: numberedName,
+          });
+          desiredName = numberedName;
+          currentNumber++;
+          wasNumbered = true;
+        }
 
         // Resolve conflicts
         const finalFilename = await resolveConflict(targetPath, desiredName);
 
-        // Track if renamed
-        if (finalFilename !== filename) {
+        // Track if renamed due to conflict (not just numbered)
+        if (finalFilename !== desiredName) {
+          result.renamed.push({
+            original: wasNumbered ? desiredName : filename,
+            final: finalFilename,
+          });
+        } else if (!wasNumbered && finalFilename !== filename) {
+          // File was renamed due to sanitization
           result.renamed.push({
             original: filename,
             final: finalFilename,
