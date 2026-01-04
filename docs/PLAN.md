@@ -336,6 +336,14 @@ Optional enhancements that improve user experience but are not essential for cor
   - [ ] Context menu action to add prefixes to existing samples (future)
   - [ ] Layout improvements for numbering UI (pending)
   - **Status**: Import numbering feature complete. Manual numbering action deferred.
+- [ ] **Loudness normalization during import**
+  - Optional loudness normalization to ensure consistent levels across samples
+  - Target loudness standard (e.g., -14 LUFS or peak normalization to -1dB)
+  - FFmpeg already available for audio processing
+  - Toggle in import dialog with persistent preference
+  - Preview/indicator showing which files will be adjusted
+  - Consider offering different normalization modes (peak, RMS, LUFS)
+  - **Rationale**: Samples from different sources often have varying loudness levels, making it harder to balance in presets. Normalization ensures a consistent starting point.
 - [ ] **Detailed storage limits tracking** (e.g., "48/128 samples in PROJECT folder")
   - Show current vs. maximum sample counts per location
   - Visual progress bars or indicators
