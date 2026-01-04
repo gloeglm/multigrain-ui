@@ -43,6 +43,7 @@ describe('WelcomeScreen', () => {
       expect(screen.getByText('Import & Convert')).toBeInTheDocument();
       expect(screen.getByText('Organize Projects')).toBeInTheDocument();
       expect(screen.getByText('View Presets')).toBeInTheDocument();
+      expect(screen.getByText('Export Reference Sheets')).toBeInTheDocument();
     });
 
     it('should render the Getting Started section', () => {
@@ -54,12 +55,12 @@ describe('WelcomeScreen', () => {
       expect(screen.getByText(/Load Factory Names/)).toBeInTheDocument();
     });
 
-    it('should render the auto-conversion tip', () => {
+    it('should render the numbering tip', () => {
       render(<WelcomeScreen onSelectCard={mockOnSelectCard} />);
 
       expect(screen.getByText(/💡 Tip:/)).toBeInTheDocument();
       expect(
-        screen.getByText(/automatically converted to the correct format for Multigrain/)
+        screen.getByText(/enable numbering to automatically prefix/)
       ).toBeInTheDocument();
     });
 

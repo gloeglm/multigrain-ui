@@ -86,7 +86,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
                       Import & Convert
                     </h3>
                     <p className="text-xs text-label-gray">
-                      Auto-convert files to 48kHz, 16-bit, stereo format
+                      Auto-convert to correct format, optional numbering prefixes
                     </p>
                   </div>
                 </div>
@@ -113,6 +113,20 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
                     <h3 className="text-sm font-semibold text-label-black mb-1">View Presets</h3>
                     <p className="text-xs text-label-gray">
                       Inspect presets and jump to referenced samples
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-panel-light rounded-lg p-4 border-2 border-panel-dark">
+                <div className="flex items-start gap-3">
+                  <div className="text-xl">📄</div>
+                  <div>
+                    <h3 className="text-sm font-semibold text-label-black mb-1">
+                      Export Reference Sheets
+                    </h3>
+                    <p className="text-xs text-label-gray">
+                      Generate printable PDFs of your project layouts
                     </p>
                   </div>
                 </div>
@@ -156,8 +170,8 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
             {/* Auto-conversion info */}
             <div className="p-3 bg-panel-light rounded border border-panel-dark">
               <p className="text-xs text-label-gray">
-                <strong>💡 Tip:</strong> When you import samples, they&apos;ll be automatically
-                converted to the correct format for Multigrain.
+                <strong>💡 Tip:</strong> When importing, enable numbering to automatically prefix
+                samples (e.g., 01_kick.wav) for reliable ordering on the hardware.
               </p>
             </div>
           </div>
