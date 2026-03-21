@@ -55,6 +55,9 @@ export async function generateOverviewSheet(data: OverviewData): Promise<Buffer>
       const range = doc.bufferedPageRange();
       for (let i = 0; i < range.count; i++) {
         doc.switchToPage(i);
+        // Temporarily disable bottom margin so footer text in the margin area
+        // doesn't trigger PDFKit's overflow detection and create a blank extra page
+        doc.page.margins.bottom = 0;
         doc
           .fontSize(FONTS.SMALL.size)
           .fillColor(COLORS.LIGHT_GRAY)
@@ -67,6 +70,7 @@ export async function generateOverviewSheet(data: OverviewData): Promise<Buffer>
               align: 'center',
             }
           );
+        doc.page.margins.bottom = PAGE.MARGIN.BOTTOM;
       }
 
       doc.end();
@@ -133,6 +137,9 @@ export async function generateProjectSheet(data: ProjectExportData): Promise<Buf
       const range = doc.bufferedPageRange();
       for (let i = 0; i < range.count; i++) {
         doc.switchToPage(i);
+        // Temporarily disable bottom margin so footer text in the margin area
+        // doesn't trigger PDFKit's overflow detection and create a blank extra page
+        doc.page.margins.bottom = 0;
         doc
           .fontSize(FONTS.SMALL.size)
           .fillColor(COLORS.LIGHT_GRAY)
@@ -145,6 +152,7 @@ export async function generateProjectSheet(data: ProjectExportData): Promise<Buf
               align: 'center',
             }
           );
+        doc.page.margins.bottom = PAGE.MARGIN.BOTTOM;
       }
 
       doc.end();
