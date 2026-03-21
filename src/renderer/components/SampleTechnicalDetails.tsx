@@ -37,33 +37,39 @@ export const SampleTechnicalDetails: React.FC<SampleTechnicalDetailsProps> = ({ 
     <div className="bg-white rounded border-2 border-panel-dark p-4">
       <h4 className="text-sm font-medium text-label-blue mb-3">Technical Details</h4>
       {metadataError ? (
-        <p className="text-sm text-red-600">{metadataError}</p>
+        <p data-testid="metadata-error" className="text-sm text-red-600">
+          {metadataError}
+        </p>
       ) : metadata ? (
         <div className="space-y-2">
           <div className="grid grid-cols-3 gap-4 text-sm">
-            <div>
+            <div data-testid="sample-rate">
               <span className="text-label-gray">Sample Rate:</span>
               <span className="ml-2 text-label-black">{metadata.sampleRate} Hz</span>
             </div>
-            <div>
+            <div data-testid="bit-depth">
               <span className="text-label-gray">Bit Depth:</span>
               <span className="ml-2 text-label-black">{metadata.bitDepth} bit</span>
             </div>
-            <div>
+            <div data-testid="channels">
               <span className="text-label-gray">Channels:</span>
               <span className="ml-2 text-label-black">{metadata.channels}</span>
             </div>
           </div>
           <div className="pt-2 border-t border-panel text-sm">
-            <div className="mb-1">
+            <div data-testid="file-size" className="mb-1">
               <span className="text-label-gray">Size:</span>
               <span className="ml-2 text-label-black">{(sample.size / 1024).toFixed(1)} KB</span>
             </div>
-            <div className="text-xs text-label-gray break-all">{sample.path}</div>
+            <div data-testid="file-path" className="text-xs text-label-gray break-all">
+              {sample.path}
+            </div>
           </div>
         </div>
       ) : (
-        <p className="text-sm text-label-gray">Loading...</p>
+        <p data-testid="metadata-loading" className="text-sm text-label-gray">
+          Loading...
+        </p>
       )}
     </div>
   );

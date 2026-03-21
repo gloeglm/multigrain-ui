@@ -104,7 +104,7 @@ Project
 
 Implement automated testing to catch bugs early and enable confident refactoring. Recent rename synchronization issues highlighted the need for comprehensive test coverage.
 
-**Current Status**: 217 tests passing across 13 test files (54 infrastructure/utility + 29 IPC handler + 11 App + 23 SampleInfo + 8 integration tests + 18 PDF export + 13 WelcomeScreen + 21 ImportDialog + 46 sampleNumbering)
+**Current Status**: 276 tests passing across 15 test files (54 infrastructure/utility + 29 IPC handler + 11 App + 23 SampleInfo + 8 integration tests + 18 PDF export + 13 WelcomeScreen + 21 ImportDialog + 46 sampleNumbering + 26 AudioWaveform + 21 SampleTechnicalDetails)
 
 #### Phase 5a-d: Test Infrastructure & Core Testing ✅ **COMPLETE**
 - [x] Vitest + React Testing Library setup with memfs for IPC mocking
@@ -120,8 +120,8 @@ Implement automated testing to catch bugs early and enable confident refactoring
 **Architecture**: Components now follow Single Responsibility Principle for better testability
 
 #### Phase 5e: Additional Component & Integration Tests 🚧 **IN PROGRESS**
-- [ ] AudioWaveform component tests (WaveSurfer initialization, controls, auto-play)
-- [ ] SampleTechnicalDetails component tests (metadata loading, display)
+- [x] AudioWaveform component tests (WaveSurfer initialization, controls, auto-play, error handling) - 26 tests
+- [x] SampleTechnicalDetails component tests (metadata loading, display, error handling, sample changes) - 21 tests
 - [x] Integration tests (rename sync between FileTree/SampleInfo verified) - 8 tests
 - [ ] Error recovery tests (failed operations, validation)
 - [ ] Additional integration workflows (delete navigation, multi-step operations)
@@ -402,7 +402,7 @@ Optional enhancements that improve user experience but are not essential for cor
 - ✅ **System browser PDF preview**
 - ✅ **Batch export of all project sheets**
 - ✅ **Sample numbering during import with auto-detection**
-- ✅ **CI/CD pipeline with automated testing (229 tests)**
+- ✅ **CI/CD pipeline with automated testing (276 tests)**
 - ✅ **Multi-platform release builds (Windows, macOS, Linux)**
 - ✅ **GitHub Releases integration (v0.1.0-beta.1, v0.1.0-beta.2)**
 - ✅ **Welcome screen with SD card selection**

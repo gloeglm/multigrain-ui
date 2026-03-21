@@ -119,7 +119,9 @@ export const AudioWaveform: React.FC<AudioWaveformProps> = ({ samplePath, autoPl
       <div className="bg-white rounded border-2 border-panel-dark p-4">
         <div ref={waveformRef} className="rounded overflow-hidden bg-panel-light" />
         {isLoading && (
-          <div className="text-center py-4 text-label-gray text-sm">Loading waveform...</div>
+          <div data-testid="loading-indicator" className="text-center py-4 text-label-gray text-sm">
+            Loading waveform...
+          </div>
         )}
       </div>
 
@@ -127,6 +129,7 @@ export const AudioWaveform: React.FC<AudioWaveformProps> = ({ samplePath, autoPl
       <div className="bg-white rounded border-2 border-panel-dark p-4">
         <div className="flex items-center gap-4">
           <button
+            data-testid="play-pause-button"
             onClick={handlePlayPause}
             disabled={isLoading}
             className="w-16 h-16 rounded-full bg-button-dark hover:bg-knob-ring disabled:bg-button-gray disabled:cursor-not-allowed text-white font-bold text-xl transition-colors"
@@ -134,6 +137,7 @@ export const AudioWaveform: React.FC<AudioWaveformProps> = ({ samplePath, autoPl
             {isPlaying ? '⏸' : '▶'}
           </button>
           <button
+            data-testid="stop-button"
             onClick={handleStop}
             disabled={isLoading}
             className="w-12 h-12 rounded-full bg-button-gray hover:bg-button-dark disabled:bg-panel disabled:cursor-not-allowed text-white font-bold transition-colors"
@@ -141,7 +145,7 @@ export const AudioWaveform: React.FC<AudioWaveformProps> = ({ samplePath, autoPl
             ⏹
           </button>
           <div className="flex-1">
-            <div className="text-label-blue font-mono text-lg">
+            <div data-testid="time-display" className="text-label-blue font-mono text-lg">
               {formatTime(currentTime)} / {formatTime(duration)}
             </div>
           </div>
