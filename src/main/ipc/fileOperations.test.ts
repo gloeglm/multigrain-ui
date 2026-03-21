@@ -423,4 +423,186 @@ describe('fileOperations IPC Handlers', () => {
       expect(result.results).toHaveLength(0);
     });
   });
+
+  describe('previewNumberPrefixes', () => {
+    const channel = 'files:previewNumberPrefixes';
+
+    it('returns files to rename when unnumbered files exist', async () => {
+      vol.fromJSON({
+        '/test/folder/kick.wav': 'audio',
+        '/test/folder/snare.wav': 'audio',
+        '/test/folder/hihat.wav': 'audio',
+      });
+
+      const handler = handlers.get(channel)!;
+      const result = await handler(null, '/test/folder');
+
+      expect(result.success).toBe(true);
+      expect(result.alreadyNumbered).toBe(0);
+      expect(result.toRename).toHaveLength(3);
+      // Files sorted alphabetically, numbered starting from 1
+      expect(result.toRename[0]).toEqual({ oldName: 'hihat.wav', newName: '01_hihat.wav' });
+      expect(result.toRename[1]).toEqual({ oldName: 'kick.wav', newName: '02_kick.wav' });
+      expect(result.toRename[2]).toEqual({ oldName: 'snare.wav', newName: '03_snare.wav' });
+    });
+
+    it('renumbers existing files starting from 1', async () => {
+      vol.fromJSON({
+        '/test/folder/05_kick.wav': 'audio',
+        '/test/folder/10_snare.wav': 'audio',
+        '/test/folder/hihat.wav': 'audio', // unnumbered, goes last
+      });
+
+      const handler = handlers.get(channel)!;
+      const result = await handler(null, '/test/folder');
+
+      expect(result.success).toBe(true);
+      expect(result.alreadyNumbered).toBe(2);
+      // Numbered files keep order (by their number), unnumbered at end
+      expect(result.toRename).toContainEqual({ oldName: '05_kick.wav', newName: '01_kick.wav' });
+      expect(result.toRename).toContainEqual({ oldName: '10_snare.wav', newName: '02_snare.wav' });
+      expect(result.toRename).toContainEqual({ oldName: 'hihat.wav', newName: '03_hihat.wav' });
+    });
+
+    it('detects existing numbering scheme', async () => {
+      vol.fromJSON({
+        '/test/folder/001_kick.wav': 'audio',
+        '/test/folder/002_snare.wav': 'audio',
+        '/test/folder/hihat.wav': 'audio',
+      });
+
+      const handler = handlers.get(channel)!;
+      const result = await handler(null, '/test/folder');
+
+      expect(result.success).toBe(true);
+      expect(result.scheme.digits).toBe(3);
+      expect(result.toRename).toContainEqual({ oldName: 'hihat.wav', newName: '003_hihat.wav' });
+    });
+
+    it('returns empty renames when files already correctly numbered', async () => {
+      vol.fromJSON({
+        '/test/folder/01_kick.wav': 'audio',
+        '/test/folder/02_snare.wav': 'audio',
+      });
+
+      const handler = handlers.get(channel)!;
+      const result = await handler(null, '/test/folder');
+
+      expect(result.success).toBe(true);
+      expect(result.toRename).toHaveLength(0);
+    });
+
+    it('fails for empty folder', async () => {
+      vol.fromJSON({
+        '/test/folder': null, // empty directory
+      });
+
+      const handler = handlers.get(channel)!;
+      const result = await handler(null, '/test/folder');
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('No WAV files');
+    });
+
+    it('fails for non-existent path', async () => {
+      const handler = handlers.get(channel)!;
+      const result = await handler(null, '/test/nonexistent');
+
+      expect(result.success).toBe(false);
+    });
+
+    it('fails for file path instead of directory', async () => {
+      vol.fromJSON({
+        '/test/file.wav': 'audio',
+      });
+
+      const handler = handlers.get(channel)!;
+      const result = await handler(null, '/test/file.wav');
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('not a directory');
+    });
+  });
+
+  describe('applyNumberPrefixes', () => {
+    const channel = 'files:applyNumberPrefixes';
+
+    it('renames unnumbered files with prefixes starting from 1', async () => {
+      vol.fromJSON({
+        '/test/folder/kick.wav': 'audio',
+        '/test/folder/snare.wav': 'audio',
+      });
+
+      const handler = handlers.get(channel)!;
+      const result = await handler(null, '/test/folder');
+
+      expect(result.success).toBe(true);
+      expect(result.renamed).toHaveLength(2);
+
+      // Verify files were actually renamed (alphabetical order)
+      expect(vol.existsSync('/test/folder/01_kick.wav')).toBe(true);
+      expect(vol.existsSync('/test/folder/02_snare.wav')).toBe(true);
+      expect(vol.existsSync('/test/folder/kick.wav')).toBe(false);
+      expect(vol.existsSync('/test/folder/snare.wav')).toBe(false);
+    });
+
+    it('renumbers all files starting from 1', async () => {
+      vol.fromJSON({
+        '/test/folder/05_kick.wav': 'audio',
+        '/test/folder/10_snare.wav': 'audio',
+      });
+
+      const handler = handlers.get(channel)!;
+      const result = await handler(null, '/test/folder');
+
+      expect(result.success).toBe(true);
+      expect(result.renamed).toHaveLength(2);
+
+      // Files renumbered to 01, 02 (preserving order)
+      expect(vol.existsSync('/test/folder/01_kick.wav')).toBe(true);
+      expect(vol.existsSync('/test/folder/02_snare.wav')).toBe(true);
+    });
+
+    it('returns message when all files already correctly numbered', async () => {
+      vol.fromJSON({
+        '/test/folder/01_kick.wav': 'audio',
+        '/test/folder/02_snare.wav': 'audio',
+      });
+
+      const handler = handlers.get(channel)!;
+      const result = await handler(null, '/test/folder');
+
+      expect(result.success).toBe(true);
+      expect(result.renamed).toHaveLength(0);
+      expect(result.message).toContain('already have correct number prefixes');
+    });
+
+    it('places unnumbered files after numbered files', async () => {
+      vol.fromJSON({
+        '/test/folder/01_kick.wav': 'audio',
+        '/test/folder/02_snare.wav': 'audio',
+        '/test/folder/hihat.wav': 'audio', // unnumbered, goes after
+      });
+
+      const handler = handlers.get(channel)!;
+      const result = await handler(null, '/test/folder');
+
+      expect(result.success).toBe(true);
+      // Only hihat needs renaming (kick and snare already correct)
+      expect(result.renamed).toHaveLength(1);
+      expect(result.renamed[0].newName).toBe('03_hihat.wav');
+    });
+
+    it('fails for empty folder', async () => {
+      vol.fromJSON({
+        '/test/folder': null,
+      });
+
+      const handler = handlers.get(channel)!;
+      const result = await handler(null, '/test/folder');
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('No WAV files');
+    });
+  });
 });

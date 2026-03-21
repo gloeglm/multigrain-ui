@@ -75,6 +75,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
   renameSample: (samplePath: string, newName: string) =>
     ipcRenderer.invoke('files:renameSample', samplePath, newName),
 
+  // File operations (numbering)
+  previewNumberPrefixes: (folderPath: string) =>
+    ipcRenderer.invoke('files:previewNumberPrefixes', folderPath),
+  applyNumberPrefixes: (folderPath: string) =>
+    ipcRenderer.invoke('files:applyNumberPrefixes', folderPath),
+
   // PDF export operations
   exportOverviewPdf: (structure: import('../shared/types').MultigainStructure) =>
     ipcRenderer.invoke('pdf:exportOverview', structure),
@@ -202,6 +208,24 @@ export type ElectronAPI = {
     success: boolean;
     newPath?: string;
     newName?: string;
+    error?: string;
+  }>;
+  previewNumberPrefixes: (folderPath: string) => Promise<{
+    success: boolean;
+    scheme?: {
+      pattern: string;
+      digits: number;
+      separator: string;
+    };
+    alreadyNumbered?: number;
+    toRename?: Array<{ oldName: string; newName: string }>;
+    error?: string;
+  }>;
+  applyNumberPrefixes: (folderPath: string) => Promise<{
+    success: boolean;
+    renamed?: Array<{ oldName: string; newName: string }>;
+    errors?: Array<{ oldName: string; error: string }>;
+    message?: string;
     error?: string;
   }>;
   exportOverviewPdf: (structure: import('../shared/types').MultigainStructure) => Promise<{

@@ -1,6 +1,82 @@
 import { ipcMain } from 'electron';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import {
+  detectNumberingScheme,
+  hasNumberPrefix,
+  extractPrefixNumber,
+  NumberingScheme,
+} from '../utils/sampleNumbering';
+
+interface NumberingPlan {
+  scheme: NumberingScheme;
+  alreadyNumbered: number;
+  renames: Array<{ oldName: string; newName: string }>;
+}
+
+/**
+ * Build a renumbering plan for all WAV files in a folder.
+ * Files are renumbered starting from 1, preserving the relative order of
+ * already-numbered files, with unnumbered files sorted alphabetically at the end.
+ */
+async function buildNumberingPlan(folderPath: string): Promise<NumberingPlan> {
+  const files = await fs.promises.readdir(folderPath);
+  const wavFiles = files.filter((f) => f.toLowerCase().endsWith('.wav'));
+
+  if (wavFiles.length === 0) {
+    throw new Error('No WAV files found in folder');
+  }
+
+  // Detect existing numbering scheme (for separator style)
+  const scheme = detectNumberingScheme(wavFiles);
+
+  // Separate numbered and unnumbered files
+  const numberedFiles: Array<{ name: string; number: number; baseName: string }> = [];
+  const unnumberedFiles: Array<{ name: string; baseName: string }> = [];
+
+  for (const file of wavFiles) {
+    if (hasNumberPrefix(file)) {
+      const num = extractPrefixNumber(file);
+      if (num !== null) {
+        const baseName = file.replace(/^\d{1,3}(\s*[-_.]\s*|\s+)/, '');
+        numberedFiles.push({ name: file, number: num, baseName });
+      }
+    } else {
+      unnumberedFiles.push({ name: file, baseName: file });
+    }
+  }
+
+  // Sort numbered files by their number to preserve order
+  numberedFiles.sort((a, b) => a.number - b.number);
+
+  // Sort unnumbered files alphabetically
+  unnumberedFiles.sort((a, b) => a.baseName.localeCompare(b.baseName));
+
+  // Combine: numbered files first (in order), then unnumbered files
+  const allFiles = [...numberedFiles, ...unnumberedFiles];
+
+  // Build the rename plan - renumber everything starting from 1
+  const renames: Array<{ oldName: string; newName: string }> = [];
+  let currentNumber = 1;
+
+  for (const file of allFiles) {
+    const paddedNumber = String(currentNumber).padStart(scheme.digits, '0');
+    const newName = `${paddedNumber}${scheme.separator}${file.baseName}`;
+
+    // Only add to renames if the name actually changes
+    if (file.name !== newName) {
+      renames.push({ oldName: file.name, newName });
+    }
+
+    currentNumber++;
+  }
+
+  return {
+    scheme,
+    alreadyNumbered: numberedFiles.length,
+    renames,
+  };
+}
 
 export function registerFileOperationsHandlers(): void {
   // Delete a project folder and all its contents
@@ -201,6 +277,111 @@ export function registerFileOperationsHandlers(): void {
       };
     } catch (error) {
       console.error('Error renaming sample:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  });
+
+  // Preview what files would be renamed when adding number prefixes
+  ipcMain.handle('files:previewNumberPrefixes', async (_event, folderPath: string) => {
+    try {
+      // Verify folder exists
+      const stats = await fs.promises.stat(folderPath);
+      if (!stats.isDirectory()) {
+        return { success: false, error: 'Path is not a directory' };
+      }
+
+      const plan = await buildNumberingPlan(folderPath);
+
+      return {
+        success: true,
+        scheme: {
+          pattern: plan.scheme.pattern,
+          digits: plan.scheme.digits,
+          separator: plan.scheme.separator,
+        },
+        alreadyNumbered: plan.alreadyNumbered,
+        toRename: plan.renames,
+      };
+    } catch (error) {
+      console.error('Error previewing number prefixes:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  });
+
+  // Apply number prefixes to samples in a folder (renumbers all starting from 1)
+  ipcMain.handle('files:applyNumberPrefixes', async (_event, folderPath: string) => {
+    try {
+      const plan = await buildNumberingPlan(folderPath);
+
+      if (plan.renames.length === 0) {
+        return {
+          success: true,
+          renamed: [],
+          message: 'All files already have correct number prefixes',
+        };
+      }
+
+      // Use two-pass rename to avoid conflicts:
+      // 1. Rename all files to temporary names
+      // 2. Rename from temporary to final names
+      const tempPrefix = `__temp_rename_${Date.now()}_`;
+      const renamed: Array<{ oldName: string; newName: string }> = [];
+      const errors: Array<{ oldName: string; error: string }> = [];
+
+      // Pass 1: Rename to temporary names
+      const tempMappings: Array<{ tempName: string; finalName: string; originalName: string }> = [];
+
+      for (const { oldName, newName } of plan.renames) {
+        const tempName = `${tempPrefix}${oldName}`;
+        const oldPath = path.join(folderPath, oldName);
+        const tempPath = path.join(folderPath, tempName);
+
+        try {
+          await fs.promises.rename(oldPath, tempPath);
+          tempMappings.push({ tempName, finalName: newName, originalName: oldName });
+        } catch (err) {
+          errors.push({
+            oldName,
+            error: err instanceof Error ? err.message : 'Unknown error',
+          });
+        }
+      }
+
+      // Pass 2: Rename from temporary to final names
+      for (const { tempName, finalName, originalName } of tempMappings) {
+        const tempPath = path.join(folderPath, tempName);
+        const finalPath = path.join(folderPath, finalName);
+
+        try {
+          await fs.promises.rename(tempPath, finalPath);
+          renamed.push({ oldName: originalName, newName: finalName });
+        } catch (err) {
+          // Try to restore original name on failure
+          try {
+            await fs.promises.rename(tempPath, path.join(folderPath, originalName));
+          } catch {
+            // Ignore restore failure
+          }
+          errors.push({
+            oldName: originalName,
+            error: err instanceof Error ? err.message : 'Unknown error',
+          });
+        }
+      }
+
+      return {
+        success: renamed.length > 0,
+        renamed,
+        errors: errors.length > 0 ? errors : undefined,
+      };
+    } catch (error) {
+      console.error('Error applying number prefixes:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',

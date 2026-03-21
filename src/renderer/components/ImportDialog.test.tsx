@@ -262,9 +262,7 @@ describe('ImportDialog Component', () => {
       );
 
       await waitFor(() => {
-        expect(
-          screen.getByText(/Sample rate is 44100 Hz, will be converted to 48000 Hz/)
-        ).toBeInTheDocument();
+        expect(screen.getByText(/Sample Rate 44100→48000Hz/)).toBeInTheDocument();
       });
     });
 

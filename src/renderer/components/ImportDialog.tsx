@@ -301,17 +301,35 @@ export function ImportDialog({ isOpen, targetPath, onClose, onImportComplete }: 
                             {analysis.filename}
                           </p>
                           {analysis.isValid ? (
-                            <div className="mt-1 space-y-1">
+                            <div className="mt-1">
                               {analysis.needsConversion || analysis.willBeTrimmed ? (
-                                analysis.issues.map((issue, i) => (
-                                  <p key={i} className="text-xs text-knob-ring">
-                                    ⚠ {issue.message}
-                                  </p>
-                                ))
-                              ) : (
-                                <p className="text-xs text-label-gray">
-                                  ✓ Ready to import (no conversion needed)
+                                <p className="text-xs text-knob-ring">
+                                  {'⚠ '}
+                                  {analysis.issues
+                                    .map((issue) => {
+                                      const m = analysis.metadata;
+                                      if (!m) return issue.message;
+                                      switch (issue.type) {
+                                        case 'sampleRate':
+                                          return `Sample Rate ${m.sampleRate}→48000Hz`;
+                                        case 'bitDepth':
+                                          return `Bitrate ${m.bitDepth}→16-bit`;
+                                        case 'channels':
+                                          return m.channels === 1
+                                            ? 'Mono→stereo'
+                                            : `${m.channels}ch→stereo`;
+                                        case 'duration':
+                                          return `${m.duration.toFixed(1)}s→32s`;
+                                        case 'format':
+                                          return `${m.format.toUpperCase()}→WAV`;
+                                        default:
+                                          return issue.message;
+                                      }
+                                    })
+                                    .join(' · ')}
                                 </p>
+                              ) : (
+                                <p className="text-xs text-label-gray">✓ Ready to import</p>
                               )}
                             </div>
                           ) : (

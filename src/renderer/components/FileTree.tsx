@@ -269,6 +269,7 @@ interface ProjectNodeProps {
   triggerRename: boolean;
   onCancelRename: () => void;
   onContextMenu: (e: React.MouseEvent, project: Project) => void;
+  onSamplesNodeContextMenu: (e: React.MouseEvent, project: Project) => void;
 }
 
 const ProjectNode: React.FC<ProjectNodeProps> = ({
@@ -276,6 +277,7 @@ const ProjectNode: React.FC<ProjectNodeProps> = ({
   triggerRename,
   onCancelRename,
   onContextMenu,
+  onSamplesNodeContextMenu,
 }) => {
   const { selection, onSelectPreset, onSelectProject, onProjectNameChange } = useFileTreeContext();
   const { showError } = useErrorDialog();
@@ -425,7 +427,17 @@ const ProjectNode: React.FC<ProjectNodeProps> = ({
             </TreeNode>
           )}
           {project.samples.length > 0 && (
-            <TreeNode label="Samples" icon="🎵" count={project.samples.length} defaultOpen>
+            <TreeNode
+              label="Samples"
+              icon="🎵"
+              count={project.samples.length}
+              defaultOpen
+              onContextMenu={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onSamplesNodeContextMenu(e, project);
+              }}
+            >
               {project.samples.map((sample) => (
                 <SampleNode key={sample.path} sample={sample} />
               ))}
@@ -461,6 +473,14 @@ export const FileTree: React.FC<FileTreeProps> = ({
     type: 'project' | 'sample';
     item: Project | WavFile;
   } | null>(null);
+  const [numberingPreview, setNumberingPreview] = useState<{
+    folderPath: string;
+    folderName: string;
+    scheme: { pattern: string; digits: number; separator: string };
+    alreadyNumbered: number;
+    toRename: Array<{ oldName: string; newName: string }>;
+  } | null>(null);
+  const [isApplyingNumbering, setIsApplyingNumbering] = useState(false);
 
   // PDF export hook
   const pdfExport = usePdfExport();
@@ -516,6 +536,16 @@ export const FileTree: React.FC<FileTreeProps> = ({
         label: 'Import Samples',
         icon: '📥',
         onClick: () => handleImportClick(project.path),
+      },
+      {
+        label: 'Add Number Prefixes',
+        icon: '🔢',
+        onClick: () =>
+          handlePreviewNumberPrefixes(
+            project.path,
+            formatProjectDisplayName(project.index, project.name, project.customName)
+          ),
+        disabled: project.samples.length === 0,
       },
       {
         label: 'Export Project Sheet',
@@ -588,6 +618,28 @@ export const FileTree: React.FC<FileTreeProps> = ({
     });
   };
 
+  const handleSamplesNodeContextMenu = (e: React.MouseEvent, project: Project) => {
+    const items: ContextMenuItem[] = [
+      {
+        label: 'Import Samples',
+        icon: '📥',
+        onClick: () => handleImportClick(project.path),
+      },
+      {
+        label: 'Add Number Prefixes',
+        icon: '🔢',
+        onClick: () =>
+          handlePreviewNumberPrefixes(
+            project.path,
+            formatProjectDisplayName(project.index, project.name, project.customName)
+          ),
+        disabled: project.samples.length === 0,
+      },
+    ];
+
+    setContextMenu({ x: e.clientX, y: e.clientY, items });
+  };
+
   const handleWavsFolderContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -597,6 +649,12 @@ export const FileTree: React.FC<FileTreeProps> = ({
         label: 'Import Samples',
         icon: '📥',
         onClick: () => handleImportClick(structure.rootPath + '/Wavs'),
+      },
+      {
+        label: 'Add Number Prefixes',
+        icon: '🔢',
+        onClick: () => handlePreviewNumberPrefixes(structure.rootPath + '/Wavs', 'Wavs'),
+        disabled: structure.globalWavs.length === 0,
       },
     ];
 
@@ -701,6 +759,61 @@ export const FileTree: React.FC<FileTreeProps> = ({
     }
   };
 
+  const handlePreviewNumberPrefixes = async (folderPath: string, folderName: string) => {
+    try {
+      const result = await window.electronAPI.previewNumberPrefixes(folderPath);
+      if (result.success && result.scheme) {
+        if (!result.toRename || result.toRename.length === 0) {
+          showError(
+            'All samples are already correctly numbered starting from 1.',
+            'No Changes Needed'
+          );
+          return;
+        }
+        setNumberingPreview({
+          folderPath,
+          folderName,
+          scheme: result.scheme,
+          alreadyNumbered: result.alreadyNumbered || 0,
+          toRename: result.toRename,
+        });
+      } else {
+        showError('Failed to preview numbering.', 'Preview Failed', result.error);
+      }
+    } catch (error) {
+      console.error('Error previewing number prefixes:', error);
+      showError(
+        'Failed to preview numbering.',
+        'Preview Failed',
+        error instanceof Error ? error.message : String(error)
+      );
+    }
+  };
+
+  const handleApplyNumberPrefixes = async () => {
+    if (!numberingPreview) return;
+
+    setIsApplyingNumbering(true);
+    try {
+      const result = await window.electronAPI.applyNumberPrefixes(numberingPreview.folderPath);
+      if (result.success) {
+        setNumberingPreview(null);
+        onImportComplete?.(); // Reload structure
+      } else {
+        showError('Failed to apply number prefixes.', 'Operation Failed', result.error);
+      }
+    } catch (error) {
+      console.error('Error applying number prefixes:', error);
+      showError(
+        'Failed to apply number prefixes.',
+        'Operation Failed',
+        error instanceof Error ? error.message : String(error)
+      );
+    } finally {
+      setIsApplyingNumbering(false);
+    }
+  };
+
   // Pass existing projects to CreateProjectDialog
   const existingProjects = structure.projects;
 
@@ -768,6 +881,7 @@ export const FileTree: React.FC<FileTreeProps> = ({
                     triggerRename={projectToRename?.path === project.path}
                     onCancelRename={() => setProjectToRename(null)}
                     onContextMenu={handleProjectContextMenu}
+                    onSamplesNodeContextMenu={handleSamplesNodeContextMenu}
                   />
                 ))}
               </div>
@@ -867,6 +981,84 @@ export const FileTree: React.FC<FileTreeProps> = ({
             }}
             onCancel={() => setDeleteConfirm(null)}
           />
+        )}
+
+        {/* Number Prefixes Confirmation Dialog */}
+        {numberingPreview && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-panel-light rounded-lg shadow-xl max-w-lg w-full mx-4 max-h-[80vh] flex flex-col">
+              <div className="p-4 border-b border-panel-dark">
+                <h2 className="text-lg font-semibold text-label-black">Add Number Prefixes</h2>
+                <p className="text-sm text-label-gray mt-1">
+                  Add number prefixes to samples in {numberingPreview.folderName}
+                </p>
+              </div>
+
+              <div className="p-4 overflow-y-auto flex-1">
+                {numberingPreview.alreadyNumbered > 0 && (
+                  <div className="mb-4 p-3 bg-panel-light rounded border border-panel-dark">
+                    <p className="text-sm text-label-gray">
+                      <span className="font-medium text-label-black">
+                        {numberingPreview.alreadyNumbered}
+                      </span>{' '}
+                      sample{numberingPreview.alreadyNumbered !== 1 ? 's' : ''} already{' '}
+                      {numberingPreview.alreadyNumbered !== 1 ? 'have' : 'has'} number prefixes and
+                      will be renumbered to keep the sequence starting from 1.
+                    </p>
+                  </div>
+                )}
+
+                <p className="text-sm font-medium text-label-black mb-2">
+                  The following {numberingPreview.toRename.length} sample
+                  {numberingPreview.toRename.length !== 1 ? 's' : ''} will be renamed:
+                </p>
+
+                <div className="space-y-1.5 max-h-60 overflow-y-auto">
+                  {numberingPreview.toRename.map(({ oldName, newName }) => (
+                    <div
+                      key={oldName}
+                      className="flex items-center gap-2 text-sm bg-panel-light p-2 rounded"
+                    >
+                      <span className="text-label-gray truncate flex-1" title={oldName}>
+                        {oldName}
+                      </span>
+                      <span className="text-label-gray">→</span>
+                      <span
+                        className="text-label-black truncate flex-1 font-medium"
+                        title={newName}
+                      >
+                        {newName}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-4 p-3 bg-panel-light rounded border border-panel-dark">
+                  <p className="text-xs text-label-gray">
+                    <strong>Detected pattern:</strong> {numberingPreview.scheme.digits}-digit with
+                    &quot;{numberingPreview.scheme.separator}&quot; separator
+                  </p>
+                </div>
+              </div>
+
+              <div className="p-4 border-t border-panel-dark flex justify-end gap-3">
+                <button
+                  onClick={() => setNumberingPreview(null)}
+                  disabled={isApplyingNumbering}
+                  className="px-4 py-2 text-sm text-label-gray hover:text-label-black disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleApplyNumberPrefixes}
+                  disabled={isApplyingNumbering}
+                  className="px-4 py-2 text-sm bg-label-blue hover:bg-button-dark text-white rounded disabled:opacity-50"
+                >
+                  {isApplyingNumbering ? 'Applying...' : 'Apply Prefixes'}
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </FileTreeContext.Provider>
