@@ -140,6 +140,7 @@ Generate printable PDF reference sheets to help users remember which projects ar
    - [x] List all projects with bank/position mapping (e.g., "X / 1 - Project Name")
    - [x] Show custom names if set
    - [x] Display sample/preset counts per project
+   - [x] Fix blank second page (PDFKit overflow detection bug)
    - [ ] Layout improvements (optimize spacing, table formatting)
 
 2. **Project Sheets** - Detailed per-project reference
@@ -148,6 +149,7 @@ Generate printable PDF reference sheets to help users remember which projects ar
    - [x] Include user descriptions for samples
    - [x] Display sample location badges (PROJECT/WAVS/RECS)
    - [x] Exclude technical details (sample rate, bit depth, file sizes)
+   - [x] Fix blank extra page (same PDFKit overflow fix)
    - [ ] Layout improvements (optimize spacing, better formatting)
 
 **Implementation Status**:
