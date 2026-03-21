@@ -605,6 +605,11 @@ export const FileTree: React.FC<FileTreeProps> = ({
         onClick: () => setCreateProjectDialogOpen(true),
       },
       {
+        label: 'Export Overview Sheet',
+        icon: '📄',
+        onClick: () => pdfExport.exportOverview(structure),
+      },
+      {
         label: 'Export All Project Sheets',
         icon: '📑',
         onClick: () => pdfExport.exportAllProjects(structure),
