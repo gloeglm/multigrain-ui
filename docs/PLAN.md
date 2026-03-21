@@ -333,9 +333,9 @@ Optional enhancements that improve user experience but are not essential for cor
   - [x] Drag-and-drop reordering in import dialog when numbering enabled
   - [x] Preview shows actual numbers that will be applied
   - [x] Persistent preference (localStorage)
-  - [ ] Context menu action to add prefixes to existing samples (future)
-  - [ ] Layout improvements for numbering UI (pending)
-  - **Status**: Import numbering feature complete. Manual numbering action deferred.
+  - [x] Context menu action to add prefixes to existing samples (Project, Wavs, Samples node)
+  - [x] Layout improvements: compact conversion warnings onto one line in import dialog
+  - **Status**: Complete.
 - [ ] **Loudness normalization during import**
   - Optional loudness normalization to ensure consistent levels across samples
   - Target loudness standard (e.g., -14 LUFS or peak normalization to -1dB)
@@ -402,18 +402,18 @@ Optional enhancements that improve user experience but are not essential for cor
 - ✅ **System browser PDF preview**
 - ✅ **Batch export of all project sheets**
 - ✅ **Sample numbering during import with auto-detection**
-- ✅ **CI/CD pipeline with automated testing (217 tests)**
+- ✅ **CI/CD pipeline with automated testing (229 tests)**
 - ✅ **Multi-platform release builds (Windows, macOS, Linux)**
 - ✅ **GitHub Releases integration (v0.1.0-beta.1, v0.1.0-beta.2)**
 - ✅ **Welcome screen with SD card selection**
+- ✅ **Add Number Prefixes context menu action for existing samples**
 
 ### What's Next (Priority Order)
-1. **Sample Numbering Layout** - UI improvements for the numbering feature in ImportDialog
-2. **Phase 5e: Additional Tests** - AudioWaveform, SampleTechnicalDetails, error recovery tests
-3. **Phase 7**: PDF layout improvements (spacing, formatting)
-4. **Phase 4d**: Preset custom naming
-5. **Phase 8**: Polish and user experience improvements (collapse all, keyboard nav, multi-select)
-6. **Phase 10**: Nice to have features (move/copy, manual numbering action)
+1. **Phase 5e: Additional Tests** - AudioWaveform, SampleTechnicalDetails, error recovery tests
+2. **Phase 7**: PDF layout improvements (spacing, formatting)
+3. **Phase 4d**: Preset custom naming
+4. **Phase 8**: Polish and user experience improvements (collapse all, keyboard nav, multi-select)
+5. **Phase 10**: Nice to have features (move/copy, export samples, etc.)
 
 ---
 
