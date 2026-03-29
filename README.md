@@ -62,7 +62,7 @@ npm start
 
 ## Usage
 
-1. **Select Your SD Card** — Click "Select SD Card" and navigate to your SD card's `Multigrain` folder
+1. **Select Your SD Card** — Click "Select SD Card" and navigate to your SD card root or the `Multigrain` folder inside it
 2. **Browse** — Expand projects in the file tree to see samples and presets
 3. **Preview Audio** — Click any `.wav` file to see its waveform and play it back
 4. **Inspect Presets** — Click any `.mgp` preset to see its 8 sample references
@@ -137,8 +137,8 @@ src/
 ## Troubleshooting
 
 ### Application won't load SD card
-- Ensure you're selecting the `Multigrain` folder (not the SD card root)
-- Verify the folder contains `Project01/`, `Wavs/`, and `Recs/` subfolders
+- You can select either the SD card root or the `Multigrain` folder directly — both work
+- Verify the SD card contains a `Multigrain` folder with `Project01/`, `Wavs/`, and `Recs/` subfolders inside it
 
 ### Audio won't play
 - Check that the file is a valid WAV file
