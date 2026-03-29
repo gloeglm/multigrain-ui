@@ -66,6 +66,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     return () => ipcRenderer.removeListener('import:progress', handler);
   },
 
+  // Audio crop
+  cropAudio: (filePath: string, startSec: number, endSec: number) =>
+    ipcRenderer.invoke('audio:crop', filePath, startSec, endSec),
+
   // File operations (delete)
   deleteProject: (projectPath: string) => ipcRenderer.invoke('files:deleteProject', projectPath),
   deleteSample: (samplePath: string) => ipcRenderer.invoke('files:deleteSample', samplePath),
@@ -117,6 +121,11 @@ export type ElectronAPI = {
   validateMultigrain: (rootPath: string) => Promise<import('../shared/types').ValidationResult>;
   findMultigrainFolder: (searchPath: string) => Promise<string | null>;
   convertAudio: (inputPath: string, outputPath: string) => Promise<void>;
+  cropAudio: (
+    filePath: string,
+    startSec: number,
+    endSec: number
+  ) => Promise<{ success: boolean; error?: string }>;
   readAudioMetadata: (filePath: string) => Promise<{
     description: string;
     title: string;
