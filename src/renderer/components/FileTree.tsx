@@ -479,6 +479,7 @@ export const FileTree: React.FC<FileTreeProps> = ({
     scheme: { pattern: string; digits: number; separator: string };
     alreadyNumbered: number;
     toRename: Array<{ oldName: string; newName: string }>;
+    presetWarnings: string[];
   } | null>(null);
   const [isApplyingNumbering, setIsApplyingNumbering] = useState(false);
 
@@ -781,6 +782,7 @@ export const FileTree: React.FC<FileTreeProps> = ({
           scheme: result.scheme,
           alreadyNumbered: result.alreadyNumbered || 0,
           toRename: result.toRename,
+          presetWarnings: result.presetWarnings || [],
         });
       } else {
         showError('Failed to preview numbering.', 'Preview Failed', result.error);
@@ -1000,6 +1002,26 @@ export const FileTree: React.FC<FileTreeProps> = ({
               </div>
 
               <div className="p-4 overflow-y-auto flex-1">
+                {numberingPreview.presetWarnings.length > 0 && (
+                  <div className="mb-4 p-3 bg-yellow-50 rounded border border-yellow-300">
+                    <p className="text-sm font-medium text-yellow-800 mb-1">
+                      ⚠ Preset references will break
+                    </p>
+                    <p className="text-sm text-yellow-700 mb-2">
+                      The following{' '}
+                      {numberingPreview.presetWarnings.length === 1 ? 'preset' : 'presets'} will
+                      have missing sample references after renaming:
+                    </p>
+                    <ul className="text-sm text-yellow-800 space-y-0.5">
+                      {numberingPreview.presetWarnings.map((name) => (
+                        <li key={name} className="font-medium truncate" title={name}>
+                          {name}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
                 {numberingPreview.alreadyNumbered > 0 && (
                   <div className="mb-4 p-3 bg-panel-light rounded border border-panel-dark">
                     <p className="text-sm text-label-gray">

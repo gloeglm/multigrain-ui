@@ -219,6 +219,7 @@ export type ElectronAPI = {
     };
     alreadyNumbered?: number;
     toRename?: Array<{ oldName: string; newName: string }>;
+    presetWarnings?: string[];
     error?: string;
   }>;
   applyNumberPrefixes: (folderPath: string) => Promise<{

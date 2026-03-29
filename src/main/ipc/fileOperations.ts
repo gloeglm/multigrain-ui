@@ -7,6 +7,7 @@ import {
   extractPrefixNumber,
   NumberingScheme,
 } from '../utils/sampleNumbering';
+import { extractSamplesFromPreset } from '../utils/presetParser';
 
 interface NumberingPlan {
   scheme: NumberingScheme;
@@ -295,6 +296,23 @@ export function registerFileOperationsHandlers(): void {
 
       const plan = await buildNumberingPlan(folderPath);
 
+      // Check which presets reference samples that are being renamed
+      const renamedNames = new Set(plan.renames.map((r) => r.oldName));
+      const mgpFiles = (await fs.promises.readdir(folderPath)).filter((f) =>
+        f.toLowerCase().endsWith('.mgp')
+      );
+      const presetWarnings: string[] = [];
+      for (const mgpFile of mgpFiles) {
+        try {
+          const samples = await extractSamplesFromPreset(path.join(folderPath, mgpFile));
+          if (samples.some((s) => renamedNames.has(s))) {
+            presetWarnings.push(path.basename(mgpFile, '.mgp'));
+          }
+        } catch {
+          // Skip unreadable preset files
+        }
+      }
+
       return {
         success: true,
         scheme: {
@@ -304,6 +322,7 @@ export function registerFileOperationsHandlers(): void {
         },
         alreadyNumbered: plan.alreadyNumbered,
         toRename: plan.renames,
+        presetWarnings,
       };
     } catch (error) {
       console.error('Error previewing number prefixes:', error);
