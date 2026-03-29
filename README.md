@@ -13,6 +13,7 @@ A cross-platform desktop application for managing audio samples on SD cards for 
 - **Audio Preview** - Waveform visualization with play/pause/stop controls and auto-play toggle
 - **Sample Import** - Auto-conversion to Multigrain format (48kHz/16-bit/stereo) with conflict resolution
 - **Sample Numbering** - Automatically number samples on import, or renumber existing samples to control playback order
+- **Sample Cropping** - Highlight an area on the waveform view by drag and drop, then crop to selection
 - **Project Management** - Create new projects, custom naming with factory presets, delete with confirmation
 - **Preset Viewer** - Inspect all 8 sample references per preset with intelligent location resolution (PROJECT → WAVS → RECS)
 - **Metadata Editing** - Add custom descriptions to projects and samples, view technical details (sample rate, bit depth, duration)
