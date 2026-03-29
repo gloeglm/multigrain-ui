@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Multigrain Sample Manager is an Electron + React + TypeScript desktop application for managing audio samples on SD cards for the Instruō Multigrain Eurorack synthesizer module.
+Multigrain Sample Manager is an Electron + React + TypeScript desktop application for managing audio samples on SD cards for the Intellijel Multigrain Eurorack synthesizer module.
 
 **Current Status**: ~85% complete. Core features implemented and tested with full CI/CD pipeline.
 
