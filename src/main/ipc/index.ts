@@ -8,6 +8,7 @@ import { registerAudioImportHandlers } from './audioImport';
 import { registerProjectOperationsHandlers } from './projectOperations';
 import { registerFileOperationsHandlers } from './fileOperations';
 import { registerPdfExportHandlers } from './pdfExport';
+import { registerAudioCropHandlers } from './audioCrop';
 
 export function registerAllHandlers(): void {
   registerFileSystemHandlers();
@@ -20,4 +21,5 @@ export function registerAllHandlers(): void {
   registerProjectOperationsHandlers();
   registerFileOperationsHandlers();
   registerPdfExportHandlers();
+  registerAudioCropHandlers();
 }

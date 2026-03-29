@@ -74,7 +74,7 @@ describe('AudioWaveform Component', () => {
 
     it('shows initial time as 0:00 / 0:00', () => {
       render(<AudioWaveform samplePath={samplePath} />);
-      expect(screen.getByTestId('time-display')).toHaveTextContent('0:00 / 0:00');
+      expect(screen.getByTestId('time-display')).toHaveTextContent('0:00.00 / 0:00.00');
     });
 
     it('shows play icon initially', () => {
@@ -134,7 +134,7 @@ describe('AudioWaveform Component', () => {
         triggerEvent('ready');
       });
 
-      expect(screen.getByTestId('time-display')).toHaveTextContent('0:00 / 1:05');
+      expect(screen.getByTestId('time-display')).toHaveTextContent('0:00.00 / 1:05.00');
     });
   });
 
@@ -208,7 +208,7 @@ describe('AudioWaveform Component', () => {
       });
 
       await user.click(screen.getByTestId('stop-button'));
-      expect(screen.getByTestId('time-display')).toHaveTextContent('0:00 /');
+      expect(screen.getByTestId('time-display')).toHaveTextContent('0:00.00 /');
     });
   });
 

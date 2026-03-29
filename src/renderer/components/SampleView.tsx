@@ -8,12 +8,14 @@ interface SampleViewProps {
   sample: WavFile;
   autoPlay?: boolean;
   onRenameComplete?: (newPath: string) => void;
+  onCropComplete?: () => void;
 }
 
 export const SampleView: React.FC<SampleViewProps> = ({
   sample,
   autoPlay = false,
   onRenameComplete,
+  onCropComplete,
 }) => {
   return (
     <div className="space-y-4">
@@ -21,7 +23,7 @@ export const SampleView: React.FC<SampleViewProps> = ({
       <SampleInfo sample={sample} onRenameComplete={onRenameComplete} />
 
       {/* Section 2: Audio player (waveform and controls) */}
-      <AudioWaveform samplePath={sample.path} autoPlay={autoPlay} />
+      <AudioWaveform samplePath={sample.path} autoPlay={autoPlay} onCropComplete={onCropComplete} />
 
       {/* Section 3: Technical data (sample rate, bit depth, channels) */}
       <SampleTechnicalDetails sample={sample} />

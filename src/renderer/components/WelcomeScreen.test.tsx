@@ -68,12 +68,10 @@ describe('WelcomeScreen', () => {
       expect(screen.queryByText(/⚠️ Previous location not accessible:/)).not.toBeInTheDocument();
     });
 
-    it('should render beta software warning', () => {
+    it('should render backup hint', () => {
       render(<WelcomeScreen onSelectCard={mockOnSelectCard} />);
 
-      expect(screen.getByText('Beta Software Warning')).toBeInTheDocument();
-      expect(screen.getByText(/This is beta software/)).toBeInTheDocument();
-      expect(screen.getByText(/Please back up your SD card content/)).toBeInTheDocument();
+      expect(screen.getByText(/Back up your SD card before making changes/)).toBeInTheDocument();
     });
   });
 

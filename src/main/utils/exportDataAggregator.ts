@@ -137,7 +137,7 @@ export async function aggregateProjectData(
             commentText = String((commentObj as { text?: string }).text || '');
           }
           const riffComment = metadata.native?.['RIFF']?.find((tag) => tag.id === 'ICMT')?.value;
-          description = commentText || riffComment || '';
+          description = commentText || (typeof riffComment === 'string' ? riffComment : '') || '';
         } catch {
           // Ignore errors reading metadata
         }

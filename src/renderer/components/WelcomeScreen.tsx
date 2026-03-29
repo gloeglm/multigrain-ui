@@ -25,30 +25,17 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
           </div>
         )}
 
-        {/* Beta warning banner */}
-        <div className="mb-6 p-4 bg-yellow-50 border-2 border-yellow-400 rounded-lg">
-          <div className="flex items-start gap-3">
-            <div className="text-2xl">⚠️</div>
-            <div className="flex-1">
-              <h3 className="text-sm font-bold text-yellow-800 mb-1">Beta Software Warning</h3>
-              <p className="text-xs text-yellow-900 mb-2">
-                This is beta software and may contain bugs that could affect your data.
-              </p>
-              <p className="text-xs font-semibold text-yellow-900">
-                ⚡ Please back up your SD card content before using this application.
-              </p>
-            </div>
-          </div>
-        </div>
-
         {/* Hero section */}
         <div className="text-center mb-8">
           <div className="text-5xl mb-3">🎛️</div>
           <h1 className="text-2xl font-bold text-label-black mb-2">
             Welcome to Multigrain Sample Manager
           </h1>
-          <p className="text-sm text-label-gray mb-4">
+          <p className="text-sm text-label-gray mb-1">
             Manage and organize your Intellijel Multigrain sample library with ease
+          </p>
+          <p className="text-xs text-label-gray mb-4">
+            💡 Back up your SD card before making changes
           </p>
           <button
             onClick={onSelectCard}
@@ -120,6 +107,18 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
 
               <div className="bg-panel-light rounded-lg p-4 border-2 border-panel-dark">
                 <div className="flex items-start gap-3">
+                  <div className="text-xl">✂️</div>
+                  <div>
+                    <h3 className="text-sm font-semibold text-label-black mb-1">Crop Samples</h3>
+                    <p className="text-xs text-label-gray">
+                      Drag to select a region on the waveform and crop to it
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-panel-light rounded-lg p-4 border-2 border-panel-dark">
+                <div className="flex items-start gap-3">
                   <div className="text-xl">📄</div>
                   <div>
                     <h3 className="text-sm font-semibold text-label-black mb-1">
@@ -167,12 +166,20 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
               </ol>
             </div>
 
-            {/* Auto-conversion info */}
-            <div className="p-3 bg-panel-light rounded border border-panel-dark">
-              <p className="text-xs text-label-gray">
-                <strong>💡 Tip:</strong> When importing, enable numbering to automatically prefix
-                samples (e.g., 01_kick.wav) for reliable ordering on the hardware.
-              </p>
+            {/* Tips */}
+            <div className="space-y-2">
+              <div className="p-3 bg-panel-light rounded border border-panel-dark">
+                <p className="text-xs text-label-gray">
+                  <strong>💡 Tip:</strong> When importing, enable numbering to automatically prefix
+                  samples (e.g., 01_kick.wav) for reliable ordering on the hardware.
+                </p>
+              </div>
+              <div className="p-3 bg-panel-light rounded border border-panel-dark">
+                <p className="text-xs text-label-gray">
+                  <strong>✂️ Tip:</strong> To crop a sample, open it and drag across the waveform to
+                  select a region, then click <strong>Crop to selection</strong>.
+                </p>
+              </div>
             </div>
           </div>
         </div>
