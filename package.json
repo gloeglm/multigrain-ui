@@ -61,7 +61,7 @@
     "@typescript-eslint/parser": "^8.50.0",
     "@vitest/ui": "^4.0.16",
     "autoprefixer": "^10.4.23",
-    "copy-webpack-plugin": "^13.0.1",
+    "copy-webpack-plugin": "^14.0.0",
     "css-loader": "^7.1.2",
     "electron": "39.2.7",
     "electron-icon-builder": "^2.0.1",
