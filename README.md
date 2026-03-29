@@ -1,6 +1,6 @@
 # Multigrain Sample Manager
 
-A cross-platform desktop application for managing audio samples on SD cards for the [Multigrain Eurorack module](https://www.instruomodular.com/product/multigrain/).
+A cross-platform desktop application for managing audio samples on SD cards for the [Intellijel Multigrain](https://intellijel.com/shop/eurorack/multigrain/) Eurorack module.
 
 ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
@@ -9,20 +9,19 @@ A cross-platform desktop application for managing audio samples on SD cards for 
 
 ## Features
 
-### Currently Implemented ✅
-
 - **Browse & Navigate** - Intuitive file tree for Projects (01-48), WAVS, and RECS folders with validation
 - **Audio Preview** - Waveform visualization with play/pause/stop controls and auto-play toggle
-- **Sample Management** - Import with auto-conversion (48kHz/16-bit/stereo), rename, delete operations
+- **Sample Import** - Auto-conversion to Multigrain format (48kHz/16-bit/stereo) with conflict resolution
+- **Sample Numbering** - Automatically number samples on import, or renumber existing samples to control playback order
 - **Project Management** - Create new projects, custom naming with factory presets, delete with confirmation
 - **Preset Viewer** - Inspect all 8 sample references per preset with intelligent location resolution (PROJECT → WAVS → RECS)
 - **Metadata Editing** - Add custom descriptions to projects and samples, view technical details (sample rate, bit depth, duration)
 - **Project Overview** - Quick statistics dashboard showing total projects, samples, recordings, and per-project counts
+- **PDF Reference Sheets** - Export printable documentation of projects, sample listings, and preset assignments
 
 ### Coming Soon 🚧
 
 - **Preset Custom Naming** - User-defined names for presets (similar to project naming)
-- **Reference Sheet Export** - Generate printable PDF documentation of projects and sample usage
 - **Enhanced File Operations** - Move/copy samples between folders, batch operations
 - **Search & Filtering** - Find samples by name, description, or location
 
@@ -46,73 +45,31 @@ A cross-platform desktop application for managing audio samples on SD cards for 
 
 ## Installation
 
-### From Release (Recommended)
+Download the latest release for your platform from the [Releases](../../releases) page:
 
-1. Download the latest release for your platform from the [Releases](../../releases) page
-2. Install the application:
-   - **macOS**: Open the `.dmg` and drag to Applications
-     - ⚠️ **Important**: macOS will block the unsigned app. See [MACOS_INSTALL.md](MACOS_INSTALL.md) for bypass instructions
-   - **Windows**: Run the `.exe` installer
-   - **Linux**: Install the `.deb` or `.rpm` package
+- **macOS**: Open the `.dmg` and drag to Applications
+- **Windows**: Run the `.exe` installer
+- **Linux**: Install the `.deb` or `.rpm` package
 
 ### From Source
 
 ```bash
-# Clone the repository
-git clone <repository-url>
+git clone https://github.com/gloeglm/multigrain-ui.git
 cd multigrain-ui
-
-# Install dependencies
 npm install
-
-# Run in development mode
 npm start
-
-# Build for production
-npm run package
 ```
 
 ## Usage
 
-1. **Launch the Application**
-   - The application opens with an empty state
-
-2. **Select Your SD Card**
-   - Click "Select SD Card" in the top-right
-   - Navigate to your SD card's `Multigrain` folder
-   - The folder structure will be validated and loaded
-
-3. **Load Factory Project Names** (Optional)
-   - Click "Load Factory Names" button in the header
-   - Confirm to apply Intellijel's factory project names
-   - Projects 1-4, 9-13, and 17-21 will be named automatically
-
-4. **Browse Samples**
-   - Expand projects in the file tree (left panel)
-   - Click on any project to view its Autosave.mgp preset
-   - Click on any preset to see its 8 sample references
-   - Click on any `.wav` file to preview it
-   - Use the auto-play toggle to automatically play samples when selected
-
-5. **Preview Audio**
-   - View waveform visualization
-   - Use play/pause/stop controls
-   - Check sample metadata and technical details
-
-6. **Inspect Presets**
-   - Click on any `.mgp` preset file
-   - View the 8 sample references with location badges
-   - Click any sample to navigate to it and listen
-
-7. **Customize Project Names**
-   - Hover over a project folder
-   - Click the edit button (✎)
-   - Enter a custom name and save
-
-8. **Add Sample Descriptions**
-   - Select a sample
-   - Click "Edit" in the Description section
-   - Add notes about the sample
+1. **Select Your SD Card** — Click "Select SD Card" and navigate to your SD card's `Multigrain` folder
+2. **Browse** — Expand projects in the file tree to see samples and presets
+3. **Preview Audio** — Click any `.wav` file to see its waveform and play it back
+4. **Inspect Presets** — Click any `.mgp` preset to see its 8 sample references
+5. **Import Samples** — Right-click a project folder and choose "Import Samples"
+6. **Manage Numbering** — Right-click a project folder to add or update number prefixes on samples
+7. **Customize Names** — Hover over a project and click ✎ to set a custom name
+8. **Export Reference Sheets** — Right-click a project and choose "Export Sheet" for a printable PDF
 
 ## Technology Stack
 
@@ -121,18 +78,10 @@ npm run package
 - **TypeScript** - Type safety
 - **Tailwind CSS** - Styling
 - **WaveSurfer.js** - Audio waveform visualization
-- **music-metadata** - Audio file metadata reading
+- **FFmpeg** - Audio conversion
+- **PDFKit** - PDF export
 
 ## Development
-
-### Prerequisites
-
-```bash
-# Clone and install
-git clone <repository-url>
-cd multigrain-ui
-npm install
-```
 
 ### Available Scripts
 
@@ -142,33 +91,24 @@ npm install
 - `npm run make` - Create distributable installers
 
 **Code Quality:**
-- `npm run type-check` - Run TypeScript type checking
-- `npm run lint` - Check code style (zero warnings enforced)
+- `npm run type-check` - Run TypeScript type checking (0 errors required)
+- `npm run lint` - Check code style (0 warnings enforced)
 - `npm run lint:fix` - Auto-fix linting issues
 - `npm run format` - Format code with Prettier
-- `npm run format:check` - Check code formatting
 
 **Testing:**
-- `npm test` - Run test suite (111 tests)
+- `npm test` - Run test suite (276 tests)
 - `npm run test:ui` - Run tests with UI
 - `npm run test:coverage` - Generate coverage report
 
 ### Development Workflow
 
-1. **Before committing**, ensure all checks pass:
-   ```bash
-   npm run type-check  # Must pass with 0 errors
-   npm run lint        # Must pass with 0 warnings
-   npm test            # All 111 tests must pass
-   ```
+Before committing, ensure all checks pass:
+```bash
+npm run type-check && npm run lint && npm test -- --run
+```
 
-2. **CI/CD** - GitHub Actions automatically runs these checks on every push/PR to `main`
-
-3. **Code Standards:**
-   - TypeScript strict mode enabled
-   - ESLint with React and TypeScript rules
-   - Prettier for consistent formatting
-   - Test coverage for new features
+CI/CD via GitHub Actions runs these checks on every push to `main`.
 
 ### Project Structure
 
@@ -176,23 +116,14 @@ npm install
 src/
 ├── main/              # Electron main process
 │   ├── ipc/          # IPC handlers (file ops, audio, presets, imports)
-│   └── utils/        # Multigrain validation, file operations
+│   └── utils/        # Multigrain validation, numbering, preset parsing
 ├── renderer/         # React UI
-│   ├── components/   # FileTree, AudioWaveform, SampleInfo, PresetViewer
+│   ├── components/   # FileTree, AudioWaveform, SampleInfo, PresetViewer, ...
 │   └── hooks/        # useMultigrain state management
 └── shared/
     ├── types.ts      # TypeScript definitions
     └── constants.ts  # Multigrain specs, factory names
 ```
-
-### Adding New Features
-
-1. Create IPC handlers in `src/main/ipc/` for main process operations
-2. Expose handlers via `electronAPI` in `src/main/preload.ts`
-3. Add TypeScript types to `src/shared/types.ts`
-4. Create React components in `src/renderer/components/`
-5. Write tests for new functionality (see existing `*.test.ts` files)
-6. Ensure all quality checks pass before committing
 
 ## Multigrain Specifications
 
@@ -203,14 +134,6 @@ src/
 - **Samples in /WAVS**: 128 global
 - **Samples in /RECS**: 1024 recordings
 
-### Hierarchy
-```
-Project
-└── Presets (48 per project)
-    └── Sounds (8 per preset)
-        └── Scenes (2 per sound) + Sample reference
-```
-
 ## Troubleshooting
 
 ### Application won't load SD card
@@ -219,13 +142,11 @@ Project
 
 ### Audio won't play
 - Check that the file is a valid WAV file
-- Verify the sample rate is supported (48kHz preferred)
 - Try reloading the structure with "Change Location"
 
 ### Custom names/descriptions not saving
 - Ensure the SD card is not write-protected
 - Check that you have write permissions to the folder
-- Look for error messages in the red notification bar
 
 ## Contributing
 
@@ -236,16 +157,10 @@ Contributions are welcome! Please follow the development workflow:
 3. Ensure all quality checks pass: `npm run type-check && npm run lint && npm test`
 4. Submit a pull request with a clear description
 
-All PRs must pass CI checks (type checking, linting, and all 111 tests) before merging.
-
 ## License
 
 MIT License - See [LICENSE](LICENSE) file for details
 
 ## Credits
 
-Built for the [Instruō Multigrain](https://www.instruomodular.com/product/multigrain/) granular synthesizer module.
-
-## Roadmap
-
-See [PLAN.md](docs/PLAN.md) for detailed implementation roadmap and technical specifications.
+Built for the [Intellijel Multigrain](https://intellijel.com/shop/eurorack/multigrain/) granular synthesizer module.

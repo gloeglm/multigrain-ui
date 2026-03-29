@@ -67,13 +67,6 @@ module.exports = {
             type: 'link',
             path: '/Applications',
           },
-          {
-            x: 330,
-            y: 340,
-            type: 'file',
-            path: './MACOS_INSTALL.md',
-            name: 'INSTALLATION INSTRUCTIONS.md',
-          },
         ],
       },
     },
