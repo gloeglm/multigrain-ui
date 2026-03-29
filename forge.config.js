@@ -1,5 +1,6 @@
 const { FusesPlugin } = require('@electron-forge/plugin-fuses');
 const { FuseV1Options, FuseVersion } = require('@electron/fuses');
+const { notarize } = require('@electron/notarize');
 
 module.exports = {
   packagerConfig: {
@@ -8,6 +9,27 @@ module.exports = {
     },
     icon: './assets/icons/icons/icon', // Electron will auto-select .ico, .icns, or .png
     executableName: 'multigrain-sample-manager',
+    osxSign: {
+      identity: process.env.APPLE_IDENTITY,
+      hardenedRuntime: true,
+      entitlements: './entitlements.plist',
+      'entitlements-inherit': './entitlements.plist',
+    },
+  },
+  hooks: {
+    postPackage: async (config, packageResult) => {
+      if (process.platform !== 'darwin') return;
+      const appPath = `${packageResult.outputPaths[0]}/Multigrain Sample Manager.app`;
+      console.log(`Notarizing ${appPath}...`);
+      await notarize({
+        tool: 'notarytool',
+        appPath,
+        appleId: process.env.APPLE_ID,
+        appleIdPassword: process.env.APPLE_ID_PASSWORD,
+        teamId: process.env.APPLE_TEAM_ID,
+      });
+      console.log('Notarization complete.');
+    },
   },
   rebuildConfig: {},
   makers: [
@@ -125,7 +147,7 @@ module.exports = {
           owner: 'gloeglm',
           name: 'multigrain-ui'
         },
-        prerelease: true,
+        prerelease: false,
         draft: true
       }
     }
