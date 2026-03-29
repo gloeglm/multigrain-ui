@@ -2,12 +2,14 @@
 
 ## v0.5.0 (2026-03-29)
 
-### New Features
-- **Sample number prefix management** — Assign or update number prefixes on existing samples directly from the file tree, not just during import
-- **Export Overview Sheet** — Export a PDF overview sheet for a project from the Projects context menu, in addition to the existing per-project sheet export
+First signed and notarized release — no more Gatekeeper warnings on macOS.
 
-### Bug Fixes
-- Fixed a blank extra page appearing at the end of PDF overview and project reference sheets
+### What's New
+- **Renumber existing samples** — You can now assign or update number prefixes on samples already on your SD card, not just during import. Right-click any sample in the file tree to manage its numbering.
+- **Export project overview sheet** — Right-click a project in the file tree to export a PDF overview of all its samples and presets in one go, great for keeping a printed reference for your case.
+
+### Fixes
+- PDF reference sheets no longer include a blank page at the end
 
 ---
 
