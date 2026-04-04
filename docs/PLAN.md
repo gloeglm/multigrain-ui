@@ -337,7 +337,8 @@ Optional enhancements that improve user experience but are not essential for cor
   - [x] Persistent preference (localStorage)
   - [x] Context menu action to add prefixes to existing samples (Project, Wavs, Samples node)
   - [x] Layout improvements: compact conversion warnings onto one line in import dialog
-  - **Status**: Complete.
+  - [ ] Auto-scroll during drag when reordering samples near the top/bottom edge of the list
+  - **Status**: Mostly complete. Auto-scroll during drag pending.
 - [ ] **Loudness normalization during import**
   - Optional loudness normalization to ensure consistent levels across samples
   - Target loudness standard (e.g., -14 LUFS or peak normalization to -1dB)
