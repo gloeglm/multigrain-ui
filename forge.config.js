@@ -43,7 +43,7 @@ module.exports = {
     {
       name: '@electron-forge/maker-dmg',
       config: {
-        name: process.arch === 'x64' ? 'Multigrain Sample Manager (Intel)' : 'Multigrain Sample Manager',
+        name: process.arch === 'x64' ? 'Multigrain Smpl Mgr Intel' : 'Multigrain Sample Manager',
         format: 'ULFO',
         additionalDMGOptions: {
           window: {
