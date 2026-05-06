@@ -111,9 +111,16 @@ export async function aggregateProjectData(
   // Get unique sample names from project folder
   const projectSampleNames = new Set(project.samples.map((s) => s.name));
 
-  // Add samples referenced in presets but might be in WAVS/RECS
+  // Add samples referenced in presets that exist in WAVS/RECS. Skip names that
+  // don't resolve to a real file anywhere — those are stale preset references
+  // (e.g. samples deleted from disk) and would otherwise show up as ghost
+  // entries in the reference sheet's sample list. They still appear inside
+  // each preset's slot list as NOT_FOUND.
   for (const sampleName of sampleUsageMap.keys()) {
-    projectSampleNames.add(sampleName);
+    const resolved = resolveSampleLocation(sampleName, project, structure);
+    if (resolved.location !== 'NOT_FOUND') {
+      projectSampleNames.add(sampleName);
+    }
   }
 
   // Debug logging

@@ -352,5 +352,52 @@ describe('Export Data Aggregator', () => {
       expect(result.samples.map((s) => s.name)).toContain('kick.wav');
       expect(result.samples.map((s) => s.name)).toContain('global.wav');
     });
+
+    it('should NOT include preset-referenced samples that have been deleted from disk', async () => {
+      // Reproduces the bug: user deleted 3 original samples, added 8 new ones,
+      // but the reference sheet listed 11 samples (the 3 deleted ones still appeared
+      // because they were still referenced by the preset file).
+      const newSamples = Array.from({ length: 8 }, (_, i) =>
+        createMockSample({
+          name: `new${i + 1}.wav`,
+          path: `/test/Project01/new${i + 1}.wav`,
+        })
+      );
+
+      const project = createMockProject({
+        index: 1,
+        samples: newSamples,
+        presets: [createMockPreset({ name: 'Preset01.mgp', path: '/test/preset1.mgp' })],
+      });
+
+      // The 3 deleted samples are NOT in PROJECT, WAVS, or RECS
+      const structure = createMockStructure({
+        projects: [project],
+        globalWavs: [],
+        recordings: [],
+      });
+
+      // Preset still references 3 deleted samples + 5 of the new ones
+      vi.mocked(extractSamplesFromPreset).mockResolvedValue([
+        'deleted1.wav',
+        'deleted2.wav',
+        'deleted3.wav',
+        'new1.wav',
+        'new2.wav',
+        'new3.wav',
+        'new4.wav',
+        'new5.wav',
+      ]);
+
+      const result = await aggregateProjectData(project, structure);
+
+      // Reference sheet should list only the 8 samples actually on disk,
+      // not the 3 deleted ones still referenced by the preset.
+      const sampleNames = result.samples.map((s) => s.name);
+      expect(sampleNames).not.toContain('deleted1.wav');
+      expect(sampleNames).not.toContain('deleted2.wav');
+      expect(sampleNames).not.toContain('deleted3.wav');
+      expect(result.samples).toHaveLength(8);
+    });
   });
 });

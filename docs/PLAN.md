@@ -371,6 +371,12 @@ Optional enhancements that improve user experience but are not essential for cor
 - [ ] **Dark mode theme**
   - Alternative color scheme
   - Respect system preferences
+- [ ] **Clean up stale preset sample references**
+  - Detect preset slots that reference samples no longer present on disk (PROJECT/WAVS/RECS)
+  - Offer a per-project (and possibly global) "clean stale references" action that clears those slots in the `.mgp` files
+  - Surface stale references in the UI (preset viewer + reference sheet already shows them as `NOT_FOUND`)
+  - **Prerequisite**: Verify how the Multigrain hardware handles a preset slot that references a missing sample — does it silently skip, error, play silence, or fall back to another sample? Behavior should inform whether cleanup is cosmetic (reference sheet hygiene) or functionally necessary.
+  - **Context**: Today, deleting a sample leaves the preset's slot pointing at the now-missing filename. The reference sheet fix (2026-05-06) hides these from "Available Samples" but they still appear inside the preset slot list as `NOT_FOUND`.
 
 **Status**: Collection of polish features to enhance usability. Implement as time/resources allow.
 
