@@ -177,6 +177,11 @@ async function parseFormat(filePath: string): Promise<ParsedFormat> {
     }
   }
 
+  // music-metadata does not always throw on unrecognised input; it may return an empty format
+  if (!parsed.format.container || !parsed.format.sampleRate || !parsed.format.numberOfChannels) {
+    throw new Error('Unrecognized audio format');
+  }
+
   return { ...parsed.format, metadataMalformed: false };
 }
 

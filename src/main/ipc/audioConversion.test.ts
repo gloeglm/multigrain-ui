@@ -2,7 +2,14 @@
 import * as fs from 'fs/promises';
 import * as os from 'os';
 import * as path from 'path';
+import { parseFile, IAudioMetadata } from 'music-metadata';
 import { analyzeAudioFile } from './audioConversion';
+
+// Pass through to the real parser by default; individual tests can override the result
+vi.mock('music-metadata', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('music-metadata')>();
+  return { ...actual, parseFile: vi.fn(actual.parseFile) };
+});
 
 function chunk(id: string, body: Buffer): Buffer {
   const header = Buffer.alloc(8);
@@ -94,6 +101,19 @@ describe('analyzeAudioFile', () => {
   it('reports unreadable files as invalid', async () => {
     const filePath = path.join(tempDir, 'garbage.wav');
     await fs.writeFile(filePath, Buffer.from('definitely not audio'));
+
+    const result = await analyzeAudioFile(filePath);
+
+    expect(result.isValid).toBe(false);
+    expect(result.issues[0].type).toBe('unreadable');
+  });
+
+  it('reports files as invalid when music-metadata returns an empty format without throwing', async () => {
+    const filePath = path.join(tempDir, 'garbage.wav');
+    await fs.writeFile(filePath, Buffer.from('definitely not audio'));
+    vi.mocked(parseFile).mockResolvedValueOnce({
+      format: { tagTypes: [], trackInfo: [] },
+    } as unknown as IAudioMetadata);
 
     const result = await analyzeAudioFile(filePath);
 
