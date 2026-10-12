@@ -3,9 +3,10 @@ import * as os from 'os';
 import * as fs from 'fs/promises';
 import ffmpeg from 'fluent-ffmpeg';
 import ffmpegInstaller from '@ffmpeg-installer/ffmpeg';
-import { parseFile } from 'music-metadata';
+import { parseFile, IAudioMetadata } from 'music-metadata';
 import { AudioAnalysis, AudioMetadata, AudioIssue, ConversionResult } from '@shared/types/import';
 import { AUDIO_SPECS } from '@shared/constants';
+import { readWavHeader } from '../utils/wavHeader';
 
 // Set FFmpeg path from installer
 // When running from asar, adjust path to use unpacked directory
@@ -28,14 +29,24 @@ export async function analyzeAudioFile(filePath: string): Promise<AudioAnalysis>
 
   try {
     // Parse audio metadata
-    const parsed = await parseFile(filePath);
+    const parsed = await parseFormat(filePath);
 
     // Extract metadata
-    const duration = parsed.format.duration || 0;
-    const sampleRate = parsed.format.sampleRate || 0;
-    const bitDepth = parsed.format.bitsPerSample || 16;
-    const channels = parsed.format.numberOfChannels || 0;
-    const format = parsed.format.container || 'unknown';
+    const duration = parsed.duration || 0;
+    const sampleRate = parsed.sampleRate || 0;
+    const bitDepth = parsed.bitsPerSample || 16;
+    const channels = parsed.numberOfChannels || 0;
+    const format = parsed.container || 'unknown';
+
+    if (parsed.metadataMalformed) {
+      // Rewriting through FFmpeg strips the broken metadata chunks
+      needsConversion = true;
+      issues.push({
+        type: 'format',
+        message: 'File contains malformed metadata. It will be rewritten without metadata.',
+        severity: 'warning',
+      });
+    }
 
     metadata = {
       duration,
@@ -131,6 +142,42 @@ export async function analyzeAudioFile(filePath: string): Promise<AudioAnalysis>
       metadata: null,
     };
   }
+}
+
+interface ParsedFormat {
+  duration?: number;
+  sampleRate?: number;
+  bitsPerSample?: number;
+  numberOfChannels?: number;
+  container?: string;
+  metadataMalformed: boolean;
+}
+
+/**
+ * Parse the audio format of a file. Falls back to reading the raw WAV header
+ * when music-metadata fails on a WAV file with malformed metadata chunks (e.g. broken
+ * LIST/INFO sub-chunk sizes). Depending on file length, music-metadata either throws
+ * ("Illegal remaining size") or silently stops parsing before reaching the data chunk.
+ * Such files are otherwise playable and are fixed by conversion.
+ */
+async function parseFormat(filePath: string): Promise<ParsedFormat> {
+  let parsed: IAudioMetadata;
+  try {
+    parsed = await parseFile(filePath);
+  } catch (error) {
+    const header = await readWavHeader(filePath).catch(() => null);
+    if (!header) throw error;
+    return { ...header, container: 'WAVE', metadataMalformed: true };
+  }
+
+  if (parsed.format.container === 'WAVE' && !parsed.format.duration) {
+    const header = await readWavHeader(filePath).catch(() => null);
+    if (header) {
+      return { ...header, container: 'WAVE', metadataMalformed: true };
+    }
+  }
+
+  return { ...parsed.format, metadataMalformed: false };
 }
 
 /**
