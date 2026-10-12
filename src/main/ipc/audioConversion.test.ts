@@ -100,7 +100,10 @@ describe('analyzeAudioFile', () => {
 
   it('reports unreadable files as invalid', async () => {
     const filePath = path.join(tempDir, 'garbage.wav');
-    await fs.writeFile(filePath, Buffer.from('definitely not audio'));
+    // Keep this above 128 bytes: for smaller files music-metadata's parseFile throws while
+    // scanning for ID3v1 tags and leaks an open file handle, which breaks temp dir cleanup
+    // on Windows
+    await fs.writeFile(filePath, Buffer.from('definitely not audio '.repeat(32)));
 
     const result = await analyzeAudioFile(filePath);
 
