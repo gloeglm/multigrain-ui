@@ -85,6 +85,6 @@
     "tailwindcss": "^3.4.19",
     "ts-loader": "^9.5.4",
     "typescript": "^5.9.3",
-    "vitest": "^4.0.16"
+    "vitest": "^4.1.11"
   }
 }
