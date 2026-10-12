@@ -93,3 +93,7 @@ out/
 
 # Claude Code local settings
 .claude/settings.local.json
+
+# Code signing certificates and keys (CI uses GitHub secrets)
+signing/
+*.p12
